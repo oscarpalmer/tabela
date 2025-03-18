@@ -1,0 +1,50 @@
+{
+	"author": {
+		"name": "Oscar Palmér",
+		"url": "https://oscarpalmer.se"
+	},
+	"description": "A modern table.",
+	"devDependencies": {
+		"@biomejs/biome": "^1.9",
+		"@types/node": "^22.13",
+		"@vitest/coverage-istanbul": "^3",
+		"dts-bundle-generator": "^9.5",
+		"glob": "^11",
+		"happy-dom": "^17.4",
+		"typescript": "^5.8",
+		"vite": "^6.2",
+		"vitest": "^3"
+	},
+	"exports": {
+		".": {
+			"import": {
+				"types": "./types/index.d.ts",
+				"default": "./dist/index.js"
+			},
+			"require": {
+				"types": "./types/index.d.cts",
+				"default": "./dist/index.cjs"
+			}
+		}
+	},
+	"files": ["dist", "src", "types"],
+	"keywords": [],
+	"license": "MIT",
+	"main": "./dist/index.cjs",
+	"module": "./dist/index.js",
+	"name": "@oscarpalmer/tabela",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/oscarpalmer/tabela.git"
+	},
+	"scripts": {
+		"build": "npm run clean && npx vite build && npm run types",
+		"clean": "rm -rf ./dist && rm -rf ./types && rm -f ./tsconfig.tsbuildinfo",
+		"test": "npx vitest --coverage",
+		"types": "npx tsc && npx dts-bundle-generator --config ./dts.config.cts --silent",
+		"watch": "npx vite build --watch"
+	},
+	"type": "module",
+	"types": "./types/index.d.cts",
+	"version": "0.1.0"
+}
