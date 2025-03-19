@@ -22,7 +22,7 @@ export class ColumnComponent {
 	) {
 		const width =
 			Number.parseInt(getComputedStyle(tabela.element).fontSize, 10) *
-			(options.width ?? 4);
+			(options.width ?? options.title.length * 1.5);
 
 		this.options = {
 			...options,

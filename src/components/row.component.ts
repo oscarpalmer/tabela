@@ -4,27 +4,34 @@ import type {Tabela} from '../tabela';
 import {CellComponent} from './cell.component';
 
 export class RowComponent {
-	readonly cells: CellComponent[] = [];
-	readonly element: HTMLDivElement;
+		readonly cells: CellComponent[] = [];
+		readonly element: HTMLDivElement;
 
-	constructor(
-		readonly tabela: Tabela,
-		readonly data: PlainObject,
-	) {
-		this.element = createRow();
+		constructor(
+			readonly tabela: Tabela,
+			readonly data: PlainObject,
+		) {
+			this.element = createRow();
 
-		this.element.className += ' tabela__row-body';
+			this.element.className += ' tabela__row-body';
+		}
 
-		const {columns} = tabela.header;
-		const {length} = columns;
+		render(): void {
+			if (this.element.innerHTML !== '') {
+				return;
+			}
 
-		for (let index = 0; index < length; index += 1) {
-			const cell = new CellComponent(tabela, columns[index], this);
+			const {tabela} = this;
+			const {columns} = tabela.header;
+			const {length} = columns;
 
-			cell.element.className += ' tabela__cell-body';
+			for (let index = 0; index < length; index += 1) {
+				const cell = new CellComponent(tabela, columns[index], this);
 
-			this.cells.push(cell);
-			this.element.append(cell.element);
+				cell.element.className += ' tabela__cell-body';
+
+				this.cells.push(cell);
+				this.element.append(cell.element);
+			}
 		}
 	}
-}
