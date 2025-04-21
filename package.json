@@ -6,16 +6,16 @@
 	"description": "A modern table.",
 	"devDependencies": {
 		"@biomejs/biome": "^1.9",
-		"@oscarpalmer/atoms": "^0.89",
-		"@oscarpalmer/oui": "^0.8",
-		"@types/node": "^22.13",
-		"@vitest/coverage-istanbul": "^3",
+		"@oscarpalmer/atoms": "^0.95",
+		"@oscarpalmer/oui": "^0.9",
+		"@types/node": "^22.14",
+		"@vitest/coverage-istanbul": "^3.1",
 		"dts-bundle-generator": "^9.5",
 		"glob": "^11",
 		"happy-dom": "^17.4",
 		"typescript": "^5.8",
-		"vite": "^6.2",
-		"vitest": "^3"
+		"vite": "^6.3",
+		"vitest": "^3.1"
 	},
 	"exports": {
 		".": {
@@ -48,5 +48,5 @@
 	},
 	"type": "module",
 	"types": "./types/index.d.cts",
-	"version": "0.3.0"
+	"version": "0.4.0"
 }

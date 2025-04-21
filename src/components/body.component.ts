@@ -4,6 +4,11 @@ import {VirtualizationManager} from '../managers/virtualization.manager';
 import type {Tabela} from '../tabela';
 import {RowComponent} from './row.component';
 
+type Elements = {
+	faker: HTMLDivElement;
+	group: HTMLDivElement;
+};
+
 function createFaker(): HTMLDivElement {
 	const element = document.createElement('div');
 
@@ -18,22 +23,27 @@ function createFaker(): HTMLDivElement {
 }
 
 export class BodyComponent {
-	readonly faker = createFaker();
-	readonly group: HTMLDivElement;
+	readonly elements: Elements = {
+		faker: createFaker(),
+		group: undefined as never,
+	};
+
 	readonly rows: RowComponent[] = [];
 	readonly virtualization: VirtualizationManager;
 
 	constructor(readonly tabela: Tabela) {
-		this.group = createRowGroup(false);
+		const group = createRowGroup(false);
+
+		this.elements.group = group;
 		this.virtualization = new VirtualizationManager(this);
 
-		this.group.className += ' tabela__rowgroup-body';
+		group.className += ' tabela__rowgroup-body';
 
-		this.group.style.height = '100%';
-		this.group.style.overflow = 'auto';
-		this.group.style.position = 'relative';
+		group.style.height = '100%';
+		group.style.overflow = 'auto';
+		group.style.position = 'relative';
 
-		this.group.append(this.faker);
+		group.append(this.elements.faker);
 
 		void this.addData(tabela.options.data).then(() => {
 			this.virtualization.update(true);
@@ -50,8 +60,16 @@ export class BodyComponent {
 		this.updateVirtualization();
 	}
 
+	destroy(): void {
+		this.virtualization.destroy();
+
+		this.elements.faker = undefined as never;
+		this.elements.group = undefined as never;
+		this.rows.length = 0;
+	}
+
 	private updateVirtualization(): void {
-		this.faker.style.height = `${this.rows.length * 32}px`;
+		this.elements.faker.style.height = `${this.rows.length * 32}px`;
 
 		this.virtualization.update(true);
 	}

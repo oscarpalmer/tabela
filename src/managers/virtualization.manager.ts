@@ -1,14 +1,19 @@
 import type {BodyComponent} from '../components/body.component';
 import type {RowComponent} from '../components/row.component';
 
+export type ElementPool = {
+	cells: Record<string, HTMLDivElement[]>;
+	rows: HTMLDivElement[];
+};
+
 type Range = {
 	end: number;
 	start: number;
 };
 
 function getRange(body: BodyComponent, down: boolean): Range {
-	const {group, rows} = body;
-	const {clientHeight, scrollTop} = group;
+	const {elements, rows} = body;
+	const {clientHeight, scrollTop} = elements.group;
 
 	const first = Math.floor(scrollTop / 32);
 
@@ -28,11 +33,18 @@ function getRange(body: BodyComponent, down: boolean): Range {
 
 export class VirtualizationManager {
 	private active = false;
+
+	private readonly pool: ElementPool = {
+		cells: {},
+		rows: [],
+	};
+
 	private top = 0;
+
 	private readonly visible = new Map<number, RowComponent>();
 
 	constructor(private readonly body: BodyComponent) {
-		this.body.group.addEventListener(
+		this.body.elements.group.addEventListener(
 			'scroll',
 			() => {
 				this.onScroll();
@@ -43,8 +55,20 @@ export class VirtualizationManager {
 		);
 	}
 
+	destroy(): void {
+		const {visible, pool} = this;
+
+		for (const [index, row] of visible) {
+			row.remove(pool);
+			visible.delete(index);
+		}
+
+		pool.cells = {};
+		pool.rows = [];
+	}
+
 	update(down: boolean): void {
-		const {body, visible} = this;
+		const {body, pool, visible} = this;
 
 		const indices = new Set<number>();
 		const range = getRange(body, down);
@@ -56,7 +80,8 @@ export class VirtualizationManager {
 		for (const [index, row] of visible) {
 			if (!indices.has(index)) {
 				visible.delete(index);
-				row.element.remove();
+
+				row.remove(pool);
 			}
 		}
 
@@ -66,25 +91,25 @@ export class VirtualizationManager {
 			if (!visible.has(index)) {
 				const row = body.rows[index];
 
-				row.element.style.inset = '0 auto auto 0';
-				row.element.style.position = 'absolute';
-				row.element.style.transform = `translateY(${index * 32}px)`;
-
-				row.render();
+				row.render(pool);
 
 				visible.set(index, row);
 
-				fragment.append(row.element);
+				if (row.element != null) {
+					row.element.style.transform = `translateY(${index * 32}px)`;
+
+					fragment.append(row.element);
+				}
 			}
 
-			body.group.append(fragment);
+			body.elements.group.append(fragment);
 		}
 	}
 
 	private onScroll(): void {
 		if (!this.active) {
 			requestAnimationFrame(() => {
-				const top = this.body.group.scrollTop;
+				const top = this.body.elements.group.scrollTop;
 
 				this.update(top > this.top);
 
