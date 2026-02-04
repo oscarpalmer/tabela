@@ -38,9 +38,7 @@ export class RowComponent {
 
 			pool.cells[options.field] ??= [];
 
-			const cell =
-				pool.cells[columns[index].options.field].shift() ??
-				createCell(options.width);
+			const cell = pool.cells[columns[index].options.field].shift() ?? createCell(options.width);
 
 			cell.textContent = String(this.data[options.field]);
 

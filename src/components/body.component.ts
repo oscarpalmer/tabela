@@ -69,10 +69,8 @@ export class BodyComponent {
 	}
 
 	private updateVirtualization(): void {
-		this.elements.faker.style.height = `${this.rows.length * 32}px`;
+		this.elements.faker.style.height = `${this.rows.length * this.tabela.options.rowHeight}px`;
 
 		this.virtualization.update(true);
 	}
 }
-
-

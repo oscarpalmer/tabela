@@ -5,4 +5,5 @@ export type TabelaOptions = {
 	columns: TabelaColumnOptions[];
 	data: PlainObject[];
 	label: string;
+	rowHeight: number;
 };

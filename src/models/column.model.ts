@@ -12,10 +12,4 @@ export type TabelaColumnOptions = {
 	width?: number;
 };
 
-export type TabelaColumnType =
-	| 'boolean'
-	| 'date'
-	| 'date-time'
-	| 'number'
-	| 'string'
-	| 'time';
+export type TabelaColumnType = 'boolean' | 'date' | 'date-time' | 'number' | 'string' | 'time';

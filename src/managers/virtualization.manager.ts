@@ -14,16 +14,14 @@ type Range = {
 function getRange(body: BodyComponent, down: boolean): Range {
 	const {elements, rows} = body;
 	const {clientHeight, scrollTop} = elements.group;
+	const {rowHeight} = body.tabela.options;
 
-	const first = Math.floor(scrollTop / 32);
+	const first = Math.floor(scrollTop / rowHeight);
 
-	const last = Math.min(
-		rows.length - 1,
-		Math.ceil((scrollTop + clientHeight) / 32) - 1,
-	);
+	const last = Math.min(rows.length - 1, Math.ceil((scrollTop + clientHeight) / rowHeight) - 1);
 
-	const before = Math.ceil(clientHeight / 32) * (down ? 1 : 2);
-	const after = Math.ceil(clientHeight / 32) * (down ? 2 : 1);
+	const before = Math.ceil(clientHeight / rowHeight) * (down ? 1 : 2);
+	const after = Math.ceil(clientHeight / rowHeight) * (down ? 2 : 1);
 
 	const start = Math.max(0, first - before);
 	const end = Math.min(rows.length - 1, last + after);
@@ -69,6 +67,7 @@ export class VirtualizationManager {
 
 	update(down: boolean): void {
 		const {body, pool, visible} = this;
+		const {rowHeight} = body.tabela.options;
 
 		const indices = new Set<number>();
 		const range = getRange(body, down);
@@ -96,7 +95,7 @@ export class VirtualizationManager {
 				visible.set(index, row);
 
 				if (row.element != null) {
-					row.element.style.transform = `translateY(${index * 32}px)`;
+					row.element.style.transform = `translateY(${index * rowHeight}px)`;
 
 					fragment.append(row.element);
 				}

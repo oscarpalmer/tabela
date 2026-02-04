@@ -12,9 +12,7 @@ export class HeaderComponent {
 	readonly elements: Elements;
 
 	constructor(readonly tabela: Tabela) {
-		this.columns = tabela.options.columns.map(
-			column => new ColumnComponent(tabela, column),
-		);
+		this.columns = tabela.options.columns.map(column => new ColumnComponent(tabela, column));
 
 		const {group, row} = createRowGroup();
 
