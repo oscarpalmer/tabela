@@ -4,7 +4,8 @@
 		"url": "https://oscarpalmer.se"
 	},
 	"dependencies": {
-		"@oscarpalmer/atoms": "^0.130"
+		"@oscarpalmer/atoms": "^0.130",
+		"@oscarpalmer/toretto": "^0.37.2"
 	},
 	"description": "A modern table.",
 	"devDependencies": {

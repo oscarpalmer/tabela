@@ -1,5 +1,12 @@
-import type {BodyComponent} from '../components/body.component';
-import type {RowComponent} from '../components/row.component';
+import {on} from '@oscarpalmer/toretto/event';
+import type {RemovableEventListener} from '@oscarpalmer/toretto/models';
+import {removeRow, renderRow, RowComponent} from '../components/row.component';
+import type {Tabela} from '../tabela';
+
+type Bound = {
+	manager: VirtualizationManager;
+	state: State;
+};
 
 export type ElementPool = {
 	cells: Record<string, HTMLDivElement[]>;
@@ -11,112 +18,133 @@ type Range = {
 	start: number;
 };
 
-function getRange(body: BodyComponent, down: boolean): Range {
-	const {elements, rows} = body;
-	const {clientHeight, scrollTop} = elements.group;
-	const {rowHeight} = body.tabela.options;
+type State = {
+	active: boolean;
+	top: number;
+};
 
-	const first = Math.floor(scrollTop / rowHeight);
+function getRange(tabela: Tabela, down: boolean): Range {
+	const {components, managers} = tabela;
+	const {body} = components;
+	const {data, rows} = managers;
+	const {clientHeight, scrollTop} = body.elements.group;
 
-	const last = Math.min(rows.length - 1, Math.ceil((scrollTop + clientHeight) / rowHeight) - 1);
+	const first = Math.floor(scrollTop / rows.height);
+	const last = Math.min(data.length - 1, Math.ceil((scrollTop + clientHeight) / rows.height) - 1);
 
-	const before = Math.ceil(clientHeight / rowHeight) * (down ? 1 : 2);
-	const after = Math.ceil(clientHeight / rowHeight) * (down ? 2 : 1);
+	const before = Math.ceil(clientHeight / rows.height) * (down ? 1 : 2);
+	const after = Math.ceil(clientHeight / rows.height) * (down ? 2 : 1);
 
 	const start = Math.max(0, first - before);
-	const end = Math.min(rows.length - 1, last + after);
+	const end = Math.min(data.length - 1, last + after);
 
 	return {end, start};
 }
 
-export class VirtualizationManager {
-	private active = false;
+function onScroll(this: Bound): void {
+	if (!this.state.active) {
+		requestAnimationFrame(() => {
+			const top = this.manager.tabela.components.body.elements.group.scrollTop;
 
-	private readonly pool: ElementPool = {
+			this.manager.update(top > this.state.top);
+
+			this.state.active = false;
+			this.state.top = top;
+		});
+
+		this.state.active = true;
+	}
+}
+
+export class VirtualizationManager {
+	fragment!: DocumentFragment;
+
+	listener: RemovableEventListener;
+
+	readonly #pool: ElementPool = {
 		cells: {},
 		rows: [],
 	};
 
-	private top = 0;
+	readonly #state: State = {
+		active: false,
+		top: 0,
+	};
 
-	private readonly visible = new Map<number, RowComponent>();
+	readonly #visible = new Map<number, RowComponent>();
 
-	constructor(private readonly body: BodyComponent) {
-		this.body.elements.group.addEventListener(
+	constructor(readonly tabela: Tabela) {
+		this.listener = on(
+			tabela.components.body.elements.group,
 			'scroll',
-			() => {
-				this.onScroll();
-			},
-			{
-				passive: true,
-			},
+			onScroll.bind({
+				manager: this,
+				state: this.#state,
+			}),
 		);
 	}
 
 	destroy(): void {
-		const {visible, pool} = this;
+		this.listener();
 
-		for (const [index, row] of visible) {
-			row.remove(pool);
-			visible.delete(index);
+		for (const [index, row] of this.#visible) {
+			removeRow(row, this.#pool);
+
+			this.#visible.delete(index);
 		}
 
-		pool.cells = {};
-		pool.rows = [];
+		this.#pool.cells = {};
+		this.#pool.rows = [];
 	}
 
 	update(down: boolean): void {
-		const {body, pool, visible} = this;
-		const {rowHeight} = body.tabela.options;
+		const {tabela} = this;
+		const {rows} = tabela.managers;
 
 		const indices = new Set<number>();
-		const range = getRange(body, down);
+		const range = getRange(tabela, down);
 
 		for (let index = range.start; index <= range.end; index += 1) {
 			indices.add(index);
 		}
 
-		for (const [index, row] of visible) {
+		for (const [index, row] of this.#visible) {
 			if (!indices.has(index)) {
-				visible.delete(index);
+				this.#visible.delete(index);
 
-				row.remove(pool);
+				removeRow(row, this.#pool);
 			}
 		}
 
-		const fragment = document.createDocumentFragment();
+		this.fragment ??= document.createDocumentFragment();
+
+		this.fragment.replaceChildren();
+
+		const keys =
+			tabela.managers.data.values.keys.active ?? tabela.managers.data.values.keys.original;
 
 		for (let index = range.start; index <= range.end; index += 1) {
-			if (!visible.has(index)) {
-				const row = body.rows[index];
-
-				row.render(pool);
-
-				visible.set(index, row);
-
-				if (row.element != null) {
-					row.element.style.transform = `translateY(${index * rowHeight}px)`;
-
-					fragment.append(row.element);
-				}
+			if (this.#visible.has(index)) {
+				continue;
 			}
 
-			body.elements.group.append(fragment);
+			const row = tabela.managers.rows.get(keys[index]);
+
+			if (row == null) {
+				continue;
+			}
+
+			renderRow(tabela, this.#pool, row);
+
+			this.#visible.set(index, row);
+
+			if (row.element != null) {
+				row.element.style.transform = `translateY(${index * rows.height}px)`;
+
+				this.fragment.append(row.element);
+			}
 		}
-	}
 
-	private onScroll(): void {
-		if (!this.active) {
-			requestAnimationFrame(() => {
-				const top = this.body.elements.group.scrollTop;
-
-				this.update(top > this.top);
-
-				this.active = false;
-				this.top = top;
-			});
-
-			this.active = true;
-		}
+		tabela.components.body.elements.group.append(this.fragment);
 	}
 }

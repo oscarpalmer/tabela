@@ -1,14 +1,21 @@
+import {setStyles} from '@oscarpalmer/toretto/style';
+
 type RowGroupWithRow = {
 	group: HTMLDivElement;
 	row: HTMLDivElement;
 };
 
 export function createCell(width: number, body?: boolean): HTMLDivElement {
-	const cell = document.createElement('div');
-
-	cell.className = 'tabela__cell';
-	cell.role = 'cell';
-	cell.style.width = `${width}px`;
+	const cell = createElement(
+		'div',
+		{
+			className: 'tabela__cell',
+			role: 'cell',
+		},
+		{
+			width: `${width}px`,
+		},
+	);
 
 	if (body ?? true) {
 		cell.classList.add('tabela__cell-body');
@@ -17,15 +24,37 @@ export function createCell(width: number, body?: boolean): HTMLDivElement {
 	return cell;
 }
 
+export function createElement<TagName extends keyof HTMLElementTagNameMap>(
+	tagName: TagName,
+	properties: Partial<HTMLElementTagNameMap[TagName]>,
+	style: Partial<CSSStyleDeclaration>,
+): HTMLElementTagNameMap[TagName] {
+	const element = document.createElement(tagName);
+
+	const keys = Object.keys(properties);
+
+	for (const key of keys) {
+		(element as any)[key] = properties[key as keyof typeof properties];
+	}
+
+	setStyles(element, style);
+
+	return element;
+}
+
 export function createRowGroup(): RowGroupWithRow;
 
 export function createRowGroup(withRow: boolean): HTMLDivElement;
 
 export function createRowGroup(withRow?: boolean) {
-	const group = document.createElement('div');
-
-	group.className = 'tabela__rowgroup';
-	group.role = 'rowgroup';
+	const group = createElement(
+		'div',
+		{
+			className: 'tabela__rowgroup',
+			role: 'rowgroup',
+		},
+		{},
+	);
 
 	if (!(withRow ?? true)) {
 		return group;
@@ -39,14 +68,20 @@ export function createRowGroup(withRow?: boolean) {
 }
 
 export function createRow(withStyle?: boolean): HTMLDivElement {
-	const row = document.createElement('div');
-
-	row.className = 'tabela__row';
-	row.role = 'row';
+	const row = createElement(
+		'div',
+		{
+			className: 'tabela__row',
+			role: 'row',
+		},
+		{},
+	);
 
 	if (withStyle ?? true) {
-		row.style.inset = '0 auto auto 0';
-		row.style.position = 'absolute';
+		setStyles(row, {
+			inset: '0 auto auto 0',
+			position: 'absolute',
+		});
 	}
 
 	return row;

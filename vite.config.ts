@@ -21,6 +21,11 @@ export default defineConfig({
 		minify: false,
 		outDir: './dist',
 		rollupOptions: {
+			external: [
+				'@oscarpalmer/atoms/array',
+				'@oscarpalmer/toretto/event',
+				'@oscarpalmer/toretto/style',
+			],
 			input: Object.fromEntries(files),
 			output: {
 				preserveModules: true,

@@ -1,13 +1,19 @@
+import {createElement} from '../helpers/dom.helpers';
 import type {TabelaColumn, TabelaColumnOptions} from '../models/column.model';
 import type {Tabela} from '../tabela';
 
-function createElement(title: string, width: number): HTMLDivElement {
-	const cell = document.createElement('div');
-
-	cell.className = 'tabela__heading';
-	cell.role = 'columnheader';
-	cell.style.width = `${width}px`;
-	cell.textContent = title;
+function createHeading(title: string, width: number): HTMLDivElement {
+	const cell = createElement(
+		'div',
+		{
+			className: 'tabela__heading',
+			role: 'columnheader',
+			textContent: title,
+		},
+		{
+			width: `${width}px`,
+		},
+	);
 
 	return cell;
 }
@@ -29,6 +35,6 @@ export class ColumnComponent {
 			width,
 		};
 
-		this.element = createElement(options.title, width);
+		this.element = createHeading(options.title, width);
 	}
 }

@@ -1,5 +1,6 @@
 import {createCell, createRowGroup} from '../helpers/dom.helpers';
 import type {Tabela} from '../tabela';
+import type {ColumnComponent} from './column.component';
 
 type Elements = {
 	cells: HTMLDivElement[];
@@ -21,9 +22,21 @@ export class FooterComponent {
 
 		group.className += ' tabela__rowgroup-footer';
 		row.className += ' tabela__row-footer';
+	}
 
-		const {columns} = tabela.header;
+	destroy(): void {
+		this.elements.cells.length = 0;
+
+		this.elements.group = undefined as never;
+		this.elements.row = undefined as never;
+	}
+
+	update(columns: ColumnComponent[]): void {
+		const {elements} = this;
 		const {length} = columns;
+
+		elements.cells.length = 0;
+		elements.row.innerHTML = '';
 
 		for (let index = 0; index < length; index += 1) {
 			const cell = createCell(columns[index].options.width ?? 4, false);
@@ -31,14 +44,8 @@ export class FooterComponent {
 			cell.className += ' tabela__cell-footer';
 			cell.innerHTML = '&nbsp;';
 
-			this.elements.cells.push(cell);
-			row.append(cell);
+			elements.cells.push(cell);
+			elements.row.append(cell);
 		}
-	}
-
-	destroy(): void {
-		this.elements.cells = [];
-		this.elements.group = undefined as never;
-		this.elements.row = undefined as never;
 	}
 }

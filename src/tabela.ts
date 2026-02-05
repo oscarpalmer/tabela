@@ -1,16 +1,31 @@
 import {BodyComponent} from './components/body.component';
 import {FooterComponent} from './components/footer.component';
 import {HeaderComponent} from './components/header.component';
+import {ColumnManager} from './managers/column.manager';
+import {DataManager} from './managers/data.manager';
+import {RowManager} from './managers/row.manager';
 import type {TabelaOptions} from './models/tabela.options';
 
+type Components = {
+	body: BodyComponent;
+	footer: FooterComponent;
+	header: HeaderComponent;
+};
+
+type Managers = {
+	columns: ColumnManager;
+	data: DataManager;
+	rows: RowManager;
+};
+
 export class Tabela {
-	readonly body: BodyComponent;
-	readonly footer: FooterComponent;
-	readonly header: HeaderComponent;
+	readonly components: Components;
+	readonly key: string;
+	readonly managers: Managers;
 
 	constructor(
 		public element: HTMLElement,
-		readonly options: TabelaOptions,
+		options: TabelaOptions,
 	) {
 		element.innerHTML = '';
 		element.role = 'table';
@@ -19,31 +34,46 @@ export class Tabela {
 
 		element.setAttribute('aria-label', options.label);
 
-		this.header = new HeaderComponent(this);
-		this.body = new BodyComponent(this);
-		this.footer = new FooterComponent(this);
+		this.key = options.key;
+
+		this.components = {
+			header: new HeaderComponent(this),
+			body: new BodyComponent(this),
+			footer: new FooterComponent(this),
+		};
+
+		this.managers = {
+			columns: new ColumnManager(this, options.columns),
+			data: new DataManager(this, options.data),
+			rows: new RowManager(this, options.rowHeight),
+		};
 
 		element.append(
-			this.header.elements.group,
-			this.body.elements.group,
-			this.footer.elements.group,
+			this.components.header.elements.group,
+			this.components.body.elements.group,
+			this.components.footer.elements.group,
 		);
+
+		this.managers.data.update();
 	}
 
 	destroy(): void {
-		this.body.destroy();
-		this.footer.destroy();
-		this.header.destroy();
+		const {components, element, managers} = this;
 
-		this.options.columns = [];
-		this.options.data = [];
+		components.body.destroy();
+		components.footer.destroy();
+		components.header.destroy();
 
-		this.element.innerHTML = '';
-		this.element.role = '';
+		managers.columns.destroy();
+		managers.data.destroy();
+		managers.rows.destroy();
 
-		this.element.classList.remove('tabela');
-		this.element.removeAttribute('aria-label');
-		this.element.removeAttribute('role');
+		element.innerHTML = '';
+		element.role = '';
+
+		element.classList.remove('tabela');
+		element.removeAttribute('aria-label');
+		element.removeAttribute('role');
 
 		this.element = undefined as never;
 	}
