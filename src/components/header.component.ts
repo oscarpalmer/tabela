@@ -1,14 +1,10 @@
 import {createRowGroup} from '../helpers/dom.helpers';
+import type {HeaderElements} from '../models/header.model';
 import type {Tabela} from '../tabela';
 import type {ColumnComponent} from './column.component';
 
-type Elements = {
-	group: HTMLDivElement;
-	row: HTMLDivElement;
-};
-
 export class HeaderComponent {
-	readonly elements: Elements;
+	readonly elements: HeaderElements;
 
 	constructor(readonly tabela: Tabela) {
 		const {group, row} = createRowGroup();

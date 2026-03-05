@@ -1,29 +1,14 @@
 import {on} from '@oscarpalmer/toretto/event';
 import type {RemovableEventListener} from '@oscarpalmer/toretto/models';
 import {removeRow, renderRow, RowComponent} from '../components/row.component';
+import type {
+	VirtualizationPool,
+	VirtualizationRange,
+	VirtualizationState,
+} from '../models/virtualization.model';
 import type {Tabela} from '../tabela';
 
-type Bound = {
-	manager: VirtualizationManager;
-	state: State;
-};
-
-export type ElementPool = {
-	cells: Record<string, HTMLDivElement[]>;
-	rows: HTMLDivElement[];
-};
-
-type Range = {
-	end: number;
-	start: number;
-};
-
-type State = {
-	active: boolean;
-	top: number;
-};
-
-function getRange(tabela: Tabela, down: boolean): Range {
+function getRange(tabela: Tabela, down: boolean): VirtualizationRange {
 	const {components, managers} = tabela;
 	const {body} = components;
 	const {data, rows} = managers;
@@ -41,12 +26,12 @@ function getRange(tabela: Tabela, down: boolean): Range {
 	return {end, start};
 }
 
-function onScroll(this: Bound): void {
+function onScroll(this: VirtualizationManager): void {
 	if (!this.state.active) {
 		requestAnimationFrame(() => {
-			const top = this.manager.tabela.components.body.elements.group.scrollTop;
+			const top = this.tabela.components.body.elements.group.scrollTop;
 
-			this.manager.update(top > this.state.top);
+			this.update(top > this.state.top);
 
 			this.state.active = false;
 			this.state.top = top;
@@ -61,40 +46,51 @@ export class VirtualizationManager {
 
 	listener: RemovableEventListener;
 
-	readonly #pool: ElementPool = {
+	readonly pool: VirtualizationPool = {
 		cells: {},
 		rows: [],
 	};
 
-	readonly #state: State = {
+	readonly state: VirtualizationState = {
 		active: false,
 		top: 0,
 	};
 
-	readonly #visible = new Map<number, RowComponent>();
+	readonly visible = new Map<number, RowComponent>();
 
 	constructor(readonly tabela: Tabela) {
-		this.listener = on(
-			tabela.components.body.elements.group,
-			'scroll',
-			onScroll.bind({
-				manager: this,
-				state: this.#state,
-			}),
-		);
+		this.listener = on(tabela.components.body.elements.group, 'scroll', onScroll.bind(this));
 	}
 
 	destroy(): void {
 		this.listener();
 
-		for (const [index, row] of this.#visible) {
-			removeRow(row, this.#pool);
+		for (const [index, row] of this.visible) {
+			removeRow(row, this.pool);
 
-			this.#visible.delete(index);
+			this.visible.delete(index);
 		}
 
-		this.#pool.cells = {};
-		this.#pool.rows = [];
+		this.pool.cells = {};
+		this.pool.rows = [];
+	}
+
+	removeCells(fields: string[]): void {
+		const {length} = fields;
+
+		for (let index = 0; index < length; index += 1) {
+			delete this.pool.cells[fields[index]];
+		}
+
+		for (const [, row] of this.visible) {
+			for (let index = 0; index < length; index += 1) {
+				row.cells[fields[index]].innerHTML = '';
+
+				row.cells[fields[index]].remove();
+
+				delete row.cells[fields[index]];
+			}
+		}
 	}
 
 	update(down: boolean): void {
@@ -108,11 +104,11 @@ export class VirtualizationManager {
 			indices.add(index);
 		}
 
-		for (const [index, row] of this.#visible) {
+		for (const [index, row] of this.visible) {
 			if (!indices.has(index)) {
-				this.#visible.delete(index);
+				this.visible.delete(index);
 
-				removeRow(row, this.#pool);
+				removeRow(row, this.pool);
 			}
 		}
 
@@ -123,8 +119,10 @@ export class VirtualizationManager {
 		const keys =
 			tabela.managers.data.values.keys.active ?? tabela.managers.data.values.keys.original;
 
+		let count = 0;
+
 		for (let index = range.start; index <= range.end; index += 1) {
-			if (this.#visible.has(index)) {
+			if (this.visible.has(index)) {
 				continue;
 			}
 
@@ -134,9 +132,11 @@ export class VirtualizationManager {
 				continue;
 			}
 
-			renderRow(tabela, this.#pool, row);
+			count += 1;
 
-			this.#visible.set(index, row);
+			renderRow(tabela, this.pool, row);
+
+			this.visible.set(index, row);
 
 			if (row.element != null) {
 				row.element.style.transform = `translateY(${index * rows.height}px)`;
@@ -145,6 +145,8 @@ export class VirtualizationManager {
 			}
 		}
 
-		tabela.components.body.elements.group.append(this.fragment);
+		if (count > 0) {
+			tabela.components.body.elements.group[down ? 'append' : 'prepend'](this.fragment);
+		}
 	}
 }

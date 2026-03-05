@@ -22,7 +22,7 @@ export default defineConfig({
 		outDir: './dist',
 		rollupOptions: {
 			external: [
-				'@oscarpalmer/atoms/array',
+				'@oscarpalmer/atoms/array/to-map',
 				'@oscarpalmer/toretto/event',
 				'@oscarpalmer/toretto/style',
 			],

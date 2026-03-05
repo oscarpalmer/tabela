@@ -4,6 +4,7 @@ import {HeaderComponent} from './components/header.component';
 import {ColumnManager} from './managers/column.manager';
 import {DataManager} from './managers/data.manager';
 import {RowManager} from './managers/row.manager';
+import {VirtualizationManager} from './managers/virtualization.manager';
 import type {TabelaOptions} from './models/tabela.options';
 
 type Components = {
@@ -16,6 +17,7 @@ type Managers = {
 	columns: ColumnManager;
 	data: DataManager;
 	rows: RowManager;
+	virtualization: VirtualizationManager;
 };
 
 export class Tabela {
@@ -46,6 +48,7 @@ export class Tabela {
 			columns: new ColumnManager(this, options.columns),
 			data: new DataManager(this, options.data),
 			rows: new RowManager(this, options.rowHeight),
+			virtualization: new VirtualizationManager(this),
 		};
 
 		element.append(

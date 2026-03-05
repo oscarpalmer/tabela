@@ -1,15 +1,10 @@
 import {createCell, createRowGroup} from '../helpers/dom.helpers';
+import type {FooterElements} from '../models/footer.model';
 import type {Tabela} from '../tabela';
 import type {ColumnComponent} from './column.component';
 
-type Elements = {
-	cells: HTMLDivElement[];
-	group: HTMLDivElement;
-	row: HTMLDivElement;
-};
-
 export class FooterComponent {
-	readonly elements: Elements;
+	readonly elements: FooterElements;
 
 	constructor(readonly tabela: Tabela) {
 		const {group, row} = createRowGroup();

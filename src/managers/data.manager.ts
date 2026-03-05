@@ -1,27 +1,10 @@
+import {toMap} from '@oscarpalmer/atoms/array/to-map';
 import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
+import type {DataValues} from '../models/data.model';
 import type {Tabela} from '../tabela';
-import {VirtualizationManager} from './virtualization.manager';
-import {toMap} from '@oscarpalmer/atoms/array';
-
-type Keys = {
-	active?: Key[];
-	original: Key[];
-};
-
-type Objects = {
-	array: PlainObject[];
-	mapped: Map<Key, PlainObject>;
-};
-
-type Values = {
-	keys: Keys;
-	objects: Objects;
-};
 
 export class DataManager {
-	readonly values: Values;
-
-	readonly virtualization: VirtualizationManager;
+	readonly values: DataValues;
 
 	get length(): number {
 		return this.values.keys.active?.length ?? this.values.keys.original.length;
@@ -42,14 +25,10 @@ export class DataManager {
 				array: values,
 			},
 		};
-
-		this.virtualization = new VirtualizationManager(tabela);
 	}
 
 	destroy(): void {
-		const {values, virtualization} = this;
-
-		virtualization.destroy();
+		const {values} = this;
 
 		values.objects.mapped.clear();
 
@@ -61,6 +40,6 @@ export class DataManager {
 	update(): void {
 		this.tabela.components.body.elements.faker.style.height = `${this.length * this.tabela.managers.rows.height}px`;
 
-		this.virtualization.update(true);
+		this.tabela.managers.virtualization.update(true);
 	}
 }

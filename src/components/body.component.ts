@@ -1,11 +1,7 @@
 import {setStyles} from '@oscarpalmer/toretto/style';
 import {createElement, createRowGroup} from '../helpers/dom.helpers';
+import type {BodyElements} from '../models/body.model';
 import type {Tabela} from '../tabela';
-
-type Elements = {
-	faker: HTMLDivElement;
-	group: HTMLDivElement;
-};
 
 function createFaker(): HTMLDivElement {
 	return createElement(
@@ -23,7 +19,7 @@ function createFaker(): HTMLDivElement {
 }
 
 export class BodyComponent {
-	readonly elements: Elements = {
+	readonly elements: BodyElements = {
 		faker: createFaker(),
 		group: undefined as never,
 	};
@@ -34,6 +30,8 @@ export class BodyComponent {
 		this.elements.group = group;
 
 		group.className += ' tabela__rowgroup-body';
+
+		group.tabIndex = 0;
 
 		setStyles(group, {
 			height: '100%',
