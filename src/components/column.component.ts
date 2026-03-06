@@ -1,6 +1,5 @@
 import {createElement} from '../helpers/dom.helpers';
 import type {TabelaColumn, TabelaColumnOptions} from '../models/column.model';
-import type {Tabela} from '../tabela';
 
 function createHeading(title: string, width: number): HTMLDivElement {
 	const cell = createElement(
@@ -22,12 +21,9 @@ export class ColumnComponent {
 	readonly element: HTMLDivElement;
 	readonly options: TabelaColumn;
 
-	constructor(
-		readonly tabela: Tabela,
-		options: TabelaColumnOptions,
-	) {
+	constructor(options: TabelaColumnOptions) {
 		const width =
-			Number.parseInt(getComputedStyle(tabela.element).fontSize, 10) *
+			Number.parseInt(getComputedStyle(document.body).fontSize, 10) *
 			(options.width ?? options.title.length * 1.5);
 
 		this.options = {

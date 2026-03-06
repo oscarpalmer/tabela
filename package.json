@@ -4,13 +4,13 @@
 		"url": "https://oscarpalmer.se"
 	},
 	"dependencies": {
-		"@oscarpalmer/atoms": "^0.157",
+		"@oscarpalmer/atoms": "^0.159",
 		"@oscarpalmer/toretto": "^0.38"
 	},
 	"description": "A modern table.",
 	"devDependencies": {
 		"@oscarpalmer/oui": "^0.19",
-		"@types/node": "^25.2",
+		"@types/node": "^25.3",
 		"@vitest/coverage-istanbul": "^4",
 		"jsdom": "^28.1",
 		"oxfmt": "^0.36",
@@ -46,5 +46,5 @@
 	},
 	"type": "module",
 	"types": "./types/index.d.ts",
-	"version": "0.6.0"
+	"version": "0.7.0"
 }

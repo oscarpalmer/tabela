@@ -1,6 +1,6 @@
 import type {Key} from '@oscarpalmer/atoms/models';
-import {RowComponent} from '../components/row.component';
-import type {Tabela} from '../tabela';
+import {renderRow, RowComponent} from '../components/row.component';
+import type {TabelaManagers} from '../models/tabela.model';
 
 export class RowManager {
 	readonly components: Map<Key, RowComponent> = new Map();
@@ -8,7 +8,7 @@ export class RowManager {
 	readonly height: number;
 
 	constructor(
-		readonly tabela: Tabela,
+		readonly managers: TabelaManagers,
 		rowHeight: number,
 	) {
 		this.height = rowHeight;
@@ -28,5 +28,21 @@ export class RowManager {
 		}
 
 		return row;
+	}
+
+	has(key: Key): boolean {
+		return this.components.has(key);
+	}
+
+	remove(key: Key): void {
+		this.components.delete(key);
+	}
+
+	update(key: Key): void {
+		const row = this.components.get(key);
+
+		if (row != null) {
+			renderRow(this.managers, row);
+		}
 	}
 }

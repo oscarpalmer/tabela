@@ -1,19 +1,20 @@
 import {ColumnComponent} from '../components/column.component';
 import type {TabelaColumnOptions} from '../models/column.model';
-import type {Tabela} from '../tabela';
+import type {TabelaComponents, TabelaManagers} from '../models/tabela.model';
 
 export class ColumnManager {
-	readonly components: ColumnComponent[] = [];
+	readonly items: ColumnComponent[] = [];
 
 	constructor(
-		readonly tabela: Tabela,
+		public managers: TabelaManagers,
+		public components: TabelaComponents,
 		columns: TabelaColumnOptions[],
 	) {
 		this.set(columns);
 	}
 
 	destroy(): void {
-		this.components.length = 0;
+		this.items.length = 0;
 	}
 
 	remove(field: string): void;
@@ -21,7 +22,7 @@ export class ColumnManager {
 	remove(fields: string[]): void;
 
 	remove(value: unknown): void {
-		const {components, tabela} = this;
+		const {components, items, managers} = this;
 
 		const fields = (Array.isArray(value) ? value : [value]).filter(
 			item => typeof item === 'string',
@@ -34,32 +35,28 @@ export class ColumnManager {
 		}
 
 		for (let fieldIndex = 0; fieldIndex < length; fieldIndex += 1) {
-			const componentIndex = components.findIndex(
+			const itemIndex = items.findIndex(
 				component => component.options.field === fields[fieldIndex],
 			);
 
-			if (componentIndex > -1) {
-				components.splice(componentIndex, 1);
+			if (itemIndex > -1) {
+				items.splice(itemIndex, 1);
 			}
 		}
 
-		tabela.components.header.update(components);
-		tabela.components.footer.update(components);
+		components.header.update(items);
+		components.footer.update(items);
 
-		tabela.managers.virtualization.removeCells(fields);
+		managers.virtualization.removeCells(fields);
 	}
 
 	set(columns: TabelaColumnOptions[]): void {
-		const {components, tabela} = this;
-		const {footer, header} = tabela.components;
+		const {components, items} = this;
+		const {footer, header} = components;
 
-		components.splice(
-			0,
-			components.length,
-			...columns.map(column => new ColumnComponent(tabela, column)),
-		);
+		items.splice(0, items.length, ...columns.map(column => new ColumnComponent(column)));
 
-		header.update(components);
-		footer.update(components);
+		header.update(items);
+		footer.update(items);
 	}
 }

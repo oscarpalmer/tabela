@@ -5,30 +5,36 @@ import {ColumnManager} from './managers/column.manager';
 import {DataManager} from './managers/data.manager';
 import {RowManager} from './managers/row.manager';
 import {VirtualizationManager} from './managers/virtualization.manager';
+import type {TabelaComponents, TabelaData, TabelaManagers} from './models/tabela.model';
 import type {TabelaOptions} from './models/tabela.options';
 
-type Components = {
-	body: BodyComponent;
-	footer: FooterComponent;
-	header: HeaderComponent;
-};
-
-type Managers = {
-	columns: ColumnManager;
-	data: DataManager;
-	rows: RowManager;
-	virtualization: VirtualizationManager;
-};
-
 export class Tabela {
-	readonly components: Components;
-	readonly key: string;
-	readonly managers: Managers;
+	readonly #components: TabelaComponents = {
+		header: undefined as never,
+		body: undefined as never,
+		footer: undefined as never,
+	};
 
-	constructor(
-		public element: HTMLElement,
-		options: TabelaOptions,
-	) {
+	#element: HTMLElement;
+
+	readonly #key: string;
+
+	readonly #managers: TabelaManagers = {
+		column: undefined as never,
+		data: undefined as never,
+		row: undefined as never,
+		virtualization: undefined as never,
+	};
+
+	readonly data: TabelaData;
+
+	get key(): string {
+		return this.#key;
+	}
+
+	constructor(element: HTMLElement, options: TabelaOptions) {
+		this.#element = element;
+
 		element.innerHTML = '';
 		element.role = 'table';
 
@@ -36,40 +42,41 @@ export class Tabela {
 
 		element.setAttribute('aria-label', options.label);
 
-		this.key = options.key;
+		this.#key = options.key;
 
-		this.components = {
-			header: new HeaderComponent(this),
-			body: new BodyComponent(this),
-			footer: new FooterComponent(this),
-		};
+		this.#components.header = new HeaderComponent();
+		this.#components.body = new BodyComponent();
+		this.#components.footer = new FooterComponent();
 
-		this.managers = {
-			columns: new ColumnManager(this, options.columns),
-			data: new DataManager(this, options.data),
-			rows: new RowManager(this, options.rowHeight),
-			virtualization: new VirtualizationManager(this),
-		};
+		this.#managers.column = new ColumnManager(this.#managers, this.#components, options.columns);
+		this.#managers.data = new DataManager(this.#managers, this.#components, options.key);
+		this.#managers.row = new RowManager(this.#managers, options.rowHeight);
+		this.#managers.virtualization = new VirtualizationManager(this.#managers, this.#components);
 
 		element.append(
-			this.components.header.elements.group,
-			this.components.body.elements.group,
-			this.components.footer.elements.group,
+			this.#components.header.elements.group,
+			this.#components.body.elements.group,
+			this.#components.footer.elements.group,
 		);
 
-		this.managers.data.update();
+		this.#managers.data.set(options.data);
+
+		this.data = this.#managers.data.handlers;
 	}
 
 	destroy(): void {
-		const {components, element, managers} = this;
+		const components = this.#components;
+		const managers = this.#managers;
+		const element = this.#element;
 
 		components.body.destroy();
 		components.footer.destroy();
 		components.header.destroy();
 
-		managers.columns.destroy();
+		managers.column.destroy();
 		managers.data.destroy();
-		managers.rows.destroy();
+		managers.row.destroy();
+		managers.virtualization.destroy();
 
 		element.innerHTML = '';
 		element.role = '';
@@ -78,6 +85,6 @@ export class Tabela {
 		element.removeAttribute('aria-label');
 		element.removeAttribute('role');
 
-		this.element = undefined as never;
+		this.#element = undefined as never;
 	}
 }

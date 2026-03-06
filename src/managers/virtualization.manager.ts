@@ -1,27 +1,33 @@
 import {on} from '@oscarpalmer/toretto/event';
 import type {RemovableEventListener} from '@oscarpalmer/toretto/models';
 import {removeRow, renderRow, RowComponent} from '../components/row.component';
+import type {TabelaComponents, TabelaManagers} from '../models/tabela.model';
 import type {
 	VirtualizationPool,
 	VirtualizationRange,
 	VirtualizationState,
 } from '../models/virtualization.model';
-import type {Tabela} from '../tabela';
 
-function getRange(tabela: Tabela, down: boolean): VirtualizationRange {
-	const {components, managers} = tabela;
-	const {body} = components;
-	const {data, rows} = managers;
-	const {clientHeight, scrollTop} = body.elements.group;
+function getRange(this: VirtualizationManager, down: boolean): VirtualizationRange {
+	const {components, managers} = this;
+	const {clientHeight, scrollTop} = components.body.elements.group;
 
-	const first = Math.floor(scrollTop / rows.height);
-	const last = Math.min(data.length - 1, Math.ceil((scrollTop + clientHeight) / rows.height) - 1);
+	const first = Math.floor(scrollTop / managers.row.height);
 
-	const before = Math.ceil(clientHeight / rows.height) * (down ? 1 : 2);
-	const after = Math.ceil(clientHeight / rows.height) * (down ? 2 : 1);
+	const last = Math.min(
+		managers.data.values.keys.active?.length ?? managers.data.values.keys.original.length - 1,
+		Math.ceil((scrollTop + clientHeight) / managers.row.height) - 1,
+	);
+
+	const before = Math.ceil(clientHeight / managers.row.height) * (down ? 1 : 2);
+	const after = Math.ceil(clientHeight / managers.row.height) * (down ? 2 : 1);
 
 	const start = Math.max(0, first - before);
-	const end = Math.min(data.length - 1, last + after);
+
+	const end = Math.min(
+		managers.data.values.keys.active?.length ?? managers.data.values.keys.original.length - 1,
+		last + after,
+	);
 
 	return {end, start};
 }
@@ -29,7 +35,7 @@ function getRange(tabela: Tabela, down: boolean): VirtualizationRange {
 function onScroll(this: VirtualizationManager): void {
 	if (!this.state.active) {
 		requestAnimationFrame(() => {
-			const top = this.tabela.components.body.elements.group.scrollTop;
+			const top = this.components.body.elements.group.scrollTop;
 
 			this.update(top > this.state.top);
 
@@ -58,15 +64,18 @@ export class VirtualizationManager {
 
 	readonly visible = new Map<number, RowComponent>();
 
-	constructor(readonly tabela: Tabela) {
-		this.listener = on(tabela.components.body.elements.group, 'scroll', onScroll.bind(this));
+	constructor(
+		public managers: TabelaManagers,
+		public components: TabelaComponents,
+	) {
+		this.listener = on(components.body.elements.group, 'scroll', onScroll.bind(this));
 	}
 
 	destroy(): void {
 		this.listener();
 
 		for (const [index, row] of this.visible) {
-			removeRow(row, this.pool);
+			removeRow(this.pool, row);
 
 			this.visible.delete(index);
 		}
@@ -93,40 +102,52 @@ export class VirtualizationManager {
 		}
 	}
 
+	getFragment(): DocumentFragment {
+		this.fragment ??= document.createDocumentFragment();
+
+		this.fragment.replaceChildren();
+
+		return this.fragment;
+	}
+
 	update(down: boolean): void {
-		const {tabela} = this;
-		const {rows} = tabela.managers;
+		const {components, managers, pool, visible} = this;
+
+		components.body.elements.faker.style.height = `${managers.data.size * managers.row.height}px`;
 
 		const indices = new Set<number>();
-		const range = getRange(tabela, down);
+		const range = getRange.call(this, down);
 
 		for (let index = range.start; index <= range.end; index += 1) {
 			indices.add(index);
 		}
 
-		for (const [index, row] of this.visible) {
-			if (!indices.has(index)) {
-				this.visible.delete(index);
+		let remove = false;
 
-				removeRow(row, this.pool);
+		for (const [index, row] of visible) {
+			if (!managers.row.has(row.key) || !indices.has(index)) {
+				remove = true;
+			}
+
+			if (remove) {
+				visible.delete(index);
+
+				removeRow(pool, row);
 			}
 		}
 
-		this.fragment ??= document.createDocumentFragment();
+		const fragment = this.getFragment();
 
-		this.fragment.replaceChildren();
-
-		const keys =
-			tabela.managers.data.values.keys.active ?? tabela.managers.data.values.keys.original;
+		const keys = managers.data.values.keys.active ?? managers.data.values.keys.original;
 
 		let count = 0;
 
 		for (let index = range.start; index <= range.end; index += 1) {
-			if (this.visible.has(index)) {
+			if (visible.has(index)) {
 				continue;
 			}
 
-			const row = tabela.managers.rows.get(keys[index]);
+			const row = managers.row.get(keys[index]);
 
 			if (row == null) {
 				continue;
@@ -134,19 +155,19 @@ export class VirtualizationManager {
 
 			count += 1;
 
-			renderRow(tabela, this.pool, row);
+			renderRow(managers, row);
 
-			this.visible.set(index, row);
+			visible.set(index, row);
 
 			if (row.element != null) {
-				row.element.style.transform = `translateY(${index * rows.height}px)`;
+				row.element.style.transform = `translateY(${index * managers.row.height}px)`;
 
-				this.fragment.append(row.element);
+				fragment.append(row.element);
 			}
 		}
 
 		if (count > 0) {
-			tabela.components.body.elements.group[down ? 'append' : 'prepend'](this.fragment);
+			components.body.elements.group[down ? 'append' : 'prepend'](fragment);
 		}
 	}
 }

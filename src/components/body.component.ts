@@ -1,7 +1,6 @@
 import {setStyles} from '@oscarpalmer/toretto/style';
 import {createElement, createRowGroup} from '../helpers/dom.helpers';
 import type {BodyElements} from '../models/body.model';
-import type {Tabela} from '../tabela';
 
 function createFaker(): HTMLDivElement {
 	return createElement(
@@ -24,7 +23,7 @@ export class BodyComponent {
 		group: undefined as never,
 	};
 
-	constructor(readonly tabela: Tabela) {
+	constructor() {
 		const group = createRowGroup(false);
 
 		this.elements.group = group;
