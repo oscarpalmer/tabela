@@ -22,6 +22,6 @@ export class HeaderComponent {
 	update(columns: ColumnComponent[]): void {
 		this.elements.row.innerHTML = '';
 
-		this.elements.row.append(...columns.map(column => column.element));
+		this.elements.row.append(...columns.map(column => column.elements.wrapper));
 	}
 }

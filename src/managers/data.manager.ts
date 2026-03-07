@@ -1,3 +1,4 @@
+import {sort} from '@oscarpalmer/atoms/array';
 import {toMap} from '@oscarpalmer/atoms/array/to-map';
 import {isPlainObject} from '@oscarpalmer/atoms/is';
 import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
@@ -5,14 +6,14 @@ import type {DataValues} from '../models/data.model';
 import type {TabelaComponents, TabelaData, TabelaManagers} from '../models/tabela.model';
 
 export class DataManager {
-	readonly handlers: TabelaData = Object.freeze({
+	readonly handlers = Object.freeze({
 		add: data => void this.add(data, true),
 		clear: () => void this.clear(),
 		get: active => this.get(active),
 		remove: items => void this.remove(items, true),
 		synchronize: (data, remove) => void this.synchronize(data, remove),
 		update: data => void this.update(data),
-	});
+	} satisfies TabelaData);
 
 	readonly values: DataValues = {
 		keys: {
@@ -41,10 +42,8 @@ export class DataManager {
 
 		values.objects.mapped = toMap(values.objects.array, field) as Map<Key, PlainObject>;
 
-		values.keys.original = [...values.objects.mapped.keys()];
-
 		if (render) {
-			this.managers.virtualization.update(true);
+			this.render();
 		}
 	}
 
@@ -102,22 +101,29 @@ export class DataManager {
 		}
 
 		if (render) {
-			this.managers.virtualization.update(true);
+			this.render();
+		}
+	}
+
+	render(): void {
+		const {field, managers, values} = this;
+
+		values.keys.original = sort(values.objects.array.map(item => item[field] as Key));
+
+		if (managers.sort.items.length > 0) {
+			managers.sort.sort();
+		} else {
+			managers.virtualization.update(true);
 		}
 	}
 
 	set(data: PlainObject[]): void {
 		const {field, values} = this;
 
-		const mapped = toMap(data, field) as Map<Key, PlainObject>;
-
-		values.keys.active = undefined;
-		values.keys.original = [...mapped.keys()];
-
-		values.objects.mapped = mapped;
+		values.objects.mapped = toMap(data, field) as Map<Key, PlainObject>;
 		values.objects.array = data;
 
-		this.managers.virtualization.update(true);
+		this.render();
 	}
 
 	async synchronize(data: PlainObject[], remove?: boolean): Promise<void> {
@@ -162,7 +168,7 @@ export class DataManager {
 		}
 
 		if (add.length > 0 || (remove ?? false)) {
-			this.managers.virtualization.update(true);
+			this.render();
 		}
 	}
 

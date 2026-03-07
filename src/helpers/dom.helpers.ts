@@ -1,3 +1,4 @@
+import {setAttributes} from '@oscarpalmer/toretto/attribute';
 import {setStyles} from '@oscarpalmer/toretto/style';
 
 type RowGroupWithRow = {
@@ -12,6 +13,7 @@ export function createCell(width: number, body?: boolean): HTMLDivElement {
 			className: 'tabela__cell',
 			role: 'cell',
 		},
+		{},
 		{
 			width: `${width}px`,
 		},
@@ -27,6 +29,7 @@ export function createCell(width: number, body?: boolean): HTMLDivElement {
 export function createElement<TagName extends keyof HTMLElementTagNameMap>(
 	tagName: TagName,
 	properties: Partial<HTMLElementTagNameMap[TagName]>,
+	attributes: Record<string, string>,
 	style: Partial<CSSStyleDeclaration>,
 ): HTMLElementTagNameMap[TagName] {
 	const element = document.createElement(tagName);
@@ -37,6 +40,7 @@ export function createElement<TagName extends keyof HTMLElementTagNameMap>(
 		(element as any)[key] = properties[key as keyof typeof properties];
 	}
 
+	setAttributes(element, attributes);
 	setStyles(element, style);
 
 	return element;
@@ -53,6 +57,7 @@ export function createRowGroup(withRow?: boolean) {
 			className: 'tabela__rowgroup',
 			role: 'rowgroup',
 		},
+		{},
 		{},
 	);
 
@@ -74,6 +79,7 @@ export function createRow(withStyle?: boolean): HTMLDivElement {
 			className: 'tabela__row',
 			role: 'row',
 		},
+		{},
 		{},
 	);
 

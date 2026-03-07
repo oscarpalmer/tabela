@@ -3,9 +3,11 @@ import {FooterComponent} from './components/footer.component';
 import {HeaderComponent} from './components/header.component';
 import {ColumnManager} from './managers/column.manager';
 import {DataManager} from './managers/data.manager';
+import {EventManager} from './managers/event.manager';
 import {RowManager} from './managers/row.manager';
+import {SortManager} from './managers/sort.manager';
 import {VirtualizationManager} from './managers/virtualization.manager';
-import type {TabelaComponents, TabelaData, TabelaManagers} from './models/tabela.model';
+import type {TabelaComponents, TabelaData, TabelaManagers, TabelaSort} from './models/tabela.model';
 import type {TabelaOptions} from './models/tabela.options';
 
 export class Tabela {
@@ -22,11 +24,15 @@ export class Tabela {
 	readonly #managers: TabelaManagers = {
 		column: undefined as never,
 		data: undefined as never,
+		event: undefined as never,
 		row: undefined as never,
+		sort: undefined as never,
 		virtualization: undefined as never,
 	};
 
 	readonly data: TabelaData;
+
+	readonly sort: TabelaSort;
 
 	get key(): string {
 		return this.#key;
@@ -50,7 +56,9 @@ export class Tabela {
 
 		this.#managers.column = new ColumnManager(this.#managers, this.#components, options.columns);
 		this.#managers.data = new DataManager(this.#managers, this.#components, options.key);
+		this.#managers.event = new EventManager(this.#managers, this.#element);
 		this.#managers.row = new RowManager(this.#managers, options.rowHeight);
+		this.#managers.sort = new SortManager(this.#managers);
 		this.#managers.virtualization = new VirtualizationManager(this.#managers, this.#components);
 
 		element.append(
@@ -62,6 +70,7 @@ export class Tabela {
 		this.#managers.data.set(options.data);
 
 		this.data = this.#managers.data.handlers;
+		this.sort = this.#managers.sort.handlers;
 	}
 
 	destroy(): void {

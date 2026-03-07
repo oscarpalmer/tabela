@@ -6,6 +6,7 @@ function createFaker(): HTMLDivElement {
 	return createElement(
 		'div',
 		{},
+		{},
 		{
 			height: '0',
 			inset: '0 auto auto 0',

@@ -110,7 +110,7 @@ export class VirtualizationManager {
 		return this.fragment;
 	}
 
-	update(down: boolean): void {
+	update(down: boolean, rerender?: boolean): void {
 		const {components, managers, pool, visible} = this;
 
 		components.body.elements.faker.style.height = `${managers.data.size * managers.row.height}px`;
@@ -122,7 +122,7 @@ export class VirtualizationManager {
 			indices.add(index);
 		}
 
-		let remove = false;
+		let remove = rerender ?? false;
 
 		for (const [index, row] of visible) {
 			if (!managers.row.has(row.key) || !indices.has(index)) {

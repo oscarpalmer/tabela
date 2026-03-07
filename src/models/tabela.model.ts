@@ -4,8 +4,11 @@ import type {FooterComponent} from '../components/footer.component';
 import type {HeaderComponent} from '../components/header.component';
 import type {ColumnManager} from '../managers/column.manager';
 import type {DataManager} from '../managers/data.manager';
+import type {EventManager} from '../managers/event.manager';
 import type {RowManager} from '../managers/row.manager';
+import type {SortManager} from '../managers/sort.manager';
 import type {VirtualizationManager} from '../managers/virtualization.manager';
+import type {SortDirection, SortItem} from './sort.model';
 
 export type TabelaComponents = {
 	body: BodyComponent;
@@ -26,6 +29,16 @@ export type TabelaData = {
 export type TabelaManagers = {
 	column: ColumnManager;
 	data: DataManager;
+	event: EventManager;
 	row: RowManager;
+	sort: SortManager;
 	virtualization: VirtualizationManager;
+};
+
+export type TabelaSort = {
+	add(field: string, direction?: SortDirection): void;
+	clear(): void;
+	flip(field: string): void;
+	remove(field: string): void;
+	set(items: SortItem[]): void;
 };
