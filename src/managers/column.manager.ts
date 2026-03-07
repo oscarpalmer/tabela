@@ -14,6 +14,12 @@ export class ColumnManager {
 	}
 
 	destroy(): void {
+		const {length} = this.items;
+
+		for (let index = 0; index < length; index += 1) {
+			this.items[index].destroy();
+		}
+
 		this.items.length = 0;
 	}
 
@@ -40,6 +46,8 @@ export class ColumnManager {
 			);
 
 			if (itemIndex > -1) {
+				items[itemIndex].destroy();
+
 				items.splice(itemIndex, 1);
 			}
 		}

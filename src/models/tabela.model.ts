@@ -5,9 +5,11 @@ import type {HeaderComponent} from '../components/header.component';
 import type {ColumnManager} from '../managers/column.manager';
 import type {DataManager} from '../managers/data.manager';
 import type {EventManager} from '../managers/event.manager';
+import type {FilterManager} from '../managers/filter.manager';
 import type {RowManager} from '../managers/row.manager';
 import type {SortManager} from '../managers/sort.manager';
 import type {VirtualizationManager} from '../managers/virtualization.manager';
+import type {FilterItem} from './filter.model';
 import type {SortDirection, SortItem} from './sort.model';
 
 export type TabelaComponents = {
@@ -26,10 +28,19 @@ export type TabelaData = {
 	update(data: PlainObject[]): void;
 };
 
+export type TabelaFilter = {
+	add(item: FilterItem): void;
+	clear(): void;
+	remove(field: string): void;
+	remove(item: FilterItem): void;
+	set(items: FilterItem[]): void;
+};
+
 export type TabelaManagers = {
 	column: ColumnManager;
 	data: DataManager;
 	event: EventManager;
+	filter: FilterManager;
 	row: RowManager;
 	sort: SortManager;
 	virtualization: VirtualizationManager;

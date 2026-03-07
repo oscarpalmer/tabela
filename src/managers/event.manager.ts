@@ -4,13 +4,13 @@ import type {TabelaManagers} from '../models/tabela.model';
 import {findAncestor} from '@oscarpalmer/toretto';
 
 export class EventManager {
-	listener!: RemovableEventListener;
+	listener: RemovableEventListener;
 
 	constructor(
 		readonly managers: TabelaManagers,
 		element: HTMLElement,
 	) {
-		on(
+		this.listener = on(
 			element,
 			'click',
 			event => {

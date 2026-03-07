@@ -1,4 +1,4 @@
-import {sort} from '@oscarpalmer/atoms/array';
+import {push, sort} from '@oscarpalmer/atoms/array';
 import {toMap} from '@oscarpalmer/atoms/array/to-map';
 import {isPlainObject} from '@oscarpalmer/atoms/is';
 import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
@@ -6,7 +6,7 @@ import type {DataValues} from '../models/data.model';
 import type {TabelaComponents, TabelaData, TabelaManagers} from '../models/tabela.model';
 
 export class DataManager {
-	readonly handlers = Object.freeze({
+	handlers = Object.freeze({
 		add: data => void this.add(data, true),
 		clear: () => void this.clear(),
 		get: active => this.get(active),
@@ -38,7 +38,7 @@ export class DataManager {
 	async add(data: PlainObject[], render: boolean): Promise<void> {
 		const {field, values} = this;
 
-		values.objects.array.push(...data);
+		push(values.objects.array, data);
 
 		values.objects.mapped = toMap(values.objects.array, field) as Map<Key, PlainObject>;
 
@@ -61,6 +61,8 @@ export class DataManager {
 		values.keys.active = undefined;
 		values.keys.original.length = 0;
 		values.objects.array.length = 0;
+
+		this.handlers = undefined as never;
 	}
 
 	get(active?: boolean): PlainObject[] {
@@ -110,7 +112,9 @@ export class DataManager {
 
 		values.keys.original = sort(values.objects.array.map(item => item[field] as Key));
 
-		if (managers.sort.items.length > 0) {
+		if (Object.keys(managers.filter.items).length > 0) {
+			managers.filter.filter();
+		} else if (managers.sort.items.length > 0) {
 			managers.sort.sort();
 		} else {
 			managers.virtualization.update(true);

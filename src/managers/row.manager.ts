@@ -1,5 +1,5 @@
 import type {Key} from '@oscarpalmer/atoms/models';
-import {renderRow, RowComponent} from '../components/row.component';
+import {removeRow, renderRow, RowComponent} from '../components/row.component';
 import type {TabelaManagers} from '../models/tabela.model';
 
 export class RowManager {
@@ -15,6 +15,14 @@ export class RowManager {
 	}
 
 	destroy(): void {
+		const components = [...this.components.values()];
+
+		const {length} = components;
+
+		for (let index = 0; index < length; index += 1) {
+			removeRow(this.managers.virtualization.pool, components[index]);
+		}
+
 		this.components.clear();
 	}
 
@@ -35,7 +43,13 @@ export class RowManager {
 	}
 
 	remove(key: Key): void {
-		this.components.delete(key);
+		const row = this.components.get(key);
+
+		if (row != null) {
+			removeRow(this.managers.virtualization.pool, row);
+
+			this.components.delete(key);
+		}
 	}
 
 	update(key: Key): void {

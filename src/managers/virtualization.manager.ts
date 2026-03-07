@@ -62,7 +62,7 @@ export class VirtualizationManager {
 		top: 0,
 	};
 
-	readonly visible = new Map<number, RowComponent>();
+	visible = new Map<number, RowComponent>();
 
 	constructor(
 		public managers: TabelaManagers,
@@ -82,6 +82,9 @@ export class VirtualizationManager {
 
 		this.pool.cells = {};
 		this.pool.rows = [];
+
+		this.listener = undefined as never;
+		this.visible = undefined as never;
 	}
 
 	removeCells(fields: string[]): void {

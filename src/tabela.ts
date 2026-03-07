@@ -4,10 +4,17 @@ import {HeaderComponent} from './components/header.component';
 import {ColumnManager} from './managers/column.manager';
 import {DataManager} from './managers/data.manager';
 import {EventManager} from './managers/event.manager';
+import {FilterManager} from './managers/filter.manager';
 import {RowManager} from './managers/row.manager';
 import {SortManager} from './managers/sort.manager';
 import {VirtualizationManager} from './managers/virtualization.manager';
-import type {TabelaComponents, TabelaData, TabelaManagers, TabelaSort} from './models/tabela.model';
+import type {
+	TabelaComponents,
+	TabelaData,
+	TabelaFilter,
+	TabelaManagers,
+	TabelaSort,
+} from './models/tabela.model';
 import type {TabelaOptions} from './models/tabela.options';
 
 export class Tabela {
@@ -25,12 +32,15 @@ export class Tabela {
 		column: undefined as never,
 		data: undefined as never,
 		event: undefined as never,
+		filter: undefined as never,
 		row: undefined as never,
 		sort: undefined as never,
 		virtualization: undefined as never,
 	};
 
 	readonly data: TabelaData;
+
+	readonly filter: TabelaFilter;
 
 	readonly sort: TabelaSort;
 
@@ -57,6 +67,7 @@ export class Tabela {
 		this.#managers.column = new ColumnManager(this.#managers, this.#components, options.columns);
 		this.#managers.data = new DataManager(this.#managers, this.#components, options.key);
 		this.#managers.event = new EventManager(this.#managers, this.#element);
+		this.#managers.filter = new FilterManager(this.#managers);
 		this.#managers.row = new RowManager(this.#managers, options.rowHeight);
 		this.#managers.sort = new SortManager(this.#managers);
 		this.#managers.virtualization = new VirtualizationManager(this.#managers, this.#components);
@@ -70,6 +81,7 @@ export class Tabela {
 		this.#managers.data.set(options.data);
 
 		this.data = this.#managers.data.handlers;
+		this.filter = this.#managers.filter.handlers;
 		this.sort = this.#managers.sort.handlers;
 	}
 
@@ -84,7 +96,10 @@ export class Tabela {
 
 		managers.column.destroy();
 		managers.data.destroy();
+		managers.event.destroy();
+		managers.filter.destroy();
 		managers.row.destroy();
+		managers.sort.destroy();
 		managers.virtualization.destroy();
 
 		element.innerHTML = '';
