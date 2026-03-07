@@ -14,8 +14,8 @@ export class FooterComponent {
 			cells: [],
 		};
 
-		group.className += ' tabela__rowgroup-footer';
-		row.className += ' tabela__row-footer';
+		group.className += ' tabela__rowgroup--footer';
+		row.className += ' tabela__row--footer';
 	}
 
 	destroy(): void {
@@ -35,7 +35,7 @@ export class FooterComponent {
 		for (let index = 0; index < length; index += 1) {
 			const cell = createCell(columns[index].options.width ?? 4, false);
 
-			cell.className += ' tabela__cell-footer';
+			cell.className += ' tabela__cell--footer';
 			cell.innerHTML = '&nbsp;';
 
 			elements.cells.push(cell);

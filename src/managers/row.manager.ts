@@ -20,7 +20,7 @@ export class RowManager {
 		const {length} = components;
 
 		for (let index = 0; index < length; index += 1) {
-			removeRow(this.managers.virtualization.pool, components[index]);
+			removeRow(this.managers.render.pool, components[index]);
 		}
 
 		this.components.clear();
@@ -46,7 +46,7 @@ export class RowManager {
 		const row = this.components.get(key);
 
 		if (row != null) {
-			removeRow(this.managers.virtualization.pool, row);
+			removeRow(this.managers.render.pool, row);
 
 			this.components.delete(key);
 		}

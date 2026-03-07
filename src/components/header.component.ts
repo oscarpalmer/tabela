@@ -10,8 +10,8 @@ export class HeaderComponent {
 
 		this.elements = {group, row};
 
-		group.className += ' tabela__rowgroup-header';
-		row.className += ' tabela__row-header';
+		group.className += ' tabela__rowgroup--header';
+		row.className += ' tabela__row--header';
 	}
 
 	destroy(): void {

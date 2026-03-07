@@ -20,7 +20,7 @@ export function createCell(width: number, body?: boolean): HTMLDivElement {
 	);
 
 	if (body ?? true) {
-		cell.classList.add('tabela__cell-body');
+		cell.classList.add('tabela__cell--body');
 	}
 
 	return cell;
@@ -65,14 +65,14 @@ export function createRowGroup(withRow?: boolean) {
 		return group;
 	}
 
-	const row = createRow(false);
+	const row = createRow();
 
 	group.append(row);
 
 	return {group, row};
 }
 
-export function createRow(withStyle?: boolean): HTMLDivElement {
+export function createRow(): HTMLDivElement {
 	const row = createElement(
 		'div',
 		{
@@ -82,13 +82,6 @@ export function createRow(withStyle?: boolean): HTMLDivElement {
 		{},
 		{},
 	);
-
-	if (withStyle ?? true) {
-		setStyles(row, {
-			inset: '0 auto auto 0',
-			position: 'absolute',
-		});
-	}
 
 	return row;
 }

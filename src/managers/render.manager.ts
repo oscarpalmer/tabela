@@ -1,21 +1,18 @@
+import type {Key} from '@oscarpalmer/atoms/models';
 import {on} from '@oscarpalmer/toretto/event';
 import type {RemovableEventListener} from '@oscarpalmer/toretto/models';
-import {removeRow, renderRow, RowComponent} from '../components/row.component';
+import {removeRow, renderRow} from '../components/row.component';
+import type {RenderElementPool, RenderRange, RenderState} from '../models/render.model';
 import type {TabelaComponents, TabelaManagers} from '../models/tabela.model';
-import type {
-	VirtualizationPool,
-	VirtualizationRange,
-	VirtualizationState,
-} from '../models/virtualization.model';
 
-function getRange(this: VirtualizationManager, down: boolean): VirtualizationRange {
+function getRange(this: RenderManager, down: boolean): RenderRange {
 	const {components, managers} = this;
 	const {clientHeight, scrollTop} = components.body.elements.group;
 
 	const first = Math.floor(scrollTop / managers.row.height);
 
 	const last = Math.min(
-		managers.data.values.keys.active?.length ?? managers.data.values.keys.original.length - 1,
+		(managers.data.values.keys.active?.length ?? managers.data.values.keys.original.length) - 1,
 		Math.ceil((scrollTop + clientHeight) / managers.row.height) - 1,
 	);
 
@@ -25,14 +22,14 @@ function getRange(this: VirtualizationManager, down: boolean): VirtualizationRan
 	const start = Math.max(0, first - before);
 
 	const end = Math.min(
-		managers.data.values.keys.active?.length ?? managers.data.values.keys.original.length - 1,
+		(managers.data.values.keys.active?.length ?? managers.data.values.keys.original.length) - 1,
 		last + after,
 	);
 
 	return {end, start};
 }
 
-function onScroll(this: VirtualizationManager): void {
+function onScroll(this: RenderManager): void {
 	if (!this.state.active) {
 		requestAnimationFrame(() => {
 			const top = this.components.body.elements.group.scrollTop;
@@ -47,22 +44,22 @@ function onScroll(this: VirtualizationManager): void {
 	}
 }
 
-export class VirtualizationManager {
+export class RenderManager {
 	fragment!: DocumentFragment;
 
 	listener: RemovableEventListener;
 
-	readonly pool: VirtualizationPool = {
+	readonly pool: RenderElementPool = {
 		cells: {},
 		rows: [],
 	};
 
-	readonly state: VirtualizationState = {
+	readonly state: RenderState = {
 		active: false,
 		top: 0,
 	};
 
-	visible = new Map<number, RowComponent>();
+	visible = new Map<number, Key>();
 
 	constructor(
 		public managers: TabelaManagers,
@@ -72,29 +69,33 @@ export class VirtualizationManager {
 	}
 
 	destroy(): void {
-		this.listener();
+		const {listener, pool, visible} = this;
 
-		for (const [index, row] of this.visible) {
-			removeRow(this.pool, row);
+		listener();
+		visible.clear();
 
-			this.visible.delete(index);
-		}
-
-		this.pool.cells = {};
-		this.pool.rows = [];
+		pool.cells = {};
+		pool.rows = [];
 
 		this.listener = undefined as never;
 		this.visible = undefined as never;
 	}
 
 	removeCells(fields: string[]): void {
+		const {managers, pool, visible} = this;
 		const {length} = fields;
 
 		for (let index = 0; index < length; index += 1) {
-			delete this.pool.cells[fields[index]];
+			delete pool.cells[fields[index]];
 		}
 
-		for (const [, row] of this.visible) {
+		for (const [, key] of visible) {
+			const row = managers.row.get(key);
+
+			if (row == null || row.element == null) {
+				continue;
+			}
+
 			for (let index = 0; index < length; index += 1) {
 				row.cells[fields[index]].innerHTML = '';
 
@@ -127,15 +128,15 @@ export class VirtualizationManager {
 
 		let remove = rerender ?? false;
 
-		for (const [index, row] of visible) {
-			if (!managers.row.has(row.key) || !indices.has(index)) {
-				remove = true;
-			}
+		for (const [index, key] of visible) {
+			const row = managers.row.get(key);
 
-			if (remove) {
+			if (remove || row == null || !indices.has(index)) {
 				visible.delete(index);
 
-				removeRow(pool, row);
+				if (row != null) {
+					removeRow(pool, row);
+				}
 			}
 		}
 
@@ -150,7 +151,8 @@ export class VirtualizationManager {
 				continue;
 			}
 
-			const row = managers.row.get(keys[index]);
+			const key = keys[index];
+			const row = managers.row.get(key);
 
 			if (row == null) {
 				continue;
@@ -160,7 +162,7 @@ export class VirtualizationManager {
 
 			renderRow(managers, row);
 
-			visible.set(index, row);
+			visible.set(index, key);
 
 			if (row.element != null) {
 				row.element.style.transform = `translateY(${index * managers.row.height}px)`;

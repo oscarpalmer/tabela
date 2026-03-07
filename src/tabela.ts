@@ -6,13 +6,15 @@ import {DataManager} from './managers/data.manager';
 import {EventManager} from './managers/event.manager';
 import {FilterManager} from './managers/filter.manager';
 import {RowManager} from './managers/row.manager';
+import {SelectionManager} from './managers/selection.manager';
 import {SortManager} from './managers/sort.manager';
-import {VirtualizationManager} from './managers/virtualization.manager';
+import {RenderManager} from './managers/render.manager';
 import type {
 	TabelaComponents,
 	TabelaData,
 	TabelaFilter,
 	TabelaManagers,
+	TabelaSelection,
 	TabelaSort,
 } from './models/tabela.model';
 import type {TabelaOptions} from './models/tabela.options';
@@ -33,14 +35,17 @@ export class Tabela {
 		data: undefined as never,
 		event: undefined as never,
 		filter: undefined as never,
+		render: undefined as never,
 		row: undefined as never,
+		selection: undefined as never,
 		sort: undefined as never,
-		virtualization: undefined as never,
 	};
 
 	readonly data: TabelaData;
 
 	readonly filter: TabelaFilter;
+
+	readonly selection: TabelaSelection;
 
 	readonly sort: TabelaSort;
 
@@ -66,11 +71,12 @@ export class Tabela {
 
 		this.#managers.column = new ColumnManager(this.#managers, this.#components, options.columns);
 		this.#managers.data = new DataManager(this.#managers, this.#components, options.key);
-		this.#managers.event = new EventManager(this.#managers, this.#element);
+		this.#managers.event = new EventManager(this.#element, this.#managers);
 		this.#managers.filter = new FilterManager(this.#managers);
+		this.#managers.render = new RenderManager(this.#managers, this.#components);
 		this.#managers.row = new RowManager(this.#managers, options.rowHeight);
+		this.#managers.selection = new SelectionManager(this.#element, this.#managers);
 		this.#managers.sort = new SortManager(this.#managers);
-		this.#managers.virtualization = new VirtualizationManager(this.#managers, this.#components);
 
 		element.append(
 			this.#components.header.elements.group,
@@ -82,6 +88,7 @@ export class Tabela {
 
 		this.data = this.#managers.data.handlers;
 		this.filter = this.#managers.filter.handlers;
+		this.selection = this.#managers.selection.handlers;
 		this.sort = this.#managers.sort.handlers;
 	}
 
@@ -98,9 +105,9 @@ export class Tabela {
 		managers.data.destroy();
 		managers.event.destroy();
 		managers.filter.destroy();
+		managers.render.destroy();
 		managers.row.destroy();
 		managers.sort.destroy();
-		managers.virtualization.destroy();
 
 		element.innerHTML = '';
 		element.role = '';

@@ -6,9 +6,10 @@ import type {ColumnManager} from '../managers/column.manager';
 import type {DataManager} from '../managers/data.manager';
 import type {EventManager} from '../managers/event.manager';
 import type {FilterManager} from '../managers/filter.manager';
+import type {RenderManager} from '../managers/render.manager';
 import type {RowManager} from '../managers/row.manager';
+import type {SelectionManager} from '../managers/selection.manager';
 import type {SortManager} from '../managers/sort.manager';
-import type {VirtualizationManager} from '../managers/virtualization.manager';
 import type {FilterItem} from './filter.model';
 import type {SortDirection, SortItem} from './sort.model';
 
@@ -42,8 +43,16 @@ export type TabelaManagers = {
 	event: EventManager;
 	filter: FilterManager;
 	row: RowManager;
+	selection: SelectionManager;
 	sort: SortManager;
-	virtualization: VirtualizationManager;
+	render: RenderManager;
+};
+
+export type TabelaSelection = {
+	clear(): void;
+	deselect(keys: Key[]): void;
+	select(keys: Key[]): void;
+	toggle(): void;
 };
 
 export type TabelaSort = {

@@ -1,14 +1,14 @@
-export type VirtualizationPool = {
+export type RenderElementPool = {
 	cells: Record<string, HTMLDivElement[]>;
 	rows: HTMLDivElement[];
 };
 
-export type VirtualizationRange = {
+export type RenderRange = {
 	end: number;
 	start: number;
 };
 
-export type VirtualizationState = {
+export type RenderState = {
 	active: boolean;
 	top: number;
 };

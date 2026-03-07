@@ -128,7 +128,7 @@ export class SortManager {
 						items,
 					).map(row => row[managers.data.field]) as Key[]);
 
-		managers.virtualization.update(true, true);
+		managers.render.update(true, true);
 	}
 
 	toggle(event: MouseEvent, field: string, direction?: string | null): void {

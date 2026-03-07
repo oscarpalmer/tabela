@@ -1,9 +1,10 @@
 import type {Key} from '@oscarpalmer/atoms/models';
+import {setAttributes} from '@oscarpalmer/toretto/attribute';
 import {createCell, createRow} from '../helpers/dom.helpers';
+import type {RenderElementPool} from '../models/render.model';
 import type {TabelaManagers} from '../models/tabela.model';
-import type {VirtualizationPool} from '../models/virtualization.model';
 
-export function removeRow(pool: VirtualizationPool, row: RowComponent): void {
+export function removeRow(pool: RenderElementPool, row: RowComponent): void {
 	if (row.element != null) {
 		row.element.innerHTML = '';
 
@@ -17,12 +18,27 @@ export function removeRow(pool: VirtualizationPool, row: RowComponent): void {
 }
 
 export function renderRow(managers: TabelaManagers, row: RowComponent): void {
-	const element = row.element ?? managers.virtualization.pool.rows.shift() ?? createRow();
+	const element = row.element ?? managers.render.pool.rows.shift() ?? createRow();
 
 	row.element = element;
 
-	element.dataset.key = String(row.key);
 	element.innerHTML = '';
+
+	const selected = managers.selection.items.has(row.key);
+
+	setAttributes(element, {
+		'aria-selected': String(selected),
+		'data-event': 'row',
+		'data-key': String(row.key),
+	});
+
+	element.classList.add('tabela__row--body');
+
+	if (selected) {
+		element.classList.add('tabela__row--selected');
+	} else {
+		element.classList.remove('tabela__row--selected');
+	}
 
 	const columns = managers.column.items;
 	const {length} = columns;
@@ -36,11 +52,10 @@ export function renderRow(managers: TabelaManagers, row: RowComponent): void {
 	for (let index = 0; index < length; index += 1) {
 		const {options} = columns[index];
 
-		managers.virtualization.pool.cells[options.field] ??= [];
+		managers.render.pool.cells[options.field] ??= [];
 
 		const cell =
-			managers.virtualization.pool.cells[columns[index].options.field].shift() ??
-			createCell(options.width);
+			managers.render.pool.cells[columns[index].options.field].shift() ?? createCell(options.width);
 
 		cell.textContent = String(data[options.field]);
 

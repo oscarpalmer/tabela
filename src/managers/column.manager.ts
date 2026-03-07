@@ -55,7 +55,7 @@ export class ColumnManager {
 		components.header.update(items);
 		components.footer.update(items);
 
-		managers.virtualization.removeCells(fields);
+		managers.render.removeCells(fields);
 	}
 
 	set(columns: TabelaColumnOptions[]): void {

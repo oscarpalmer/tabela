@@ -7,8 +7,8 @@ export class EventManager {
 	listener: RemovableEventListener;
 
 	constructor(
-		readonly managers: TabelaManagers,
 		element: HTMLElement,
+		readonly managers: TabelaManagers,
 	) {
 		this.listener = on(
 			element,
@@ -38,6 +38,13 @@ export class EventManager {
 		switch (type) {
 			case 'heading':
 				this.onSort(event, target);
+				break;
+
+			case 'row':
+				this.managers.selection.handle(event, target);
+				break;
+
+			default:
 				break;
 		}
 	}

@@ -87,7 +87,7 @@ export class FilterManager {
 		if (managers.sort.items.length > 0) {
 			managers.sort.sort();
 		} else {
-			managers.virtualization.update(true, true);
+			managers.render.update(true, true);
 		}
 	}
 
