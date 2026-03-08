@@ -2,7 +2,7 @@ import type {Key} from '@oscarpalmer/atoms/models';
 import {setAttributes} from '@oscarpalmer/toretto/attribute';
 import {createCell, createRow} from '../helpers/dom.helpers';
 import type {RenderElementPool} from '../models/render.model';
-import type {TabelaManagers} from '../models/tabela.model';
+import type {TabelaState} from '../models/tabela.model';
 
 export function removeRow(pool: RenderElementPool, row: RowComponent): void {
 	if (row.element != null) {
@@ -17,19 +17,23 @@ export function removeRow(pool: RenderElementPool, row: RowComponent): void {
 	row.cells = {};
 }
 
-export function renderRow(managers: TabelaManagers, row: RowComponent): void {
-	const element = row.element ?? managers.render.pool.rows.shift() ?? createRow();
+export function renderRow(state: TabelaState, row: RowComponent): void {
+	const element = row.element ?? state.managers.render.pool.rows.shift() ?? createRow();
 
 	row.element = element;
 
 	element.innerHTML = '';
 
-	const selected = managers.selection.items.has(row.key);
+	const selected = state.managers.selection.items.has(row.key);
+
+	const key = String(row.key);
 
 	setAttributes(element, {
 		'aria-selected': String(selected),
+		'data-active': String(state.managers.navigation.active === row.key),
 		'data-event': 'row',
-		'data-key': String(row.key),
+		'data-key': key,
+		id: `tabela_${state.id}_row_${key}`,
 	});
 
 	element.classList.add('tabela__row--body');
@@ -40,10 +44,10 @@ export function renderRow(managers: TabelaManagers, row: RowComponent): void {
 		element.classList.remove('tabela__row--selected');
 	}
 
-	const columns = managers.column.items;
+	const columns = state.managers.column.items;
 	const {length} = columns;
 
-	const data = managers.data.values.objects.mapped.get(row.key);
+	const data = state.managers.data.values.objects.mapped.get(row.key);
 
 	if (data == null) {
 		return;
@@ -52,10 +56,11 @@ export function renderRow(managers: TabelaManagers, row: RowComponent): void {
 	for (let index = 0; index < length; index += 1) {
 		const {options} = columns[index];
 
-		managers.render.pool.cells[options.field] ??= [];
+		state.managers.render.pool.cells[options.field] ??= [];
 
 		const cell =
-			managers.render.pool.cells[columns[index].options.field].shift() ?? createCell(options.width);
+			state.managers.render.pool.cells[columns[index].options.field].shift() ??
+			createCell(options.width);
 
 		cell.textContent = String(data[options.field]);
 

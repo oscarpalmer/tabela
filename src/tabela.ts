@@ -5,10 +5,11 @@ import {ColumnManager} from './managers/column.manager';
 import {DataManager} from './managers/data.manager';
 import {EventManager} from './managers/event.manager';
 import {FilterManager} from './managers/filter.manager';
+import {NavigationManager} from './managers/navigation.manager';
+import {RenderManager} from './managers/render.manager';
 import {RowManager} from './managers/row.manager';
 import {SelectionManager} from './managers/selection.manager';
 import {SortManager} from './managers/sort.manager';
-import {RenderManager} from './managers/render.manager';
 import type {
 	TabelaComponents,
 	TabelaData,
@@ -16,6 +17,7 @@ import type {
 	TabelaManagers,
 	TabelaSelection,
 	TabelaSort,
+	TabelaState,
 } from './models/tabela.model';
 import type {TabelaOptions} from './models/tabela.options';
 
@@ -28,6 +30,8 @@ export class Tabela {
 
 	#element: HTMLElement;
 
+	#id = getId();
+
 	readonly #key: string;
 
 	readonly #managers: TabelaManagers = {
@@ -35,6 +39,7 @@ export class Tabela {
 		data: undefined as never,
 		event: undefined as never,
 		filter: undefined as never,
+		navigation: undefined as never,
 		render: undefined as never,
 		row: undefined as never,
 		selection: undefined as never,
@@ -69,14 +74,24 @@ export class Tabela {
 		this.#components.body = new BodyComponent();
 		this.#components.footer = new FooterComponent();
 
-		this.#managers.column = new ColumnManager(this.#managers, this.#components, options.columns);
-		this.#managers.data = new DataManager(this.#managers, this.#components, options.key);
-		this.#managers.event = new EventManager(this.#element, this.#managers);
-		this.#managers.filter = new FilterManager(this.#managers);
-		this.#managers.render = new RenderManager(this.#managers, this.#components);
-		this.#managers.row = new RowManager(this.#managers, options.rowHeight);
-		this.#managers.selection = new SelectionManager(this.#element, this.#managers);
-		this.#managers.sort = new SortManager(this.#managers);
+		const state: TabelaState = {
+			element,
+			options,
+			components: this.#components,
+			id: this.#id,
+			key: this.#key,
+			managers: this.#managers,
+		};
+
+		this.#managers.column = new ColumnManager(state);
+		this.#managers.data = new DataManager(state);
+		this.#managers.event = new EventManager(state);
+		this.#managers.filter = new FilterManager(state);
+		this.#managers.navigation = new NavigationManager(state);
+		this.#managers.render = new RenderManager(state);
+		this.#managers.row = new RowManager(state);
+		this.#managers.selection = new SelectionManager(state);
+		this.#managers.sort = new SortManager(state);
 
 		element.append(
 			this.#components.header.elements.group,
@@ -105,8 +120,10 @@ export class Tabela {
 		managers.data.destroy();
 		managers.event.destroy();
 		managers.filter.destroy();
+		// managers.navigation.destroy();
 		managers.render.destroy();
 		managers.row.destroy();
+		managers.selection.destroy();
 		managers.sort.destroy();
 
 		element.innerHTML = '';
@@ -119,3 +136,11 @@ export class Tabela {
 		this.#element = undefined as never;
 	}
 }
+
+function getId(): number {
+	id += 1;
+
+	return id;
+}
+
+let id = 0;

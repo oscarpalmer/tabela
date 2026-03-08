@@ -6,7 +6,7 @@ import {getPosition, on} from '@oscarpalmer/toretto/event';
 import {createElement} from '../helpers/dom.helpers';
 import {getKey} from '../helpers/misc.helpers';
 import {dragStyling} from '../helpers/style.helper';
-import type {TabelaManagers, TabelaSelection} from '../models/tabela.model';
+import type {TabelaSelection, TabelaState} from '../models/tabela.model';
 
 export class SelectionManager {
 	handlers = Object.freeze({
@@ -20,11 +20,8 @@ export class SelectionManager {
 
 	last: Key | undefined;
 
-	constructor(
-		public element: HTMLElement,
-		readonly managers: TabelaManagers,
-	) {
-		mapped.set(element, this);
+	constructor(public state: TabelaState) {
+		mapped.set(state.element, this);
 	}
 
 	clear(): void {
@@ -58,11 +55,12 @@ export class SelectionManager {
 	}
 
 	destroy(): void {
-		mapped.delete(this.element);
+		mapped.delete(this.state.element);
 
 		this.handlers = undefined as never;
-		this.element = undefined as never;
 		this.items = undefined as never;
+		this.last = undefined;
+		this.state = undefined as never;
 	}
 
 	handle(event: MouseEvent, target: HTMLElement): void {
@@ -76,19 +74,17 @@ export class SelectionManager {
 
 		if (event.shiftKey) {
 			if (this.last == null) {
-				this.last = key;
-
-				return;
+				this.state.managers.navigation.setActive(key, false);
+			} else {
+				this.range(this.last, key);
 			}
-
-			this.range(this.last, key);
-
-			this.last = key;
 
 			return;
 		}
 
 		this.last = key;
+
+		this.state.managers.navigation.setActive(key, false);
 
 		if (event.ctrlKey || event.metaKey) {
 			if (items.has(key)) {
@@ -100,18 +96,12 @@ export class SelectionManager {
 			return;
 		}
 
-		if (items.has(key)) {
-			if (items.size === 1) {
-				this.clear();
-			} else {
-				this.set([key]);
-			}
-		} else {
-			this.set([key]);
-		}
+		this.set([key]);
 	}
 
 	range(from: Key | HTMLElement, to: Key | HTMLElement): void {
+		const {state} = this;
+
 		const keyed = isKey(from) && isKey(to);
 
 		const fromKey = keyed ? (from as Key) : getKey((from as HTMLElement).getAttribute('data-key'))!;
@@ -121,10 +111,10 @@ export class SelectionManager {
 			return;
 		}
 
-		const keys = this.managers.data.values.keys.active ?? this.managers.data.values.keys.original;
+		const keys = state.managers.data.values.keys.active ?? state.managers.data.values.keys.original;
 
-		const fromIndex = keys.indexOf(fromKey);
-		const toIndex = keys.indexOf(toKey);
+		const fromIndex = state.managers.data.getIndex(fromKey);
+		const toIndex = state.managers.data.getIndex(toKey);
 
 		if (fromIndex === -1 || toIndex === -1) {
 			return;
@@ -143,6 +133,10 @@ export class SelectionManager {
 		} else {
 			this.set(selected);
 		}
+
+		this.last = toKey;
+
+		this.state.managers.navigation.setActive(toKey, false);
 	}
 
 	select(keys: Key[]): void {
@@ -181,9 +175,9 @@ export class SelectionManager {
 	}
 
 	toggle(): void {
-		const {items, managers} = this;
+		const {items, state} = this;
 
-		const all = managers.data.values.keys.active ?? managers.data.values.keys.original;
+		const all = state.managers.data.values.keys.active ?? state.managers.data.values.keys.original;
 
 		if (items.size === all.length) {
 			this.clear();
@@ -203,7 +197,7 @@ export class SelectionManager {
 		for (let index = 0; index < length; index += 1) {
 			const {key, removed} = items[index];
 
-			const row = this.managers.row.get(key);
+			const row = this.state.managers.row.get(key);
 
 			if (row == null || row.element == null) {
 				continue;

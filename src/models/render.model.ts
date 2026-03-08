@@ -1,3 +1,5 @@
+import type {TabelaState} from './tabela.model';
+
 export type RenderElementPool = {
 	cells: Record<string, HTMLDivElement[]>;
 	rows: HTMLDivElement[];
@@ -11,4 +13,4 @@ export type RenderRange = {
 export type RenderState = {
 	active: boolean;
 	top: number;
-};
+} & TabelaState;

@@ -3,7 +3,7 @@ import {toMap} from '@oscarpalmer/atoms/array/to-map';
 import {isPlainObject} from '@oscarpalmer/atoms/is';
 import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
 import type {DataValues} from '../models/data.model';
-import type {TabelaComponents, TabelaData, TabelaManagers} from '../models/tabela.model';
+import type {TabelaData, TabelaState} from '../models/tabela.model';
 
 export class DataManager {
 	handlers = Object.freeze({
@@ -15,7 +15,7 @@ export class DataManager {
 		update: data => void this.update(data),
 	} satisfies TabelaData);
 
-	readonly values: DataValues = {
+	values: DataValues = {
 		keys: {
 			original: [],
 		},
@@ -29,18 +29,14 @@ export class DataManager {
 		return this.values.keys.active?.length ?? this.values.keys.original.length;
 	}
 
-	constructor(
-		public managers: TabelaManagers,
-		public components: TabelaComponents,
-		public field: string,
-	) {}
+	constructor(public state: TabelaState) {}
 
 	async add(data: PlainObject[], render: boolean): Promise<void> {
-		const {field, values} = this;
+		const {state, values} = this;
 
 		push(values.objects.array, data);
 
-		values.objects.mapped = toMap(values.objects.array, field) as Map<Key, PlainObject>;
+		values.objects.mapped = toMap(values.objects.array, state.key) as Map<Key, PlainObject>;
 
 		if (render) {
 			this.render();
@@ -63,6 +59,8 @@ export class DataManager {
 		values.objects.array.length = 0;
 
 		this.handlers = undefined as never;
+		this.state = undefined as never;
+		this.values = undefined as never;
 	}
 
 	get(active?: boolean): PlainObject[] {
@@ -73,11 +71,17 @@ export class DataManager {
 			: values.objects.array;
 	}
 
+	getIndex(key: Key): number {
+		const {values} = this;
+
+		return (values.keys.active ?? values.keys.original).indexOf(key);
+	}
+
 	async remove(items: Array<Key | PlainObject>, render: boolean): Promise<void> {
-		const {field, managers, values} = this;
+		const {state, values} = this;
 
 		const keys = items
-			.map(value => (isPlainObject(value) ? value[field] : value) as Key)
+			.map(value => (isPlainObject(value) ? value[state.key] : value) as Key)
 			.filter(key => values.objects.mapped.has(key)) as Key[];
 
 		const {length} = keys;
@@ -91,7 +95,7 @@ export class DataManager {
 
 			values.objects.mapped.delete(key);
 
-			const arrayIndex = values.objects.array.findIndex(object => object[field] === key);
+			const arrayIndex = values.objects.array.findIndex(object => object[state.key] === key);
 
 			if (arrayIndex > -1) {
 				values.objects.array.splice(arrayIndex, 1);
@@ -99,7 +103,7 @@ export class DataManager {
 
 			values.keys.original.splice(values.keys.original.indexOf(key), 1);
 
-			managers.row.remove(key);
+			state.managers.row.remove(key);
 		}
 
 		if (render) {
@@ -108,30 +112,30 @@ export class DataManager {
 	}
 
 	render(): void {
-		const {field, managers, values} = this;
+		const {state, values} = this;
 
-		values.keys.original = sort(values.objects.array.map(item => item[field] as Key));
+		values.keys.original = sort(values.objects.array.map(item => item[state.key] as Key));
 
-		if (Object.keys(managers.filter.items).length > 0) {
-			managers.filter.filter();
-		} else if (managers.sort.items.length > 0) {
-			managers.sort.sort();
+		if (Object.keys(state.managers.filter.items).length > 0) {
+			state.managers.filter.filter();
+		} else if (state.managers.sort.items.length > 0) {
+			state.managers.sort.sort();
 		} else {
-			managers.render.update(true);
+			state.managers.render.update(true);
 		}
 	}
 
 	set(data: PlainObject[]): void {
-		const {field, values} = this;
+		const {state, values} = this;
 
-		values.objects.mapped = toMap(data, field) as Map<Key, PlainObject>;
+		values.objects.mapped = toMap(data, state.key) as Map<Key, PlainObject>;
 		values.objects.array = data;
 
 		this.render();
 	}
 
 	async synchronize(data: PlainObject[], remove?: boolean): Promise<void> {
-		const {field, values} = this;
+		const {state, values} = this;
 
 		const add: PlainObject[] = [];
 		const updated: PlainObject[] = [];
@@ -142,7 +146,7 @@ export class DataManager {
 
 		for (let index = 0; index < length; index += 1) {
 			const object = data[index];
-			const key = object[field] as Key;
+			const key = object[state.key] as Key;
 
 			if (values.objects.mapped.has(key)) {
 				updated.push(object);
@@ -177,19 +181,19 @@ export class DataManager {
 	}
 
 	async update(data: PlainObject[]): Promise<void> {
-		const {field, managers, values} = this;
+		const {state, values} = this;
 
 		const {length} = data;
 
 		for (let index = 0; index < length; index += 1) {
 			const object = data[index];
-			const key = object[field] as Key;
+			const key = object[state.key] as Key;
 			const value = values.objects.mapped.get(key);
 
 			if (value != null) {
 				values.objects.mapped.set(key, {...value, ...object} as PlainObject);
 
-				managers.row.update(key);
+				state.managers.row.update(key);
 			}
 		}
 	}

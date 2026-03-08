@@ -1,29 +1,24 @@
 import type {Key} from '@oscarpalmer/atoms/models';
 import {removeRow, renderRow, RowComponent} from '../components/row.component';
-import type {TabelaManagers} from '../models/tabela.model';
+import type {TabelaState} from '../models/tabela.model';
 
 export class RowManager {
-	readonly components: Map<Key, RowComponent> = new Map();
+	components = new Map<Key, RowComponent>();
 
-	readonly height: number;
-
-	constructor(
-		readonly managers: TabelaManagers,
-		rowHeight: number,
-	) {
-		this.height = rowHeight;
-	}
+	constructor(public state: TabelaState) {}
 
 	destroy(): void {
 		const components = [...this.components.values()];
-
 		const {length} = components;
 
 		for (let index = 0; index < length; index += 1) {
-			removeRow(this.managers.render.pool, components[index]);
+			removeRow(this.state.managers.render.pool, components[index]);
 		}
 
 		this.components.clear();
+
+		this.components = undefined as never;
+		this.state = undefined as never;
 	}
 
 	get(key: Key): RowComponent | undefined {
@@ -46,7 +41,7 @@ export class RowManager {
 		const row = this.components.get(key);
 
 		if (row != null) {
-			removeRow(this.managers.render.pool, row);
+			removeRow(this.state.managers.render.pool, row);
 
 			this.components.delete(key);
 		}
@@ -56,7 +51,7 @@ export class RowManager {
 		const row = this.components.get(key);
 
 		if (row != null) {
-			renderRow(this.managers, row);
+			renderRow(this.state, row);
 		}
 	}
 }

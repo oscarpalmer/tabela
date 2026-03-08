@@ -22,6 +22,8 @@ export class BodyComponent {
 
 		group.tabIndex = 0;
 
+		group.setAttribute('data-event', 'body');
+
 		group.append(this.elements.faker);
 	}
 

@@ -4,7 +4,7 @@ import {getString} from '@oscarpalmer/atoms/string';
 import {endsWith, includes, startsWith} from '@oscarpalmer/atoms/string/match';
 import {equal} from '@oscarpalmer/atoms/value/equal';
 import type {FilterComparison, FilterItem} from '../models/filter.model';
-import type {TabelaFilter, TabelaManagers} from '../models/tabela.model';
+import type {TabelaFilter, TabelaState} from '../models/tabela.model';
 
 export class FilterManager {
 	handlers = Object.freeze({
@@ -16,7 +16,7 @@ export class FilterManager {
 
 	items: Record<string, FilterItem[]> = {};
 
-	constructor(readonly managers: TabelaManagers) {}
+	constructor(public state: TabelaState) {}
 
 	add(item: FilterItem): void {
 		if (this.items[item.field] == null) {
@@ -44,20 +44,21 @@ export class FilterManager {
 
 	destroy(): void {
 		this.handlers = undefined as never;
-		this.items = {};
+		this.items = undefined as never;
+		this.state = undefined as never;
 	}
 
 	filter(): void {
-		const {managers} = this;
+		const {state} = this;
 
 		const filtered: Key[] = [];
 		const filters = Object.entries(this.items);
 
-		const keysLength = managers.data.values.keys.original.length;
+		const keysLength = state.managers.data.values.keys.original.length;
 
 		rowLoop: for (let keyIndex = 0; keyIndex < keysLength; keyIndex += 1) {
-			const key = managers.data.values.keys.original[keyIndex];
-			const row = managers.data.values.objects.mapped.get(key);
+			const key = state.managers.data.values.keys.original[keyIndex];
+			const row = state.managers.data.values.objects.mapped.get(key);
 
 			if (row == null) {
 				continue;
@@ -82,12 +83,12 @@ export class FilterManager {
 			filtered.push(key);
 		}
 
-		managers.data.values.keys.active = filtered;
+		state.managers.data.values.keys.active = filtered;
 
-		if (managers.sort.items.length > 0) {
-			managers.sort.sort();
+		if (state.managers.sort.items.length > 0) {
+			state.managers.sort.sort();
 		} else {
-			managers.render.update(true, true);
+			state.managers.render.update(true, true);
 		}
 	}
 

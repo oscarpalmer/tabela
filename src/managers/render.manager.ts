@@ -3,21 +3,21 @@ import {on} from '@oscarpalmer/toretto/event';
 import type {RemovableEventListener} from '@oscarpalmer/toretto/models';
 import {removeRow, renderRow} from '../components/row.component';
 import type {RenderElementPool, RenderRange, RenderState} from '../models/render.model';
-import type {TabelaComponents, TabelaManagers} from '../models/tabela.model';
+import type {TabelaState} from '../models/tabela.model';
 
 function getRange(this: RenderManager, down: boolean): RenderRange {
-	const {components, managers} = this;
+	const {components, managers, options} = this.state;
 	const {clientHeight, scrollTop} = components.body.elements.group;
 
-	const first = Math.floor(scrollTop / managers.row.height);
+	const first = Math.floor(scrollTop / options.rowHeight);
 
 	const last = Math.min(
 		(managers.data.values.keys.active?.length ?? managers.data.values.keys.original.length) - 1,
-		Math.ceil((scrollTop + clientHeight) / managers.row.height) - 1,
+		Math.ceil((scrollTop + clientHeight) / options.rowHeight) - 1,
 	);
 
-	const before = Math.ceil(clientHeight / managers.row.height) * (down ? 1 : 2);
-	const after = Math.ceil(clientHeight / managers.row.height) * (down ? 2 : 1);
+	const before = Math.ceil(clientHeight / options.rowHeight) * (down ? 1 : 2);
+	const after = Math.ceil(clientHeight / options.rowHeight) * (down ? 2 : 1);
 
 	const start = Math.max(0, first - before);
 
@@ -30,17 +30,19 @@ function getRange(this: RenderManager, down: boolean): RenderRange {
 }
 
 function onScroll(this: RenderManager): void {
-	if (!this.state.active) {
+	const {state} = this;
+
+	if (!state.active) {
 		requestAnimationFrame(() => {
-			const top = this.components.body.elements.group.scrollTop;
+			const top = state.components.body.elements.group.scrollTop;
 
-			this.update(top > this.state.top);
+			this.update(top > state.top);
 
-			this.state.active = false;
-			this.state.top = top;
+			state.active = false;
+			state.top = top;
 		});
 
-		this.state.active = true;
+		state.active = true;
 	}
 }
 
@@ -49,23 +51,23 @@ export class RenderManager {
 
 	listener: RemovableEventListener;
 
-	readonly pool: RenderElementPool = {
+	pool: RenderElementPool = {
 		cells: {},
 		rows: [],
 	};
 
-	readonly state: RenderState = {
-		active: false,
-		top: 0,
-	};
+	state: RenderState;
 
 	visible = new Map<number, Key>();
 
-	constructor(
-		public managers: TabelaManagers,
-		public components: TabelaComponents,
-	) {
-		this.listener = on(components.body.elements.group, 'scroll', onScroll.bind(this));
+	constructor(state: TabelaState) {
+		this.listener = on(state.components.body.elements.group, 'scroll', onScroll.bind(this));
+
+		this.state = {
+			...state,
+			active: false,
+			top: 0,
+		};
 	}
 
 	destroy(): void {
@@ -77,12 +79,15 @@ export class RenderManager {
 		pool.cells = {};
 		pool.rows = [];
 
+		this.fragment = undefined as never;
 		this.listener = undefined as never;
+		this.pool = undefined as never;
+		this.state = undefined as never;
 		this.visible = undefined as never;
 	}
 
 	removeCells(fields: string[]): void {
-		const {managers, pool, visible} = this;
+		const {pool, state, visible} = this;
 		const {length} = fields;
 
 		for (let index = 0; index < length; index += 1) {
@@ -90,7 +95,7 @@ export class RenderManager {
 		}
 
 		for (const [, key] of visible) {
-			const row = managers.row.get(key);
+			const row = state.managers.row.get(key);
 
 			if (row == null || row.element == null) {
 				continue;
@@ -115,9 +120,10 @@ export class RenderManager {
 	}
 
 	update(down: boolean, rerender?: boolean): void {
-		const {components, managers, pool, visible} = this;
+		const {state, pool, visible} = this;
+		const {components, managers, options} = state;
 
-		components.body.elements.faker.style.height = `${managers.data.size * managers.row.height}px`;
+		components.body.elements.faker.style.height = `${managers.data.size * options.rowHeight}px`;
 
 		const indices = new Set<number>();
 		const range = getRange.call(this, down);
@@ -160,12 +166,12 @@ export class RenderManager {
 
 			count += 1;
 
-			renderRow(managers, row);
+			renderRow(state, row);
 
 			visible.set(index, key);
 
 			if (row.element != null) {
-				row.element.style.transform = `translateY(${index * managers.row.height}px)`;
+				row.element.style.transform = `translateY(${index * options.rowHeight}px)`;
 
 				fragment.append(row.element);
 			}

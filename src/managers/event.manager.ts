@@ -1,62 +1,85 @@
 import {on} from '@oscarpalmer/toretto/event';
-import type {RemovableEventListener} from '@oscarpalmer/toretto/models';
-import type {TabelaManagers} from '../models/tabela.model';
-import {findAncestor} from '@oscarpalmer/toretto';
+import {findAncestor} from '@oscarpalmer/toretto/find';
+import type {TabelaState} from '../models/tabela.model';
 
 export class EventManager {
-	listener: RemovableEventListener;
-
-	constructor(
-		element: HTMLElement,
-		readonly managers: TabelaManagers,
-	) {
-		this.listener = on(
-			element,
-			'click',
-			event => {
-				this.onClick(event);
-			},
-			{
-				passive: false,
-			},
-		);
+	constructor(public state: TabelaState) {
+		mapped.set(state.element, this);
 	}
 
 	destroy(): void {
-		this.listener();
-	}
+		mapped.delete(this.state.element);
 
-	onClick(event: MouseEvent): void {
-		const target = findAncestor(event, '[data-event]');
-
-		if (!(target instanceof HTMLElement)) {
-			return;
-		}
-
-		const type = target?.getAttribute('data-event');
-
-		switch (type) {
-			case 'heading':
-				this.onSort(event, target);
-				break;
-
-			case 'row':
-				this.managers.selection.handle(event, target);
-				break;
-
-			default:
-				break;
-		}
+		this.state = undefined as never;
 	}
 
 	onSort(event: MouseEvent, target: HTMLElement): void {
-		const {managers} = this;
-
 		const direction = target.getAttribute('data-sort-direction');
 		const field = target.getAttribute('data-field');
 
 		if (field != null) {
-			managers.sort.toggle(event, field, direction);
+			this.state.managers.sort.toggle(event, field, direction);
 		}
 	}
 }
+
+function onClick(event: MouseEvent): void {
+	const target = findAncestor(event, '[data-event]');
+	const table = findAncestor(event, '.tabela');
+
+	if (!(target instanceof HTMLElement) || !(table instanceof HTMLElement)) {
+		return;
+	}
+
+	const manager = mapped.get(table);
+
+	if (manager == null) {
+		return;
+	}
+
+	const type = target?.getAttribute('data-event');
+
+	switch (type) {
+		case 'heading':
+			manager.onSort(event, target);
+			break;
+
+		case 'row':
+			manager.state.managers.selection.handle(event, target);
+			break;
+
+		default:
+			break;
+	}
+}
+
+function onKeydown(event: KeyboardEvent): void {
+	const target = findAncestor(event, '[data-event]');
+	const table = findAncestor(event, '.tabela');
+
+	if (!(target instanceof HTMLElement) || !(table instanceof HTMLElement)) {
+		return;
+	}
+
+	const manager = mapped.get(table);
+
+	if (manager == null) {
+		return;
+	}
+
+	const type = target?.getAttribute('data-event');
+
+	switch (type) {
+		case 'body':
+			manager.state.managers.navigation.handle(event);
+			break;
+
+		default:
+			break;
+	}
+}
+
+const mapped = new WeakMap<HTMLElement, EventManager>();
+
+on(document, 'click', onClick);
+on(document, 'keydown', onKeydown, {passive: false});

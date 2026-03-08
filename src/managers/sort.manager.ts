@@ -2,7 +2,7 @@ import {sort, type ArrayKeySorter} from '@oscarpalmer/atoms/array';
 import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
 import {setAttribute, setAttributes} from '@oscarpalmer/toretto/attribute';
 import type {SortDirection, SortItem} from '../models/sort.model';
-import type {TabelaManagers, TabelaSort} from '../models/tabela.model';
+import type {TabelaSort, TabelaState} from '../models/tabela.model';
 
 export class SortManager {
 	handlers = Object.freeze({
@@ -13,9 +13,9 @@ export class SortManager {
 		set: items => this.set(items),
 	} satisfies TabelaSort);
 
-	readonly items: ArrayKeySorter<PlainObject>[] = [];
+	items: ArrayKeySorter<PlainObject>[] = [];
 
-	constructor(readonly managers: TabelaManagers) {}
+	constructor(public state: TabelaState) {}
 
 	add(field: string, direction?: SortDirection): void {
 		const index = this.items.findIndex(item => item.key === field);
@@ -50,7 +50,8 @@ export class SortManager {
 
 	destroy(): void {
 		this.handlers = undefined as never;
-		this.items.length = 0;
+		this.items = undefined as never;
+		this.state = undefined as never;
 	}
 
 	flip(field: string): void {
@@ -94,12 +95,12 @@ export class SortManager {
 	}
 
 	sort(): void {
-		const {items, managers} = this;
+		const {items, state} = this;
 
-		const {length} = managers.column.items;
+		const {length} = state.managers.column.items;
 
 		for (let index = 0; index < length; index += 1) {
-			const column = managers.column.items[index];
+			const column = state.managers.column.items[index];
 
 			const sorterIndex = items.findIndex(item => item.key === column.options.field);
 			const sorterItem = items[sorterIndex];
@@ -117,18 +118,17 @@ export class SortManager {
 			);
 		}
 
-		managers.data.values.keys.active =
+		state.managers.data.values.keys.active =
 			items.length === 0
 				? undefined
 				: (sort(
-						managers.data.values.keys.active?.map(
-								key => managers.data.values.objects.mapped.get(key)!,
-							) ??
-							managers.data.values.objects.array,
+						state.managers.data.values.keys.active?.map(
+							key => state.managers.data.values.objects.mapped.get(key)!,
+						) ?? state.managers.data.values.objects.array,
 						items,
-					).map(row => row[managers.data.field]) as Key[]);
+					).map(row => row[state.key]) as Key[]);
 
-		managers.render.update(true, true);
+		state.managers.render.update(true, true);
 	}
 
 	toggle(event: MouseEvent, field: string, direction?: string | null): void {

@@ -1,16 +1,12 @@
 import {ColumnComponent} from '../components/column.component';
 import type {TabelaColumnOptions} from '../models/column.model';
-import type {TabelaComponents, TabelaManagers} from '../models/tabela.model';
+import type {TabelaState} from '../models/tabela.model';
 
 export class ColumnManager {
-	readonly items: ColumnComponent[] = [];
+	items: ColumnComponent[] = [];
 
-	constructor(
-		public managers: TabelaManagers,
-		public components: TabelaComponents,
-		columns: TabelaColumnOptions[],
-	) {
-		this.set(columns);
+	constructor(public state: TabelaState) {
+		this.set(state.options.columns);
 	}
 
 	destroy(): void {
@@ -20,7 +16,8 @@ export class ColumnManager {
 			this.items[index].destroy();
 		}
 
-		this.items.length = 0;
+		this.items = undefined as never;
+		this.state = undefined as never;
 	}
 
 	remove(field: string): void;
@@ -28,7 +25,8 @@ export class ColumnManager {
 	remove(fields: string[]): void;
 
 	remove(value: unknown): void {
-		const {components, items, managers} = this;
+		const {items, state} = this;
+		const {components, managers} = state;
 
 		const fields = (Array.isArray(value) ? value : [value]).filter(
 			item => typeof item === 'string',
@@ -59,8 +57,8 @@ export class ColumnManager {
 	}
 
 	set(columns: TabelaColumnOptions[]): void {
-		const {components, items} = this;
-		const {footer, header} = components;
+		const {items, state} = this;
+		const {footer, header} = state.components;
 
 		items.splice(0, items.length, ...columns.map(column => new ColumnComponent(column)));
 
