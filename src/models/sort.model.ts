@@ -1,6 +1,14 @@
-export type SortDirection = 'ascending' | 'descending';
+export type TabelaSort = {
+	add(field: string, direction?: TabelaSortDirection): void;
+	clear(): void;
+	flip(field: string): void;
+	remove(field: string): void;
+	set(items: TabelaSortItem[]): void;
+};
 
-export type SortItem = {
-	direction: SortDirection;
+export type TabelaSortDirection = 'ascending' | 'descending';
+
+export type TabelaSortItem = {
+	direction: TabelaSortDirection;
 	field: string;
 };

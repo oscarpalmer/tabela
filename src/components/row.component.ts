@@ -2,7 +2,7 @@ import type {Key} from '@oscarpalmer/atoms/models';
 import {setAttributes} from '@oscarpalmer/toretto/attribute';
 import {createCell, createRow} from '../helpers/dom.helpers';
 import type {RenderElementPool} from '../models/render.model';
-import type {TabelaState} from '../models/tabela.model';
+import type {State} from '../models/tabela.model';
 
 export function removeRow(pool: RenderElementPool, row: RowComponent): void {
 	if (row.element != null) {
@@ -17,7 +17,7 @@ export function removeRow(pool: RenderElementPool, row: RowComponent): void {
 	row.cells = {};
 }
 
-export function renderRow(state: TabelaState, row: RowComponent): void {
+export function renderRow(state: State, row: RowComponent): void {
 	const element = row.element ?? state.managers.render.pool.rows.shift() ?? createRow();
 
 	row.element = element;

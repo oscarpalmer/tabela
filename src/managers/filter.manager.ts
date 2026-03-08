@@ -3,8 +3,8 @@ import {getNumber} from '@oscarpalmer/atoms/number';
 import {getString} from '@oscarpalmer/atoms/string';
 import {endsWith, includes, startsWith} from '@oscarpalmer/atoms/string/match';
 import {equal} from '@oscarpalmer/atoms/value/equal';
-import type {FilterComparison, FilterItem} from '../models/filter.model';
-import type {TabelaFilter, TabelaState} from '../models/tabela.model';
+import type {TabelaFilter, TabelaFilterComparison, TabelaFilterItem} from '../models/filter.model';
+import type {State} from '../models/tabela.model';
 
 export class FilterManager {
 	handlers = Object.freeze({
@@ -14,11 +14,11 @@ export class FilterManager {
 		set: items => this.set(items),
 	} satisfies TabelaFilter);
 
-	items: Record<string, FilterItem[]> = {};
+	items: Record<string, TabelaFilterItem[]> = {};
 
-	constructor(public state: TabelaState) {}
+	constructor(public state: State) {}
 
-	add(item: FilterItem): void {
+	add(item: TabelaFilterItem): void {
 		if (this.items[item.field] == null) {
 			this.items[item.field] = [];
 		} else {
@@ -92,13 +92,13 @@ export class FilterManager {
 		}
 	}
 
-	remove(value: string | FilterItem): void {
+	remove(value: string | TabelaFilterItem): void {
 		if (typeof value === 'string') {
 			if (this.items[value] == null) {
 				return;
 			}
 
-			const keyed: Record<string, FilterItem[]> = {};
+			const keyed: Record<string, TabelaFilterItem[]> = {};
 
 			this.items = keyed;
 		} else {
@@ -118,8 +118,8 @@ export class FilterManager {
 		this.filter();
 	}
 
-	set(items: FilterItem[]): void {
-		const keyed: Record<string, FilterItem[]> = {};
+	set(items: TabelaFilterItem[]): void {
+		const keyed: Record<string, TabelaFilterItem[]> = {};
 
 		const {length} = items;
 
@@ -137,7 +137,7 @@ export class FilterManager {
 	}
 }
 
-const comparators: Record<FilterComparison, (row: unknown, filter: unknown) => boolean> = {
+const comparators: Record<TabelaFilterComparison, (row: unknown, filter: unknown) => boolean> = {
 	contains: (row, filter) => includes(getString(row), getString(filter), true),
 	'ends-with': (row, filter) => endsWith(getString(row), getString(filter), true),
 	equals: (row, filter) => equalizer(row, filter),

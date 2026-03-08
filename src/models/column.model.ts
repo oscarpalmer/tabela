@@ -1,11 +1,11 @@
-export type TabelaColumn = {
+export type Column = {
 	field: string;
 	title: string;
 	type: TabelaColumnType;
 	width: number;
 };
 
-export type TabelaColumnOptions = {
+export type TabelaColumn = {
 	field: string;
 	title: string;
 	type: TabelaColumnType;

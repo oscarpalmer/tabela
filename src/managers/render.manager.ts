@@ -3,7 +3,7 @@ import {on} from '@oscarpalmer/toretto/event';
 import type {RemovableEventListener} from '@oscarpalmer/toretto/models';
 import {removeRow, renderRow} from '../components/row.component';
 import type {RenderElementPool, RenderRange, RenderState} from '../models/render.model';
-import type {TabelaState} from '../models/tabela.model';
+import type {State} from '../models/tabela.model';
 
 function getRange(this: RenderManager, down: boolean): RenderRange {
 	const {components, managers, options} = this.state;
@@ -60,7 +60,7 @@ export class RenderManager {
 
 	visible = new Map<number, Key>();
 
-	constructor(state: TabelaState) {
+	constructor(state: State) {
 		this.listener = on(state.components.body.elements.group, 'scroll', onScroll.bind(this));
 
 		this.state = {

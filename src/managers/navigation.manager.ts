@@ -2,12 +2,12 @@ import {isNullableOrWhitespace} from '@oscarpalmer/atoms/is';
 import type {Key} from '@oscarpalmer/atoms/models';
 import {clamp} from '@oscarpalmer/atoms/number';
 import {getKey} from '../helpers/misc.helpers';
-import type {TabelaState} from '../models/tabela.model';
+import type {State} from '../models/tabela.model';
 
 export class NavigationManager {
 	active: Key | undefined;
 
-	constructor(public state: TabelaState) {}
+	constructor(public state: State) {}
 
 	destroy(): void {
 		this.state = undefined as never;

@@ -1,8 +1,8 @@
 import {sort, type ArrayKeySorter} from '@oscarpalmer/atoms/array';
 import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
 import {setAttribute, setAttributes} from '@oscarpalmer/toretto/attribute';
-import type {SortDirection, SortItem} from '../models/sort.model';
-import type {TabelaSort, TabelaState} from '../models/tabela.model';
+import type {TabelaSort, TabelaSortDirection, TabelaSortItem} from '../models/sort.model';
+import type {State} from '../models/tabela.model';
 
 export class SortManager {
 	handlers = Object.freeze({
@@ -15,9 +15,9 @@ export class SortManager {
 
 	items: ArrayKeySorter<PlainObject>[] = [];
 
-	constructor(public state: TabelaState) {}
+	constructor(public state: State) {}
 
-	add(field: string, direction?: SortDirection): void {
+	add(field: string, direction?: TabelaSortDirection): void {
 		const index = this.items.findIndex(item => item.key === field);
 
 		if (index > -1) {
@@ -84,7 +84,7 @@ export class SortManager {
 		}
 	}
 
-	set(items: SortItem[]): void {
+	set(items: TabelaSortItem[]): void {
 		this.items.splice(
 			0,
 			this.items.length,

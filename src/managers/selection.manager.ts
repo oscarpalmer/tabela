@@ -6,22 +6,44 @@ import {getPosition, on} from '@oscarpalmer/toretto/event';
 import {createElement} from '../helpers/dom.helpers';
 import {getKey} from '../helpers/misc.helpers';
 import {dragStyling} from '../helpers/style.helper';
-import type {TabelaSelection, TabelaState} from '../models/tabela.model';
+import type {State} from '../models/tabela.model';
+import type {TabelaSelection} from '../models/selection.model';
 
 export class SelectionManager {
 	handlers = Object.freeze({
+		add: keys => this.add(keys),
 		clear: () => this.clear(),
-		deselect: keys => this.deselect(keys),
-		select: keys => this.select(keys),
+		remove: keys => this.remove(keys),
+		set: keys => this.set(keys),
 		toggle: () => this.toggle(),
-	} as TabelaSelection);
+	} satisfies TabelaSelection);
 
 	items = new Set<Key>();
 
 	last: Key | undefined;
 
-	constructor(public state: TabelaState) {
+	constructor(public state: State) {
 		mapped.set(state.element, this);
+	}
+
+	add(keys: Key[]): void {
+		const {length} = keys;
+
+		let update = false;
+
+		for (let index = 0; index < length; index += 1) {
+			const key = keys[index];
+
+			if (!this.items.has(key)) {
+				this.items.add(key);
+
+				update = true;
+			}
+		}
+
+		if (update) {
+			this.update([]);
+		}
 	}
 
 	clear(): void {
@@ -34,24 +56,6 @@ export class SelectionManager {
 		this.items.clear();
 
 		this.update(removed);
-	}
-
-	deselect(keys: Key[]): void {
-		const {length} = keys;
-
-		const removed: Key[] = [];
-
-		for (let index = 0; index < length; index += 1) {
-			const key = keys[index];
-
-			if (this.items.delete(key)) {
-				removed.push(key);
-			}
-		}
-
-		if (removed.length > 0) {
-			this.update(removed);
-		}
 	}
 
 	destroy(): void {
@@ -88,9 +92,9 @@ export class SelectionManager {
 
 		if (event.ctrlKey || event.metaKey) {
 			if (items.has(key)) {
-				this.deselect([key]);
+				this.remove([key]);
 			} else {
-				this.select([key]);
+				this.add([key]);
 			}
 
 			return;
@@ -129,7 +133,7 @@ export class SelectionManager {
 		}
 
 		if (keyed) {
-			this.select(selected);
+			this.add(selected);
 		} else {
 			this.set(selected);
 		}
@@ -139,23 +143,21 @@ export class SelectionManager {
 		this.state.managers.navigation.setActive(toKey, false);
 	}
 
-	select(keys: Key[]): void {
+	remove(keys: Key[]): void {
 		const {length} = keys;
 
-		let update = false;
+		const removed: Key[] = [];
 
 		for (let index = 0; index < length; index += 1) {
 			const key = keys[index];
 
-			if (!this.items.has(key)) {
-				this.items.add(key);
-
-				update = true;
+			if (this.items.delete(key)) {
+				removed.push(key);
 			}
 		}
 
-		if (update) {
-			this.update([]);
+		if (removed.length > 0) {
+			this.update(removed);
 		}
 	}
 
@@ -182,7 +184,7 @@ export class SelectionManager {
 		if (items.size === all.length) {
 			this.clear();
 		} else {
-			this.select(all);
+			this.add(all);
 		}
 	}
 

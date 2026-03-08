@@ -10,19 +10,15 @@ import {RenderManager} from './managers/render.manager';
 import {RowManager} from './managers/row.manager';
 import {SelectionManager} from './managers/selection.manager';
 import {SortManager} from './managers/sort.manager';
-import type {
-	TabelaComponents,
-	TabelaData,
-	TabelaFilter,
-	TabelaManagers,
-	TabelaSelection,
-	TabelaSort,
-	TabelaState,
-} from './models/tabela.model';
+import type {TabelaData} from './models/data.model';
+import type {TabelaFilter} from './models/filter.model';
+import type {TabelaSelection} from './models/selection.model';
+import type {TabelaSort} from './models/sort.model';
+import type {Components, Managers, State} from './models/tabela.model';
 import type {TabelaOptions} from './models/tabela.options';
 
 export class Tabela {
-	readonly #components: TabelaComponents = {
+	readonly #components: Components = {
 		header: undefined as never,
 		body: undefined as never,
 		footer: undefined as never,
@@ -34,7 +30,7 @@ export class Tabela {
 
 	readonly #key: string;
 
-	readonly #managers: TabelaManagers = {
+	readonly #managers: Managers = {
 		column: undefined as never,
 		data: undefined as never,
 		event: undefined as never,
@@ -74,7 +70,7 @@ export class Tabela {
 		this.#components.body = new BodyComponent();
 		this.#components.footer = new FooterComponent();
 
-		const state: TabelaState = {
+		const state: State = {
 			element,
 			options,
 			components: this.#components,

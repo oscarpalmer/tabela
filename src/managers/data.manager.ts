@@ -2,8 +2,8 @@ import {push, sort} from '@oscarpalmer/atoms/array';
 import {toMap} from '@oscarpalmer/atoms/array/to-map';
 import {isPlainObject} from '@oscarpalmer/atoms/is';
 import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
-import type {DataValues} from '../models/data.model';
-import type {TabelaData, TabelaState} from '../models/tabela.model';
+import type {DataValues, TabelaData} from '../models/data.model';
+import type {State} from '../models/tabela.model';
 
 export class DataManager {
 	handlers = Object.freeze({
@@ -29,7 +29,7 @@ export class DataManager {
 		return this.values.keys.active?.length ?? this.values.keys.original.length;
 	}
 
-	constructor(public state: TabelaState) {}
+	constructor(public state: State) {}
 
 	async add(data: PlainObject[], render: boolean): Promise<void> {
 		const {state, values} = this;

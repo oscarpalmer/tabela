@@ -1,21 +1,21 @@
 import {createElement} from '../helpers/dom.helpers';
-import type {TabelaColumn, TabelaColumnOptions} from '../models/column.model';
+import type {Column, TabelaColumn} from '../models/column.model';
 
 export class ColumnComponent {
 	elements: ColumnElements;
-	options: TabelaColumn;
+	options: Column;
 
-	constructor(options: TabelaColumnOptions) {
+	constructor(column: TabelaColumn) {
 		const width =
 			Number.parseInt(getComputedStyle(document.body).fontSize, 10) *
-			(options.width ?? options.title.length * 1.5);
+			(column.width ?? column.title.length * 1.5);
 
 		this.options = {
-			...options,
+			...column,
 			width,
 		};
 
-		this.elements = createHeading(options.field, options.title, width);
+		this.elements = createHeading(this.options.field, this.options.title, width);
 	}
 
 	destroy(): void {

@@ -1,11 +1,11 @@
 import {ColumnComponent} from '../components/column.component';
-import type {TabelaColumnOptions} from '../models/column.model';
-import type {TabelaState} from '../models/tabela.model';
+import type {TabelaColumn} from '../models/column.model';
+import type {State} from '../models/tabela.model';
 
 export class ColumnManager {
 	items: ColumnComponent[] = [];
 
-	constructor(public state: TabelaState) {
+	constructor(public state: State) {
 		this.set(state.options.columns);
 	}
 
@@ -56,7 +56,7 @@ export class ColumnManager {
 		managers.render.removeCells(fields);
 	}
 
-	set(columns: TabelaColumnOptions[]): void {
+	set(columns: TabelaColumn[]): void {
 		const {items, state} = this;
 		const {footer, header} = state.components;
 

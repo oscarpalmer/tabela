@@ -1,8 +1,8 @@
 import type {PlainObject} from '@oscarpalmer/atoms/models';
-import type {TabelaColumnOptions} from './column.model';
+import type {TabelaColumn} from './column.model';
 
 export type TabelaOptions = {
-	columns: TabelaColumnOptions[];
+	columns: TabelaColumn[];
 	data: PlainObject[];
 	key: string;
 	label: string;

@@ -1,11 +1,11 @@
 import type {Key} from '@oscarpalmer/atoms/models';
 import {removeRow, renderRow, RowComponent} from '../components/row.component';
-import type {TabelaState} from '../models/tabela.model';
+import type {State} from '../models/tabela.model';
 
 export class RowManager {
 	components = new Map<Key, RowComponent>();
 
-	constructor(public state: TabelaState) {}
+	constructor(public state: State) {}
 
 	destroy(): void {
 		const components = [...this.components.values()];

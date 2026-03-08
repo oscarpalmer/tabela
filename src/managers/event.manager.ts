@@ -1,9 +1,9 @@
 import {on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
-import type {TabelaState} from '../models/tabela.model';
+import type {State} from '../models/tabela.model';
 
 export class EventManager {
-	constructor(public state: TabelaState) {
+	constructor(public state: State) {
 		mapped.set(state.element, this);
 	}
 
