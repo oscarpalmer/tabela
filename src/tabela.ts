@@ -5,6 +5,7 @@ import {ColumnManager} from './managers/column.manager';
 import {DataManager} from './managers/data.manager';
 import {EventManager} from './managers/event.manager';
 import {FilterManager} from './managers/filter.manager';
+import {GroupManager} from './managers/group.manager';
 import {NavigationManager} from './managers/navigation.manager';
 import {RenderManager} from './managers/render.manager';
 import {RowManager} from './managers/row.manager';
@@ -35,6 +36,7 @@ export class Tabela {
 		data: undefined as never,
 		event: undefined as never,
 		filter: undefined as never,
+		group: undefined as never,
 		navigation: undefined as never,
 		render: undefined as never,
 		row: undefined as never,
@@ -83,6 +85,7 @@ export class Tabela {
 		this.#managers.data = new DataManager(state);
 		this.#managers.event = new EventManager(state);
 		this.#managers.filter = new FilterManager(state);
+		this.#managers.group = new GroupManager(state);
 		this.#managers.navigation = new NavigationManager(state);
 		this.#managers.render = new RenderManager(state);
 		this.#managers.row = new RowManager(state);

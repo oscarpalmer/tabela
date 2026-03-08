@@ -80,7 +80,9 @@ export function createRow(): HTMLDivElement {
 			role: 'row',
 		},
 		{},
-		{},
+		{
+			height: '32px',
+		},
 	);
 
 	return row;

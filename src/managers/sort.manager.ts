@@ -1,6 +1,8 @@
 import {sort, type ArrayKeySorter} from '@oscarpalmer/atoms/array';
 import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
+import {compare} from '@oscarpalmer/atoms/value/compare';
 import {setAttribute, setAttributes} from '@oscarpalmer/toretto/attribute';
+import {GroupComponent} from '../components/group.component';
 import type {TabelaSort, TabelaSortDirection, TabelaSortItem} from '../models/sort.model';
 import type {State} from '../models/tabela.model';
 
@@ -119,14 +121,7 @@ export class SortManager {
 		}
 
 		state.managers.data.values.keys.active =
-			items.length === 0
-				? undefined
-				: (sort(
-						state.managers.data.values.keys.active?.map(
-							key => state.managers.data.values.objects.mapped.get(key)!,
-						) ?? state.managers.data.values.objects.array,
-						items,
-					).map(row => row[state.key]) as Key[]);
+			items.length === 0 ? undefined : getSortedKeys(state, items);
 
 		state.managers.render.update(true, true);
 	}
@@ -146,4 +141,72 @@ export class SortManager {
 				return;
 		}
 	}
+}
+
+function getSortedKeys(
+	state: State,
+	sorters: ArrayKeySorter<PlainObject>[],
+): Array<GroupComponent | Key> {
+	const data =
+		state.managers.data.values.keys.active?.map(key =>
+			key instanceof GroupComponent ? key : state.managers.data.values.objects.mapped.get(key)!,
+		) ?? state.managers.data.values.objects.array.slice();
+
+	if (!state.managers.group.enabled) {
+		return sort(data as PlainObject[], sorters).map(
+			item => (item as PlainObject)[state.key] as Key,
+		);
+	}
+
+	return sortWithGroups(state, data, sorters).map(item =>
+		item instanceof GroupComponent ? item : (item[state.key] as Key),
+	);
+}
+
+export function sortWithGroups(
+	state: State,
+	data: Array<GroupComponent | PlainObject>,
+	sorters: ArrayKeySorter<PlainObject>[],
+): Array<GroupComponent | PlainObject> {
+	const {length} = sorters;
+
+	return data.sort((first, second) => {
+		const firstValue =
+			first instanceof GroupComponent
+				? first.value
+				: (first as PlainObject)[state.managers.group.field];
+
+		const secondValue =
+			second instanceof GroupComponent
+				? second.value
+				: (second as PlainObject)[state.managers.group.field];
+
+		const firstOrder = state.managers.group.order[firstValue as never];
+		const secondOrder = state.managers.group.order[secondValue as never];
+
+		const groupComparison = compare(firstOrder, secondOrder);
+
+		if (groupComparison !== 0) {
+			return groupComparison;
+		}
+
+		const firstIsGroup = first instanceof GroupComponent;
+		const secondIsGroup = second instanceof GroupComponent;
+
+		if (firstIsGroup || secondIsGroup) {
+			return firstIsGroup && secondIsGroup ? 0 : firstIsGroup ? -1 : 1;
+		}
+
+		for (let index = 0; index < length; index += 1) {
+			const sorter = sorters[index];
+
+			const comparison = compare(first[sorter.key], second[sorter.key]);
+
+			if (comparison !== 0) {
+				return comparison * (sorter.direction === 'ascending' ? 1 : -1);
+			}
+		}
+
+		return 0;
+	});
 }

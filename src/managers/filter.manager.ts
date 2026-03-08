@@ -5,6 +5,7 @@ import {endsWith, includes, startsWith} from '@oscarpalmer/atoms/string/match';
 import {equal} from '@oscarpalmer/atoms/value/equal';
 import type {TabelaFilter, TabelaFilterComparison, TabelaFilterItem} from '../models/filter.model';
 import type {State} from '../models/tabela.model';
+import {GroupComponent} from '../components/group.component';
 
 export class FilterManager {
 	handlers = Object.freeze({
@@ -51,13 +52,20 @@ export class FilterManager {
 	filter(): void {
 		const {state} = this;
 
-		const filtered: Key[] = [];
+		const filtered: Array<GroupComponent | Key> = [];
 		const filters = Object.entries(this.items);
 
 		const keysLength = state.managers.data.values.keys.original.length;
 
 		rowLoop: for (let keyIndex = 0; keyIndex < keysLength; keyIndex += 1) {
 			const key = state.managers.data.values.keys.original[keyIndex];
+
+			if (key instanceof GroupComponent) {
+				filtered.push(key);
+
+				continue;
+			}
+
 			const row = state.managers.data.values.objects.mapped.get(key);
 
 			if (row == null) {

@@ -4,6 +4,7 @@ import type {TabelaColumn} from './column.model';
 export type TabelaOptions = {
 	columns: TabelaColumn[];
 	data: PlainObject[];
+	grouping?: string;
 	key: string;
 	label: string;
 	rowHeight: number;

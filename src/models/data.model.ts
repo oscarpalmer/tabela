@@ -1,4 +1,5 @@
 import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
+import type {GroupComponent} from '../components/group.component';
 
 export type DataValues = {
 	keys: DataValuesKeys;
@@ -6,12 +7,12 @@ export type DataValues = {
 };
 
 type DataValuesKeys = {
-	active?: Key[];
-	original: Key[];
+	active?: Array<GroupComponent | Key>;
+	original: Array<GroupComponent | Key>;
 };
 
 type DataValuesObjects = {
-	array: PlainObject[];
+	array: Array<GroupComponent | PlainObject>;
 	mapped: Map<Key, PlainObject>;
 };
 

@@ -1,13 +1,15 @@
 import {isKey} from '@oscarpalmer/atoms/is';
 import type {Key} from '@oscarpalmer/atoms/models';
-import {findAncestor, type EventPosition} from '@oscarpalmer/toretto';
 import {setAttribute} from '@oscarpalmer/toretto/attribute';
 import {getPosition, on} from '@oscarpalmer/toretto/event';
+import {findAncestor} from '@oscarpalmer/toretto/find';
+import type {EventPosition} from '@oscarpalmer/toretto/models';
 import {createElement} from '../helpers/dom.helpers';
 import {getKey} from '../helpers/misc.helpers';
 import {dragStyling} from '../helpers/style.helper';
-import type {State} from '../models/tabela.model';
 import type {TabelaSelection} from '../models/selection.model';
+import type {State} from '../models/tabela.model';
+import {GroupComponent} from '../components/group.component';
 
 export class SelectionManager {
 	handlers = Object.freeze({
@@ -115,7 +117,7 @@ export class SelectionManager {
 			return;
 		}
 
-		const keys = state.managers.data.values.keys.active ?? state.managers.data.values.keys.original;
+		const {keys} = state.managers.data;
 
 		const fromIndex = state.managers.data.getIndex(fromKey);
 		const toIndex = state.managers.data.getIndex(toKey);
@@ -129,7 +131,11 @@ export class SelectionManager {
 		const selected: Key[] = [];
 
 		for (let index = start; index <= end; index += 1) {
-			selected.push(keys[index]);
+			const key = keys[index];
+
+			if (!(key instanceof GroupComponent)) {
+				selected.push(key);
+			}
 		}
 
 		if (keyed) {
@@ -178,13 +184,12 @@ export class SelectionManager {
 
 	toggle(): void {
 		const {items, state} = this;
+		const {keys} = state.managers.data;
 
-		const all = state.managers.data.values.keys.active ?? state.managers.data.values.keys.original;
-
-		if (items.size === all.length) {
+		if (items.size === keys.length - state.managers.group.items.length) {
 			this.clear();
 		} else {
-			this.add(all);
+			this.set(keys.filter(key => !(key instanceof GroupComponent)) as Key[]);
 		}
 	}
 

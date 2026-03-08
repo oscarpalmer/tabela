@@ -1,6 +1,7 @@
 import {isNullableOrWhitespace} from '@oscarpalmer/atoms/is';
 import type {Key} from '@oscarpalmer/atoms/models';
 import {clamp} from '@oscarpalmer/atoms/number';
+import type {GroupComponent} from '../components/group.component';
 import {getKey} from '../helpers/misc.helpers';
 import type {State} from '../models/tabela.model';
 
@@ -24,7 +25,7 @@ export class NavigationManager {
 
 		const activeDescendant = components.body.elements.group.getAttribute('aria-activedescendant');
 
-		const keys = managers.data.values.keys.active ?? managers.data.values.keys.original;
+		const {keys} = managers.data;
 		const {length} = keys;
 
 		let next: number;
@@ -36,7 +37,7 @@ export class NavigationManager {
 		}
 
 		if (next != null) {
-			this.setActive(keys.at(next)!);
+			this.setActive(keys.at(next) as Key);
 		}
 	}
 
@@ -97,7 +98,7 @@ function getIndex(
 	event: KeyboardEvent,
 	active: string,
 	id: number,
-	keys: Key[],
+	keys: Array<GroupComponent | Key>,
 ): number | undefined {
 	const key = getKey(active.replace(`tabela_${id}_row_`, ''));
 

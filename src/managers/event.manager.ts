@@ -40,7 +40,11 @@ function onClick(event: MouseEvent): void {
 	const type = target?.getAttribute('data-event');
 
 	switch (type) {
-		case 'heading':
+		case 'group':
+			manager.state.managers.group.handle(target);
+			break;
+
+			case 'heading':
 			manager.onSort(event, target);
 			break;
 

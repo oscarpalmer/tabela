@@ -5,6 +5,7 @@ import type {ColumnManager} from '../managers/column.manager';
 import type {DataManager} from '../managers/data.manager';
 import type {EventManager} from '../managers/event.manager';
 import type {FilterManager} from '../managers/filter.manager';
+import type { GroupManager } from '../managers/group.manager';
 import type {NavigationManager} from '../managers/navigation.manager';
 import type {RenderManager} from '../managers/render.manager';
 import type {RowManager} from '../managers/row.manager';
@@ -23,6 +24,7 @@ export type Managers = {
 	data: DataManager;
 	event: EventManager;
 	filter: FilterManager;
+	group: GroupManager;
 	navigation: NavigationManager;
 	row: RowManager;
 	selection: SelectionManager;
