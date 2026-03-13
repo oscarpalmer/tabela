@@ -1,5 +1,10 @@
 import {createElement} from '../helpers/dom.helpers';
 import type {Column, TabelaColumn} from '../models/column.model';
+import {
+	CSS_TABELA_HEADING,
+	CSS_TABELA_HEADING_CONTENT,
+	CSS_TABELA_HEADING_SORTER,
+} from '../models/style.model';
 
 export class ColumnComponent {
 	elements: ColumnElements;
@@ -38,7 +43,7 @@ function createHeading(field: string, title: string, width: number): ColumnEleme
 	const wrapper = createElement(
 		'div',
 		{
-			className: 'tabela__heading',
+			className: CSS_TABELA_HEADING,
 			role: 'columnheader',
 		},
 		{
@@ -53,7 +58,7 @@ function createHeading(field: string, title: string, width: number): ColumnEleme
 	const content = createElement(
 		'div',
 		{
-			className: 'tabela__heading__content',
+			className: CSS_TABELA_HEADING_CONTENT,
 			textContent: title,
 		},
 		{},
@@ -63,7 +68,7 @@ function createHeading(field: string, title: string, width: number): ColumnEleme
 	const sorter = createElement(
 		'div',
 		{
-			className: 'tabela__heading__sorter',
+			className: CSS_TABELA_HEADING_SORTER,
 		},
 		{},
 		{},

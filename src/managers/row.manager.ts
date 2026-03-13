@@ -8,11 +8,15 @@ export class RowManager {
 	constructor(public state: State) {}
 
 	destroy(): void {
+
 		const components = [...this.components.values()];
 		const {length} = components;
 
 		for (let index = 0; index < length; index += 1) {
-			removeRow(this.state.managers.render.pool, components[index]);
+			const row = components[index];
+
+			row.cells = {};
+			row.element = undefined;
 		}
 
 		this.components.clear();

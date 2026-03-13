@@ -2,6 +2,7 @@ import type {Key} from '@oscarpalmer/atoms/models';
 import {setAttributes} from '@oscarpalmer/toretto/attribute';
 import {createCell, createRow} from '../helpers/dom.helpers';
 import type {RenderElementPool} from '../models/render.model';
+import {CSS_TABELA_ROW_BODY, CSS_TABELA_ROW_SELECTED} from '../models/style.model';
 import type {State} from '../models/tabela.model';
 
 export function removeRow(pool: RenderElementPool, row: RowComponent): void {
@@ -36,12 +37,12 @@ export function renderRow(state: State, row: RowComponent): void {
 		id: `tabela_${state.id}_row_${key}`,
 	});
 
-	element.classList.add('tabela__row--body');
+	element.classList.add(CSS_TABELA_ROW_BODY);
 
 	if (selected) {
-		element.classList.add('tabela__row--selected');
+		element.classList.add(CSS_TABELA_ROW_SELECTED);
 	} else {
-		element.classList.remove('tabela__row--selected');
+		element.classList.remove(CSS_TABELA_ROW_SELECTED);
 	}
 
 	const columns = state.managers.column.items;

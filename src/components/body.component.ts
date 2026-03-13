@@ -1,10 +1,16 @@
 import {createElement, createRowGroup} from '../helpers/dom.helpers';
 import type {BodyElements} from '../models/body.model';
+import {CSS_TABELA_FAKER, CSS_TABELA_ROWGROUP_BODY} from '../models/style.model';
 
 function createFaker(): HTMLDivElement {
-	return createElement('div', {
-		className: 'tabela__faker',
-	}, {}, {});
+	return createElement(
+		'div',
+		{
+			className: CSS_TABELA_FAKER,
+		},
+		{},
+		{},
+	);
 }
 
 export class BodyComponent {
@@ -18,7 +24,7 @@ export class BodyComponent {
 
 		this.elements.group = group;
 
-		group.className += ' tabela__rowgroup--body';
+		group.className += ` ${CSS_TABELA_ROWGROUP_BODY}`;
 
 		group.tabIndex = 0;
 

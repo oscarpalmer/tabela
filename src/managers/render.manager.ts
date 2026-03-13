@@ -7,8 +7,8 @@ import type {RenderElementPool, RenderRange, RenderState} from '../models/render
 import type {State} from '../models/tabela.model';
 
 function getRange(state: State, down: boolean): RenderRange {
-	const {components, managers, options} = state;
-	const {clientHeight, scrollTop} = components.body.elements.group;
+	const {element, managers, options} = state;
+	const {clientHeight, scrollTop} = element;
 
 	const {keys} = managers.data;
 
@@ -33,7 +33,7 @@ function onScroll(this: RenderManager): void {
 
 	if (!state.active) {
 		requestAnimationFrame(() => {
-			const top = state.components.body.elements.group.scrollTop;
+			const top = state.element.scrollTop;
 
 			this.update(top > state.top);
 
@@ -60,7 +60,7 @@ export class RenderManager {
 	visible = new Map<number, GroupComponent | Key>();
 
 	constructor(state: State) {
-		this.listener = on(state.components.body.elements.group, 'scroll', onScroll.bind(this));
+		this.listener = on(state.element, 'scroll', onScroll.bind(this));
 
 		this.state = {
 			...state,
@@ -74,6 +74,20 @@ export class RenderManager {
 
 		listener();
 		visible.clear();
+
+		const cells = Object.values(pool.cells).flat();
+
+		let {length} = cells;
+
+		for (let index = 0; index < length; index += 1) {
+			cells[index].remove();
+		}
+
+		length = pool.rows.length;
+
+		for (let index = 0; index < length; index += 1) {
+			pool.rows[index].remove();
+		}
 
 		pool.cells = {};
 		pool.rows = [];

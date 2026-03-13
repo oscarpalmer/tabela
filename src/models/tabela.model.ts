@@ -5,12 +5,13 @@ import type {ColumnManager} from '../managers/column.manager';
 import type {DataManager} from '../managers/data.manager';
 import type {EventManager} from '../managers/event.manager';
 import type {FilterManager} from '../managers/filter.manager';
-import type { GroupManager } from '../managers/group.manager';
+import type {GroupManager} from '../managers/group.manager';
 import type {NavigationManager} from '../managers/navigation.manager';
 import type {RenderManager} from '../managers/render.manager';
 import type {RowManager} from '../managers/row.manager';
 import type {SelectionManager} from '../managers/selection.manager';
 import type {SortManager} from '../managers/sort.manager';
+import type {StyleManager} from '../managers/style.manager';
 import type {TabelaOptions} from './tabela.options';
 
 export type Components = {
@@ -26,17 +27,18 @@ export type Managers = {
 	filter: FilterManager;
 	group: GroupManager;
 	navigation: NavigationManager;
+	render: RenderManager;
 	row: RowManager;
 	selection: SelectionManager;
 	sort: SortManager;
-	render: RenderManager;
+	style: StyleManager;
 };
 
 export type State = {
-	readonly components: Components;
-	readonly element: HTMLElement;
-	readonly id: number;
-	readonly key: string;
-	readonly managers: Managers;
-	readonly options: TabelaOptions;
+	components: Components;
+	element: HTMLElement;
+	id: number;
+	key: string;
+	managers: Managers;
+	options: TabelaOptions;
 };

@@ -1,5 +1,10 @@
 import {createCell, createRowGroup} from '../helpers/dom.helpers';
 import type {FooterElements} from '../models/footer.model';
+import {
+	CSS_TABELA_CELL_FOOTER,
+	CSS_TABELA_ROW_FOOTER,
+	CSS_TABELA_ROWGROUP_FOOTER,
+} from '../models/style.model';
 import type {ColumnComponent} from './column.component';
 
 export class FooterComponent {
@@ -14,8 +19,8 @@ export class FooterComponent {
 			cells: [],
 		};
 
-		group.className += ' tabela__rowgroup--footer';
-		row.className += ' tabela__row--footer';
+		group.className += ` ${CSS_TABELA_ROWGROUP_FOOTER}`;
+		row.className += ` ${CSS_TABELA_ROW_FOOTER}`;
 	}
 
 	destroy(): void {
@@ -35,7 +40,7 @@ export class FooterComponent {
 		for (let index = 0; index < length; index += 1) {
 			const cell = createCell(columns[index].options.width ?? 4, false);
 
-			cell.className += ' tabela__cell--footer';
+			cell.className += ` ${CSS_TABELA_CELL_FOOTER}`;
 			cell.innerHTML = '&nbsp;';
 
 			elements.cells.push(cell);

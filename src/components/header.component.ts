@@ -1,5 +1,6 @@
 import {createRowGroup} from '../helpers/dom.helpers';
 import type {HeaderElements} from '../models/header.model';
+import {CSS_TABELA_ROW_HEADER, CSS_TABELA_ROWGROUP_HEADER} from '../models/style.model';
 import type {ColumnComponent} from './column.component';
 
 export class HeaderComponent {
@@ -10,8 +11,8 @@ export class HeaderComponent {
 
 		this.elements = {group, row};
 
-		group.className += ' tabela__rowgroup--header';
-		row.className += ' tabela__row--header';
+		group.className += ` ${CSS_TABELA_ROWGROUP_HEADER}`;
+		row.className += ` ${CSS_TABELA_ROW_HEADER}`;
 	}
 
 	destroy(): void {

@@ -1,4 +1,5 @@
 import {createElement} from '../helpers/dom.helpers';
+import {CSS_TABELA_ROW, CSS_TABELA_ROW_GROUP} from '../models/style.model';
 import type {State} from '../models/tabela.model';
 
 export class GroupComponent {
@@ -23,7 +24,7 @@ export function renderGroup(state: State, component: GroupComponent): void {
 	component.element ??= createElement(
 		'div',
 		{
-			className: 'tabela__row tabela__row--group',
+			className: `${CSS_TABELA_ROW} ${CSS_TABELA_ROW_GROUP}`,
 			innerHTML: `<div class="tabela__cell tabela__cell--group" role="cell">
 	<button class="tabela__button tabela__button--group" data-event="group" data-key="${component.key}" type="button">
 		<span aria-hidden="true"></span>

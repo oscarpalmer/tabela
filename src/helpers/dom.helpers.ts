@@ -1,5 +1,11 @@
 import {setAttributes} from '@oscarpalmer/toretto/attribute';
 import {setStyles} from '@oscarpalmer/toretto/style';
+import {
+	CSS_TABELA_CELL,
+	CSS_TABELA_CELL_BODY,
+	CSS_TABELA_ROW,
+	CSS_TABELA_ROWGROUP,
+} from '../models/style.model';
 
 type RowGroupWithRow = {
 	group: HTMLDivElement;
@@ -10,7 +16,7 @@ export function createCell(width: number, body?: boolean): HTMLDivElement {
 	const cell = createElement(
 		'div',
 		{
-			className: 'tabela__cell',
+			className: CSS_TABELA_CELL,
 			role: 'cell',
 		},
 		{},
@@ -20,7 +26,7 @@ export function createCell(width: number, body?: boolean): HTMLDivElement {
 	);
 
 	if (body ?? true) {
-		cell.classList.add('tabela__cell--body');
+		cell.classList.add(CSS_TABELA_CELL_BODY);
 	}
 
 	return cell;
@@ -28,20 +34,21 @@ export function createCell(width: number, body?: boolean): HTMLDivElement {
 
 export function createElement<TagName extends keyof HTMLElementTagNameMap>(
 	tagName: TagName,
-	properties: Partial<HTMLElementTagNameMap[TagName]>,
-	attributes: Record<string, string>,
-	style: Partial<CSSStyleDeclaration>,
+	properties?: Partial<HTMLElementTagNameMap[TagName]>,
+	attributes?: Record<string, string>,
+	style?: Partial<CSSStyleDeclaration>,
 ): HTMLElementTagNameMap[TagName] {
 	const element = document.createElement(tagName);
 
-	const keys = Object.keys(properties);
+	const props = properties ?? {};
+	const keys = Object.keys(props);
 
 	for (const key of keys) {
-		(element as any)[key] = properties[key as keyof typeof properties];
+		(element as any)[key] = props[key as keyof typeof props];
 	}
 
-	setAttributes(element, attributes);
-	setStyles(element, style);
+	setAttributes(element, attributes ?? {});
+	setStyles(element, style ?? {});
 
 	return element;
 }
@@ -54,7 +61,7 @@ export function createRowGroup(withRow?: boolean) {
 	const group = createElement(
 		'div',
 		{
-			className: 'tabela__rowgroup',
+			className: CSS_TABELA_ROWGROUP,
 			role: 'rowgroup',
 		},
 		{},
@@ -76,7 +83,7 @@ export function createRow(): HTMLDivElement {
 	const row = createElement(
 		'div',
 		{
-			className: 'tabela__row',
+			className: CSS_TABELA_ROW,
 			role: 'row',
 		},
 		{},

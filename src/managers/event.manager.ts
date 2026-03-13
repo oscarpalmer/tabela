@@ -24,8 +24,10 @@ export class EventManager {
 }
 
 function onClick(event: MouseEvent): void {
+	console.log(performance.now(), event);
+
 	const target = findAncestor(event, '[data-event]');
-	const table = findAncestor(event, '.tabela');
+	const table = findAncestor(event, '.tabela__table');
 
 	if (!(target instanceof HTMLElement) || !(table instanceof HTMLElement)) {
 		return;
@@ -59,7 +61,7 @@ function onClick(event: MouseEvent): void {
 
 function onKeydown(event: KeyboardEvent): void {
 	const target = findAncestor(event, '[data-event]');
-	const table = findAncestor(event, '.tabela');
+	const table = findAncestor(event, '.tabela__table');
 
 	if (!(target instanceof HTMLElement) || !(table instanceof HTMLElement)) {
 		return;
@@ -84,6 +86,8 @@ function onKeydown(event: KeyboardEvent): void {
 }
 
 const mapped = new WeakMap<HTMLElement, EventManager>();
+
+console.log('Attaching event listeners');
 
 on(document, 'click', onClick);
 on(document, 'keydown', onKeydown, {passive: false});

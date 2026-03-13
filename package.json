@@ -4,21 +4,21 @@
 		"url": "https://oscarpalmer.se"
 	},
 	"dependencies": {
-		"@oscarpalmer/atoms": "^0.159",
+		"@oscarpalmer/atoms": "^0.161",
 		"@oscarpalmer/toretto": "^0.38"
 	},
 	"description": "A modern table.",
 	"devDependencies": {
-		"@oscarpalmer/oui": "^0.19",
+		"@oscarpalmer/abydon": "0.16",
 		"@types/node": "^25.3",
 		"@vitest/coverage-istanbul": "^4",
 		"jsdom": "^28.1",
 		"oxfmt": "^0.36",
 		"oxlint": "^1.51",
-		"rolldown": "1.0.0-rc.7",
+		"rolldown": "1.0.0-rc.8",
 		"tslib": "^2.8",
 		"typescript": "^5.9",
-		"vite": "8.0.0-beta.16",
+		"vite": "8.0.0-beta.17",
 		"vitest": "^4"
 	},
 	"exports": {
@@ -41,6 +41,8 @@
 		"clean": "rm -rf ./dist && rm -rf ./types && rm -f ./tsconfig.tsbuildinfo",
 		"rolldown:build": "npx rolldown -c",
 		"rolldown:watch": "npx rolldown -c ./rolldown.config.js --watch",
+		"rolldown:build:www": "npx rolldown -c ./www/js/rolldown.config.js",
+		"rolldown:watch:www": "npx rolldown -c ./www/js/rolldown.config.js --watch",
 		"test": "npx vitest --coverage",
 		"watch": "npx vite build --watch"
 	},

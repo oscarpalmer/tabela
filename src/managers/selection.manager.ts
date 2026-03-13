@@ -10,6 +10,11 @@ import {dragStyling} from '../helpers/style.helper';
 import type {TabelaSelection} from '../models/selection.model';
 import type {State} from '../models/tabela.model';
 import {GroupComponent} from '../components/group.component';
+import {
+	CSS_TABELA_ROW_BODY,
+	CSS_TABELA_ROW_SELECTED,
+	CSS_TABELA_SELECTION,
+} from '../models/style.model';
 
 export class SelectionManager {
 	handlers = Object.freeze({
@@ -213,9 +218,9 @@ export class SelectionManager {
 			setAttribute(row.element, 'aria-selected', String(!removed));
 
 			if (removed) {
-				row.element.classList.remove('tabela__row--selected');
+				row.element.classList.remove(CSS_TABELA_ROW_SELECTED);
 			} else {
-				row.element.classList.add('tabela__row--selected');
+				row.element.classList.add(CSS_TABELA_ROW_SELECTED);
 			}
 		}
 	}
@@ -225,7 +230,7 @@ function getPlaceholder(): HTMLElement {
 	placeholder ??= createElement(
 		'div',
 		{
-			className: 'tabela__selection--placeholder',
+			className: CSS_TABELA_SELECTION,
 		},
 		{},
 		{},
@@ -236,7 +241,7 @@ function getPlaceholder(): HTMLElement {
 
 function onMouseDown(event: MouseEvent): void {
 	if (shifted) {
-		const row = findAncestor(event.target as HTMLElement, '.tabela__row--body');
+		const row = findAncestor(event.target as HTMLElement, `.${CSS_TABELA_ROW_BODY}`);
 
 		if (!(row instanceof HTMLElement)) {
 			return;
@@ -296,8 +301,8 @@ function onMouseUp(event: MouseEvent): void {
 	if (row instanceof HTMLElement) {
 		endElement = row;
 
-		const endTable = findAncestor(endElement, '.tabela');
-		const startTable = findAncestor(startElement, '.tabela');
+		const endTable = findAncestor(endElement, '.tabela__table');
+		const startTable = findAncestor(startElement, '.tabela__table');
 
 		if (startTable != null && startTable === endTable) {
 			mapped.get(startTable)?.range(startElement, endElement);
