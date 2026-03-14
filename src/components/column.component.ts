@@ -55,24 +55,14 @@ function createHeading(field: string, title: string, width: number): ColumnEleme
 		},
 	);
 
-	const content = createElement(
-		'div',
-		{
-			className: CSS_TABELA_HEADING_CONTENT,
-			textContent: title,
-		},
-		{},
-		{},
-	);
+	const content = createElement('div', {
+		className: CSS_TABELA_HEADING_CONTENT,
+		textContent: title,
+	});
 
-	const sorter = createElement(
-		'div',
-		{
-			className: CSS_TABELA_HEADING_SORTER,
-		},
-		{},
-		{},
-	);
+	const sorter = createElement('div', {
+		className: CSS_TABELA_HEADING_SORTER,
+	});
 
 	wrapper.append(content, sorter);
 

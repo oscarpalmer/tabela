@@ -4,17 +4,17 @@ import {setAttribute} from '@oscarpalmer/toretto/attribute';
 import {getPosition, on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
 import type {EventPosition} from '@oscarpalmer/toretto/models';
+import {GroupComponent} from '../components/group.component';
 import {createElement} from '../helpers/dom.helpers';
 import {getKey} from '../helpers/misc.helpers';
-import {dragStyling} from '../helpers/style.helper';
+import {preventSelection} from '../helpers/style.helper';
 import type {TabelaSelection} from '../models/selection.model';
-import type {State} from '../models/tabela.model';
-import {GroupComponent} from '../components/group.component';
 import {
 	CSS_TABELA_ROW_BODY,
 	CSS_TABELA_ROW_SELECTED,
 	CSS_TABELA_SELECTION,
 } from '../models/style.model';
+import type {State} from '../models/tabela.model';
 
 export class SelectionManager {
 	handlers = Object.freeze({
@@ -122,7 +122,7 @@ export class SelectionManager {
 			return;
 		}
 
-		const {keys} = state.managers.data;
+		const {items} = state.managers.data;
 
 		const fromIndex = state.managers.data.getIndex(fromKey);
 		const toIndex = state.managers.data.getIndex(toKey);
@@ -136,10 +136,10 @@ export class SelectionManager {
 		const selected: Key[] = [];
 
 		for (let index = start; index <= end; index += 1) {
-			const key = keys[index];
+			const item = items[index];
 
-			if (!(key instanceof GroupComponent)) {
-				selected.push(key);
+			if (!(item instanceof GroupComponent)) {
+				selected.push(item as Key);
 			}
 		}
 
@@ -189,38 +189,40 @@ export class SelectionManager {
 
 	toggle(): void {
 		const {items, state} = this;
-		const {keys} = state.managers.data;
+		const data = state.managers.data.items;
 
-		if (items.size === keys.length - state.managers.group.items.length) {
+		if (items.size === data.length - state.managers.group.items.length) {
 			this.clear();
 		} else {
-			this.set(keys.filter(key => !(key instanceof GroupComponent)) as Key[]);
+			this.set(data.filter(key => !(key instanceof GroupComponent)) as Key[]);
 		}
 	}
 
 	update(removed: Key[]): void {
+		const {state} = this;
+
 		const items = [
 			...removed.map(key => ({key, removed: true})),
 			...[...this.items].map(key => ({key, removed: false})),
 		];
 
-		const {length} = items;
+		let {length} = items;
 
 		for (let index = 0; index < length; index += 1) {
 			const {key, removed} = items[index];
 
-			const row = this.state.managers.row.get(key);
+			const element = state.managers.row.get(key, false)?.element;
 
-			if (row == null || row.element == null) {
+			if (element == null) {
 				continue;
 			}
 
-			setAttribute(row.element, 'aria-selected', String(!removed));
+			setAttribute(element, 'aria-selected', String(!removed));
 
 			if (removed) {
-				row.element.classList.remove(CSS_TABELA_ROW_SELECTED);
+				element.classList.remove(CSS_TABELA_ROW_SELECTED);
 			} else {
-				row.element.classList.add(CSS_TABELA_ROW_SELECTED);
+				element.classList.add(CSS_TABELA_ROW_SELECTED);
 			}
 		}
 	}
@@ -250,7 +252,7 @@ function onMouseDown(event: MouseEvent): void {
 		startElement = row;
 		startPosition = getPosition(event)!;
 
-		dragStyling.set();
+		preventSelection.set();
 	}
 }
 
@@ -291,7 +293,7 @@ function onMouseUp(event: MouseEvent): void {
 	if (!event.shiftKey) {
 		shifted = false;
 
-		dragStyling.remove();
+		preventSelection.remove();
 	}
 
 	getPlaceholder().remove();

@@ -1,52 +1,58 @@
 {
+	"name": "@oscarpalmer/tabela",
+	"version": "0.13.0",
+	"description": "A modern table.",
+	"keywords": [],
+	"license": "MIT",
 	"author": {
 		"name": "Oscar Palmér",
 		"url": "https://oscarpalmer.se"
 	},
-	"dependencies": {
-		"@oscarpalmer/atoms": "^0.161",
-		"@oscarpalmer/toretto": "^0.38"
-	},
-	"description": "A modern table.",
-	"devDependencies": {
-		"@oscarpalmer/abydon": "0.16",
-		"@types/node": "^25.3",
-		"@vitest/coverage-istanbul": "^4",
-		"jsdom": "^28.1",
-		"oxfmt": "^0.36",
-		"oxlint": "^1.51",
-		"rolldown": "1.0.0-rc.8",
-		"tslib": "^2.8",
-		"typescript": "^5.9",
-		"vite": "8.0.0-beta.17",
-		"vitest": "^4"
-	},
-	"exports": {
-		".": {
-			"types": "./types/index.d.ts",
-			"default": "./dist/index.js"
-		}
-	},
-	"files": ["dist", "src", "types"],
-	"keywords": [],
-	"license": "MIT",
-	"module": "./dist/index.js",
-	"name": "@oscarpalmer/tabela",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/oscarpalmer/tabela.git"
 	},
-	"scripts": {
-		"build": "npm run clean && npx vite build && npm run rolldown:build && npx tsc",
-		"clean": "rm -rf ./dist && rm -rf ./types && rm -f ./tsconfig.tsbuildinfo",
-		"rolldown:build": "npx rolldown -c",
-		"rolldown:watch": "npx rolldown -c ./rolldown.config.js --watch",
-		"rolldown:build:www": "npx rolldown -c ./www/js/rolldown.config.js",
-		"rolldown:watch:www": "npx rolldown -c ./www/js/rolldown.config.js --watch",
-		"test": "npx vitest --coverage",
-		"watch": "npx vite build --watch"
-	},
+	"files": [
+		"dist",
+		"src"
+	],
 	"type": "module",
-	"types": "./types/index.d.ts",
-	"version": "0.12.0"
+	"module": "./dist/index.mjs",
+	"types": "./dist/index.d.mts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.mts",
+			"default": "./dist/index.mjs"
+		}
+	},
+	"scripts": {
+		"build": "vpx vp run tsdown:build && vpx vp pack",
+		"tsdown:build": "vpx tsdown -c ./tsdown.config.ts",
+		"tsdown:watch": "vpx tsdown -c ./tsdown.config.ts --watch",
+		"test": "vpx vp test run --coverage",
+		"test:leak": "vpx vp test run --detect-async-leaks --coverage",
+		"watch": "vpx vite build --watch",
+		"www": "concurrently \"vpx vp run www:css\" \"vpx vp run www:js\"",
+		"www:css": "sass --watch www/.app/css:./www/css",
+		"www:js": "vpx tsdown -c ./www/.app/js/tsdown.config.ts --watch"
+	},
+	"dependencies": {
+		"@oscarpalmer/atoms": "^0.165",
+		"@oscarpalmer/toretto": "^0.41"
+	},
+	"devDependencies": {
+		"@oscarpalmer/abydon": "^0.19",
+		"@oscarpalmer/oui": "^0.19",
+		"@types/node": "^25.5",
+		"@vitest/coverage-istanbul": "^4.1",
+		"concurrently": "^9.2",
+		"jsdom": "^28.1",
+		"sass": "^1.98",
+		"tsdown": "^0.21",
+		"typescript": "^5.9",
+		"vite": "npm:@voidzero-dev/vite-plus-core@latest",
+		"vite-plus": "latest",
+		"vitest": "npm:@voidzero-dev/vite-plus-test@latest"
+	},
+	"packageManager": "npm@11.11.1"
 }

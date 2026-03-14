@@ -20,7 +20,7 @@ export const CSS_TABELA_ROW_BODY = 'tabela__row--body';
 
 export const CSS_TABELA_ROW_FOOTER = 'tabela__row--footer';
 
-export const CSS_TABELA_ROW_GROUP = 'tabela__row--group';
+export const CSS_TABELA_ROW_GROUP = 'tabela__row--group tabela__group';
 
 export const CSS_TABELA_ROW_HEADER = 'tabela__row--header';
 

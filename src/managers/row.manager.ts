@@ -7,28 +7,30 @@ export class RowManager {
 
 	constructor(public state: State) {}
 
-	destroy(): void {
+	clear(): void {
+		const {components} = this;
 
-		const components = [...this.components.values()];
-		const {length} = components;
+		const rows = [...components.values()];
+		const {length} = rows;
 
 		for (let index = 0; index < length; index += 1) {
-			const row = components[index];
-
-			row.cells = {};
-			row.element = undefined;
+			this.removeRow(rows[index]);
 		}
 
-		this.components.clear();
+		components.clear();
+	}
+
+	destroy(): void {
+		this.clear();
 
 		this.components = undefined as never;
 		this.state = undefined as never;
 	}
 
-	get(key: Key): RowComponent | undefined {
+	get(key: Key, create: boolean): RowComponent | undefined {
 		let row = this.components.get(key);
 
-		if (row == null) {
+		if (row == null && create) {
 			row = new RowComponent(key);
 
 			this.components.set(key, row);
@@ -45,10 +47,16 @@ export class RowManager {
 		const row = this.components.get(key);
 
 		if (row != null) {
-			removeRow(this.state.managers.render.pool, row);
-
-			this.components.delete(key);
+			this.removeRow(row);
 		}
+	}
+
+	removeRow(row: RowComponent): void {
+		if (row.element != null) {
+			removeRow(this.state.managers.render.pool, row);
+		}
+
+		this.components.delete(row.key);
 	}
 
 	update(key: Key): void {

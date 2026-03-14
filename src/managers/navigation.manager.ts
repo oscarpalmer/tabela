@@ -1,12 +1,12 @@
 import {isNullableOrWhitespace} from '@oscarpalmer/atoms/is';
-import type {Key} from '@oscarpalmer/atoms/models';
 import {clamp} from '@oscarpalmer/atoms/number';
-import type {GroupComponent} from '../components/group.component';
 import {getKey} from '../helpers/misc.helpers';
+import type {DataItem} from '../models/data.model';
 import type {State} from '../models/tabela.model';
+import {GroupComponent} from '../components/group.component';
 
 export class NavigationManager {
-	active: Key | undefined;
+	active: DataItem | undefined;
 
 	constructor(public state: State) {}
 
@@ -25,26 +25,26 @@ export class NavigationManager {
 
 		const activeDescendant = components.body.elements.group.getAttribute('aria-activedescendant');
 
-		const {keys} = managers.data;
-		const {length} = keys;
+		const {items} = managers.data;
+		const {length} = items;
 
 		let next: number;
 
 		if (isNullableOrWhitespace(activeDescendant)) {
 			next = getDefaultIndex(event.key, length);
 		} else {
-			next = getIndex(event, activeDescendant, id, keys)!;
+			next = getIndex(this.state, event, activeDescendant, id)!;
 		}
 
 		if (next != null) {
-			this.setActive(keys.at(next) as Key);
+			this.setActive(items.at(next));
 		}
 	}
 
-	setActive(key: Key | undefined, scroll?: boolean): void {
-		const {components, managers, options} = this.state;
+	setActive(item: DataItem | undefined, scroll?: boolean): void {
+		const {components, id, managers, options} = this.state;
 
-		this.active = key;
+		this.active = item;
 
 		const active = components.body.elements.group.querySelectorAll('[data-active="true"]');
 
@@ -52,19 +52,19 @@ export class NavigationManager {
 			item.setAttribute('data-active', 'false');
 		}
 
-		const row = managers.row.get(key!);
+		const component = item instanceof GroupComponent ? item : managers.row.get(item!, false);
 
-		if (row != null) {
-			row.element?.setAttribute('data-active', 'true');
+		if (component != null) {
+			component.element?.setAttribute('data-active', 'true');
 
 			if (scroll ?? true) {
-				if (row.element == null) {
+				if (component.element == null) {
 					components.body.elements.group.scrollTo({
-						top: managers.data.getIndex(key!) * options.rowHeight,
+						top: managers.data.getIndex(item!) * options.rowHeight,
 						behavior: 'smooth',
 					});
 				} else {
-					row.element.scrollIntoView({
+					component.element.scrollIntoView({
 						block: 'nearest',
 					});
 				}
@@ -73,7 +73,7 @@ export class NavigationManager {
 
 		components.body.elements.group.setAttribute(
 			'aria-activedescendant',
-			row == null ? '' : `tabela_${this.state.id}_row_${key}`,
+			component == null ? '' : `tabela_${id}_${component.key}`,
 		);
 	}
 }
@@ -95,25 +95,26 @@ function getDefaultIndex(key: string, max: number): number {
 }
 
 function getIndex(
+	state: State,
 	event: KeyboardEvent,
 	active: string,
 	id: number,
-	keys: Array<GroupComponent | Key>,
 ): number | undefined {
-	const key = getKey(active.replace(`tabela_${id}_row_`, ''));
+	const key = getKey(active.replace(`tabela_${id}_`, ''));
 
 	if (key == null) {
 		return;
 	}
 
 	if (absoluteKeys.has(event.key)) {
-		return event.key === 'Home' ? 0 : keys.length - 1;
+		return event.key === 'Home' ? 0 : state.managers.data.size - 1;
 	}
 
-	const index = keys.indexOf(key);
+	const index = state.managers.data.getIndex(key);
+
 	const offset = getOffset(event.key);
 
-	return clamp(index + offset, 0, keys.length - 1, true);
+	return clamp(index + offset, 0, state.managers.data.size - 1, true);
 }
 
 function getOffset(key: string): number {

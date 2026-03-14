@@ -1,4 +1,5 @@
 import type {Key} from '@oscarpalmer/atoms/models';
+import {getValue} from '@oscarpalmer/atoms/value/handle';
 import {setAttributes} from '@oscarpalmer/toretto/attribute';
 import {createCell, createRow} from '../helpers/dom.helpers';
 import type {RenderElementPool} from '../models/render.model';
@@ -34,7 +35,7 @@ export function renderRow(state: State, row: RowComponent): void {
 		'data-active': String(state.managers.navigation.active === row.key),
 		'data-event': 'row',
 		'data-key': key,
-		id: `tabela_${state.id}_row_${key}`,
+		id: `tabela_${state.id}_${key}`,
 	});
 
 	element.classList.add(CSS_TABELA_ROW_BODY);
@@ -48,7 +49,7 @@ export function renderRow(state: State, row: RowComponent): void {
 	const columns = state.managers.column.items;
 	const {length} = columns;
 
-	const data = state.managers.data.values.objects.mapped.get(row.key);
+	const data = state.managers.data.state.values.mapped.get(row.key);
 
 	if (data == null) {
 		return;
@@ -63,7 +64,7 @@ export function renderRow(state: State, row: RowComponent): void {
 			state.managers.render.pool.cells[columns[index].options.field].shift() ??
 			createCell(options.width);
 
-		cell.textContent = String(data[options.field]);
+		cell.textContent = String(getValue(data, options.field));
 
 		row.cells[options.field] = cell;
 

@@ -58,15 +58,10 @@ export function createRowGroup(): RowGroupWithRow;
 export function createRowGroup(withRow: boolean): HTMLDivElement;
 
 export function createRowGroup(withRow?: boolean) {
-	const group = createElement(
-		'div',
-		{
-			className: CSS_TABELA_ROWGROUP,
-			role: 'rowgroup',
-		},
-		{},
-		{},
-	);
+	const group = createElement('div', {
+		className: CSS_TABELA_ROWGROUP,
+		role: 'rowgroup',
+	});
 
 	if (!(withRow ?? true)) {
 		return group;

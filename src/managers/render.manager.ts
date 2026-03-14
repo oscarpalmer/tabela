@@ -1,8 +1,8 @@
-import type {Key} from '@oscarpalmer/atoms/models';
 import {on} from '@oscarpalmer/toretto/event';
 import type {RemovableEventListener} from '@oscarpalmer/toretto/models';
 import {GroupComponent, renderGroup} from '../components/group.component';
 import {removeRow, renderRow} from '../components/row.component';
+import type {DataItem} from '../models/data.model';
 import type {RenderElementPool, RenderRange, RenderState} from '../models/render.model';
 import type {State} from '../models/tabela.model';
 
@@ -10,20 +10,20 @@ function getRange(state: State, down: boolean): RenderRange {
 	const {element, managers, options} = state;
 	const {clientHeight, scrollTop} = element;
 
-	const {keys} = managers.data;
+	const {items} = managers.data;
 
-	const first = Math.floor(scrollTop / options.rowHeight);
+	const firstIndex = Math.floor(scrollTop / options.rowHeight);
+	const lastIndex = items.length - managers.group.collapsed.size - 1;
 
-	const last = Math.min(
-		keys.length - managers.group.collapsed.size - 1,
-		Math.ceil((scrollTop + clientHeight) / options.rowHeight) - 1,
-	);
+	const last = Math.min(lastIndex, Math.ceil((scrollTop + clientHeight) / options.rowHeight) - 1);
 
-	const before = Math.ceil(clientHeight / options.rowHeight) * (down ? 1 : 2);
-	const after = Math.ceil(clientHeight / options.rowHeight) * (down ? 2 : 1);
+	const visible = clientHeight / options.rowHeight;
 
-	const start = Math.max(0, first - before);
-	const end = Math.min(keys.length - managers.group.collapsed.size - 1, last + after);
+	const before = Math.ceil(visible) * (down ? 1 : 2);
+	const after = Math.ceil(visible) * (down ? 2 : 1);
+
+	const start = Math.max(0, firstIndex - before);
+	const end = Math.min(lastIndex, last + after);
 
 	return {end, start};
 }
@@ -57,7 +57,7 @@ export class RenderManager {
 
 	state: RenderState;
 
-	visible = new Map<number, GroupComponent | Key>();
+	visible = new Map<number, DataItem>();
 
 	constructor(state: State) {
 		this.listener = on(state.element, 'scroll', onScroll.bind(this));
@@ -112,7 +112,7 @@ export class RenderManager {
 				continue;
 			}
 
-			const row = state.managers.row.get(key);
+			const row = state.managers.row.get(key, false);
 
 			if (row == null || row.element == null) {
 				continue;
@@ -163,7 +163,7 @@ export class RenderManager {
 				continue;
 			}
 
-			const row = managers.row.get(key);
+			const row = managers.row.get(key, false);
 
 			if (remove || row == null || !indices.has(index) || managers.group.collapsed.has(key)) {
 				visible.delete(index);
@@ -176,7 +176,7 @@ export class RenderManager {
 
 		const fragment = this.getFragment();
 
-		const {keys} = managers.data;
+		const {items} = managers.data;
 
 		let count = 0;
 		let offset = 0;
@@ -186,31 +186,31 @@ export class RenderManager {
 				continue;
 			}
 
-			const key = keys[index];
+			const item = items[index];
 
-			if (key instanceof GroupComponent) {
+			if (item instanceof GroupComponent) {
 				count += 1;
 
-				renderGroup(state, key);
+				renderGroup(state, item);
 
-				visible.set(index, key);
+				visible.set(index, item);
 
-				if (key.element != null) {
-					key.element.style.transform = `translateY(${(index - offset) * options.rowHeight}px)`;
+				if (item.element != null) {
+					item.element.style.transform = `translateY(${(index - offset) * options.rowHeight}px)`;
 
-					fragment.append(key.element);
+					fragment.append(item.element);
 				}
 
 				continue;
 			}
 
-			const row = managers.row.get(key);
+			const row = managers.row.get(item, true);
 
 			if (row == null) {
 				continue;
 			}
 
-			if (managers.group.collapsed.has(key)) {
+			if (managers.group.collapsed.has(item)) {
 				offset += 1;
 
 				continue;
@@ -220,7 +220,7 @@ export class RenderManager {
 
 			renderRow(state, row);
 
-			visible.set(index, key);
+			visible.set(index, item);
 
 			if (row.element != null) {
 				row.element.style.transform = `translateY(${(index - offset) * options.rowHeight}px)`;

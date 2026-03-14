@@ -1,17 +1,20 @@
 import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
 import type {GroupComponent} from '../components/group.component';
+import type {State} from './tabela.model';
 
-export type DataValues = {
-	keys: DataValuesKeys;
-	objects: DataValuesObjects;
+export type DataItem = GroupComponent | Key;
+
+type DataItems = {
+	active?: Array<DataItem>;
+	original: Array<DataItem>;
 };
 
-type DataValuesKeys = {
-	active?: Array<GroupComponent | Key>;
-	original: Array<GroupComponent | Key>;
-};
+export type DataState = {
+	items: DataItems;
+	values: DataValues;
+} & State;
 
-type DataValuesObjects = {
+type DataValues = {
 	array: Array<GroupComponent | PlainObject>;
 	mapped: Map<Key, PlainObject>;
 };

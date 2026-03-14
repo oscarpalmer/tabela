@@ -2,9 +2,10 @@ import {sort} from '@oscarpalmer/atoms/array';
 import {toRecord} from '@oscarpalmer/atoms/array/to-record';
 import {isNullableOrWhitespace} from '@oscarpalmer/atoms/is';
 import type {Key, Simplify} from '@oscarpalmer/atoms/models';
-import type {GroupComponent} from '../components/group.component';
+import {getString} from '@oscarpalmer/atoms/string';
+import {removeGroup, type GroupComponent} from '../components/group.component';
+import type {TabelaGroup} from '../models/group.model';
 import type {State} from '../models/tabela.model';
-import type { TabelaGroup } from '../models/group.model';
 
 export class GroupManager {
 	collapsed = new Set<Key>();
@@ -30,7 +31,7 @@ export class GroupManager {
 
 	order: Record<never, number> = {};
 
-	constructor(readonly state: State) {
+	constructor(public state: State) {
 		if (isNullableOrWhitespace(state.options.grouping)) {
 			return;
 		}
@@ -43,19 +44,38 @@ export class GroupManager {
 		this.set([...this.items, group]);
 	}
 
+	clear(): void {
+		const groups = this.items.splice(0);
+		const {length} = groups;
+
+		for (let index = 0; index < length; index += 1) {
+			this.remove(groups[index]);
+		}
+	}
+
 	destroy(): void {
-		console.log(this);
+		const groups = this.items.splice(0);
+		const {length} = groups;
+
+		for (let index = 0; index < length; index += 1) {
+			removeGroup(groups[index]);
+		}
+
+		this.collapsed.clear();
+
+		this.handlers = undefined as never;
+		this.state = undefined as never;
 	}
 
 	get(value: unknown) {
-		return this.items.find(item => item.value === value);
+		const asString = getString(value);
+
+		return this.items.find(item => item.value.stringified === asString);
 	}
 
 	handle(button: HTMLElement): void {
-		const key = button.dataset.key;
-		const group = this.get(key);
-
-		console.log(button, key, group);
+		const value = button.dataset.key?.replace(`tabela_${this.state.id}_group:`, '');
+		const group = this.get(value);
 
 		if (group == null) {
 			return;
@@ -67,15 +87,15 @@ export class GroupManager {
 
 		const index = items.indexOf(group);
 
-		let first = state.managers.data.values.keys.original.indexOf(items[index]) + 1;
+		let first = state.managers.data.state.items.original.indexOf(items[index]) + 1;
 
 		const last =
 			items[index + 1] == null
-				? state.managers.data.keys.length - 1
-				: state.managers.data.values.keys.original.indexOf(items[index + 1]) - 1;
+				? state.managers.data.state.items.original.length - 1
+				: state.managers.data.state.items.original.indexOf(items[index + 1]) - 1;
 
 		for (; first <= last; first += 1) {
-			const key = state.managers.data.values.keys.original[first] as Key;
+			const key = state.managers.data.state.items.original[first] as Key;
 
 			if (group.expanded) {
 				collapsed.delete(key);
@@ -84,16 +104,28 @@ export class GroupManager {
 			}
 		}
 
-		state.managers.render.update(true, true);
+		if (Object.keys(state.managers.filter.items).length > 0) {
+			state.managers.filter.filter();
+		} else if (state.managers.sort.items.length > 0) {
+			state.managers.sort.sort();
+		} else {
+			state.managers.render.update(true, true);
+		}
 	}
 
 	remove(group: GroupComponent): void {
+		removeGroup(group);
+
 		this.set(this.items.filter(item => item !== group));
 	}
 
 	set(items: GroupComponent[]) {
 		this.items = sort(items, item => item.label);
 
-		this.order = toRecord(items as Simplify<GroupComponent>[], 'value', (_, index) => index);
+		this.order = toRecord(
+			items as Simplify<GroupComponent>[],
+			group => group.value.stringified,
+			(_, index) => index,
+		);
 	}
 }

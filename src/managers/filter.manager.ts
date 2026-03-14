@@ -1,11 +1,11 @@
-import type {Key} from '@oscarpalmer/atoms/models';
 import {getNumber} from '@oscarpalmer/atoms/number';
 import {getString} from '@oscarpalmer/atoms/string';
 import {endsWith, includes, startsWith} from '@oscarpalmer/atoms/string/match';
 import {equal} from '@oscarpalmer/atoms/value/equal';
+import {GroupComponent} from '../components/group.component';
+import type {DataItem} from '../models/data.model';
 import type {TabelaFilter, TabelaFilterComparison, TabelaFilterItem} from '../models/filter.model';
 import type {State} from '../models/tabela.model';
-import {GroupComponent} from '../components/group.component';
 
 export class FilterManager {
 	handlers = Object.freeze({
@@ -25,7 +25,7 @@ export class FilterManager {
 		} else {
 			const index = this.items[item.field].findIndex(existing => equal(existing, item));
 
-			if (index !== -1) {
+			if (index > -1) {
 				return;
 			}
 		}
@@ -52,21 +52,21 @@ export class FilterManager {
 	filter(): void {
 		const {state} = this;
 
-		const filtered: Array<GroupComponent | Key> = [];
+		const filtered: DataItem[] = [];
 		const filters = Object.entries(this.items);
 
-		const keysLength = state.managers.data.values.keys.original.length;
+		const itemsLength = state.managers.data.state.items.original.length;
 
-		rowLoop: for (let keyIndex = 0; keyIndex < keysLength; keyIndex += 1) {
-			const key = state.managers.data.values.keys.original[keyIndex];
+		rowLoop: for (let itemIndex = 0; itemIndex < itemsLength; itemIndex += 1) {
+			const item = state.managers.data.state.items.original[itemIndex];
 
-			if (key instanceof GroupComponent) {
-				filtered.push(key);
+			if (item instanceof GroupComponent) {
+				filtered.push(item);
 
 				continue;
 			}
 
-			const row = state.managers.data.values.objects.mapped.get(key);
+			const row = state.managers.data.state.values.mapped.get(item);
 
 			if (row == null) {
 				continue;
@@ -88,10 +88,10 @@ export class FilterManager {
 				continue rowLoop;
 			}
 
-			filtered.push(key);
+			filtered.push(item);
 		}
 
-		state.managers.data.values.keys.active = filtered;
+		state.managers.data.state.items.active = filtered;
 
 		if (state.managers.sort.items.length > 0) {
 			state.managers.sort.sort();
@@ -107,6 +107,17 @@ export class FilterManager {
 			}
 
 			const keyed: Record<string, TabelaFilterItem[]> = {};
+
+			const filters = Object.keys(this.items);
+			const {length} = filters;
+
+			for (let index = 0; index < length; index += 1) {
+				const field = filters[index];
+
+				if (field !== value) {
+					keyed[field] = this.items[field];
+				}
+			}
 
 			this.items = keyed;
 		} else {

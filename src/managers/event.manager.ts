@@ -24,8 +24,6 @@ export class EventManager {
 }
 
 function onClick(event: MouseEvent): void {
-	console.log(performance.now(), event);
-
 	const target = findAncestor(event, '[data-event]');
 	const table = findAncestor(event, '.tabela__table');
 
@@ -46,7 +44,7 @@ function onClick(event: MouseEvent): void {
 			manager.state.managers.group.handle(target);
 			break;
 
-			case 'heading':
+		case 'heading':
 			manager.onSort(event, target);
 			break;
 
@@ -73,21 +71,18 @@ function onKeydown(event: KeyboardEvent): void {
 		return;
 	}
 
-	const type = target?.getAttribute('data-event');
+	if (event.key === ' ') {
+		event.preventDefault();
 
-	switch (type) {
-		case 'body':
-			manager.state.managers.navigation.handle(event);
-			break;
+		// TODO: it's on the way
 
-		default:
-			break;
+		return;
 	}
+
+	manager.state.managers.navigation.handle(event);
 }
 
 const mapped = new WeakMap<HTMLElement, EventManager>();
-
-console.log('Attaching event listeners');
 
 on(document, 'click', onClick);
 on(document, 'keydown', onKeydown, {passive: false});

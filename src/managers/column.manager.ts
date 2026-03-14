@@ -20,6 +20,10 @@ export class ColumnManager {
 		this.state = undefined as never;
 	}
 
+	get(field: string): ColumnComponent | undefined {
+		return this.items.find(item => item.options.field === field);
+	}
+
 	remove(field: string): void;
 
 	remove(fields: string[]): void;

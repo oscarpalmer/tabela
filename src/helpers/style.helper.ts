@@ -1,6 +1,6 @@
 import {toggleStyles} from '@oscarpalmer/toretto/style';
 
-export const dragStyling = toggleStyles(document.body, {
+export const preventSelection = toggleStyles(document.body, {
 	userSelect: 'none',
 	webkitUserSelect: 'none',
 });

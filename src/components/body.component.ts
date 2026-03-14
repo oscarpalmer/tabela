@@ -3,14 +3,9 @@ import type {BodyElements} from '../models/body.model';
 import {CSS_TABELA_FAKER, CSS_TABELA_ROWGROUP_BODY} from '../models/style.model';
 
 function createFaker(): HTMLDivElement {
-	return createElement(
-		'div',
-		{
-			className: CSS_TABELA_FAKER,
-		},
-		{},
-		{},
-	);
+	return createElement('div', {
+		className: CSS_TABELA_FAKER,
+	});
 }
 
 export class BodyComponent {
