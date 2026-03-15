@@ -2,7 +2,10 @@
 	"extends": "./tsconfig.json",
 	"compilerOptions": {
 		"paths": {
-			// "@oscarpalmer/tabela": ["../tabela/src/index.ts"],
+			"@oscarpalmer/abydon": ["../abydon/src/index.ts"],
+			"@oscarpalmer/atoms/*": ["../atoms/src/*"],
+			"@oscarpalmer/tabela": ["../tabela/src/index.ts"],
+			"@oscarpalmer/toretto/*": ["../toretto/src/*"]
 		}
 	}
 }

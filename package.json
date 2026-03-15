@@ -5,7 +5,7 @@
 		"build:js": "npx vp pack",
 		"watch": "concurrently \"npm run watch:css\" \"npm run watch:js\"",
 		"watch:css": "sass --watch --no-source-map src/css:dist/css",
-		"watch:js": "npx vp pack --tsconfig ./tsconfig.local.json --skip-node-modules-bundle --watch"
+		"watch:js": "npx vp pack --tsconfig ./tsconfig.local.json --watch"
 	},
 	"dependencies": {
 		"@oscarpalmer/abydon": "^0.19",
