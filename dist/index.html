@@ -1,0 +1,66 @@
+<!doctype html>
+<html dir="ltr" lang="en">
+
+<head>
+	<base href="/" />
+
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+	<title>Tabela</title>
+
+	<link rel="stylesheet" href="css/styles.css" />
+
+	<style>
+		#loading {
+			background-color: light-dark(var(--oui-stone-0), var(--oui-slate-0));
+			position: fixed;
+			inset: 0;
+			z-index: 1000;
+			transition: opacity .25s ease-in-out;
+
+			svg {
+				width: clamp(2rem, 10vw, 8rem);
+				height: clamp(2rem, 10vw, 8rem);
+				position: absolute;
+				inset: 50% auto auto 50%;
+				transform: translate3d(-50%, -50%, 0);
+
+				* {
+					stroke: light-dark(var(--oui-blue-6), var(--oui-blue-5));
+				}
+			}
+		}
+	</style>
+
+	<meta name="author" content="Oscar Palmér" />
+	<meta name="description" content="Tabela is a table for the modern web." />
+
+	<link rel="canonical" href="https://tabela.oscarpalmer.se/">
+
+	<meta name="color-scheme" content="light dark" />
+
+	<meta name="theme-color" media="(prefers-color-scheme: light)" content="#fcfcf9">
+	<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#191b1d">
+
+	<meta name="robots" content="index, follow">
+</head>
+
+<body>
+	<div id="loading">
+		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" aria-hidden="true">
+			<circle fill="none" stroke-opacity="1" stroke="blue" stroke-width=".5" cx="100" cy="100" r="0">
+				<animate attributeName="r" calcMode="spline" dur="2" values="1;80" keyTimes="0;1" keySplines="0 .2 .5 1"
+					repeatCount="indefinite"></animate>
+				<animate attributeName="stroke-width" calcMode="spline" dur="2" values="0;25" keyTimes="0;1"
+					keySplines="0 .2 .5 1" repeatCount="indefinite"></animate>
+				<animate attributeName="stroke-opacity" calcMode="spline" dur="2" values="1;0" keyTimes="0;1"
+					keySplines="0 .2 .5 1" repeatCount="indefinite"></animate>
+			</circle>
+		</svg>
+		<span class="oui-vh">Loading…</span>
+	</div>
+	<script src="js/index.mjs" type="module"></script>
+</body>
+
+</html>

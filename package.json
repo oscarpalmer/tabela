@@ -1,48 +1,17 @@
 {
-	"name": "@oscarpalmer/tabela",
-	"version": "0.13.0",
-	"description": "A modern table.",
-	"keywords": [],
-	"license": "MIT",
-	"author": {
-		"name": "Oscar Palmér",
-		"url": "https://oscarpalmer.se"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/oscarpalmer/tabela.git"
-	},
-	"files": [
-		"dist",
-		"src"
-	],
-	"type": "module",
-	"module": "./dist/index.mjs",
-	"types": "./dist/index.d.mts",
-	"exports": {
-		".": {
-			"types": "./dist/index.d.mts",
-			"default": "./dist/index.mjs"
-		}
-	},
 	"scripts": {
-		"build": "vpx vp run tsdown:build && vpx vp pack",
-		"tsdown:build": "vpx tsdown -c ./tsdown.config.ts",
-		"tsdown:watch": "vpx tsdown -c ./tsdown.config.ts --watch",
-		"test": "vpx vp test run --coverage",
-		"test:leak": "vpx vp test run --detect-async-leaks --coverage",
-		"watch": "vpx vite build --watch",
-		"www": "concurrently \"vpx vp run www:css\" \"vpx vp run www:js\"",
-		"www:css": "sass --watch www/.app/css:./www/css",
-		"www:js": "vpx tsdown -c ./www/.app/js/tsdown.config.ts --watch"
+		"build": "npm run build:css && npm run build:js",
+		"build:css": "sass --no-source-map src/css:dist/css",
+		"build:js": "npx vp pack"
 	},
 	"dependencies": {
+		"@oscarpalmer/abydon": "^0.19",
 		"@oscarpalmer/atoms": "^0.165",
+		"@oscarpalmer/oui": "^0.19",
+		"@oscarpalmer/tabela": "^0.13",
 		"@oscarpalmer/toretto": "^0.41"
 	},
 	"devDependencies": {
-		"@oscarpalmer/abydon": "^0.19",
-		"@oscarpalmer/oui": "^0.19",
 		"@types/node": "^25.5",
 		"@vitest/coverage-istanbul": "^4.1",
 		"concurrently": "^9.2",

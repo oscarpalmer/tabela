@@ -1,0 +1,35 @@
+.content,
+.footer,
+.header {
+	padding: var(--spacing);
+}
+
+.content {
+	flex: 1;
+}
+
+.footer,
+.header {
+	background-color: light-dark(var(--oui-stone-1), var(--oui-slate-1));
+}
+
+.footer {
+	border-top: 1px solid light-dark(var(--oui-stone-3), var(--oui-slate-3));
+	color: light-dark(var(--oui-stone-8), var(--oui-slate-8));
+	font-size: 0.875rem;
+}
+
+.header {
+	border-bottom: 1px solid light-dark(var(--oui-stone-3), var(--oui-slate-3));
+
+	&__description {
+		font-size: 1.25rem;
+		font-style: italic;
+		line-height: 1.125;
+	}
+
+	&__title {
+		color: light-dark(var(--oui-stone-7), var(--oui-slate-7));
+		font-size: 1rem;
+	}
+}

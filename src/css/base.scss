@@ -1,0 +1,14 @@
+:root {
+	--spacing: clamp(.5rem, 4vw, 2rem);
+
+	background-color: light-dark(var(--oui-stone-0), var(--oui-slate-0));
+	color: light-dark(var(--oui-stone-9), var(--oui-slate-8));
+	color-scheme: light dark only;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+body {
+	display: flex;
+	flex-flow: column nowrap;
+}

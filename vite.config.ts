@@ -1,21 +1,12 @@
-/// <reference types="vitest" />
-import {defineConfig} from 'vite';
+import {defineConfig, minify} from 'vite';
 
 export default defineConfig({
 	base: './',
-	logLevel: 'silent',
 	pack: {
-		clean: false,
-		dts: true,
+		dts: false,
 		entry: ['./src/**/*.ts'],
+		minify: 'dce-only',
+		outDir: './dist/js',
 		unbundle: false,
-	},
-	test: {
-		coverage: {
-			include: ['src/**/*.ts'],
-			provider: 'istanbul',
-		},
-		environment: 'jsdom',
-		watch: false,
 	},
 });
