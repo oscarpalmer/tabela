@@ -1,5 +1,8 @@
 :root {
-	--spacing: clamp(.5rem, 4vw, 2rem);
+	--spacing: clamp(.5rem, 2vw, 2rem);
+
+	--flex-gap: var(--spacing);
+	--stack-gap: var(--spacing);
 
 	background-color: light-dark(var(--oui-stone-0), var(--oui-slate-0));
 	color: light-dark(var(--oui-stone-9), var(--oui-slate-8));
@@ -11,4 +14,14 @@
 body {
 	display: flex;
 	flex-flow: column nowrap;
+}
+
+/** */
+
+.flow {
+	[role="separator"] {
+		width: 1px;
+		height: 1rem;
+		background-color: light-dark(var(--oui-stone-3), var(--oui-slate-3));
+	}
 }
