@@ -1,6 +1,6 @@
 import {html} from '@oscarpalmer/abydon';
 
-type Key = 'abydon' | 'atoms' | 'oui' | 'tabela';
+type Key = 'abydon' | 'atoms' | 'oui' | 'tabela' | 'toretto';
 
 type Link = {
 	key: string;
@@ -24,6 +24,10 @@ const links: Record<Key, Link> = {
 		key: 'tabela',
 		label: 'Tabela',
 	},
+	toretto: {
+		key: 'toretto',
+		label: 'Toretto',
+	},
 };
 
 function getLink(key: Key) {
@@ -33,6 +37,6 @@ function getLink(key: Key) {
 export default html`
 	<footer class="footer stack stack--small">
 		<p>&copy 2026, Oscar Palmér</p>
-		<p>Built with ${getLink('abydon')}, ${getLink('atoms')}, ${getLink('oui')}, and ${getLink('tabela')}.</p>
+		<p>Built with ${getLink('abydon')}, ${getLink('atoms')}, ${getLink('oui')}, ${getLink('tabela')}, and ${getLink('toretto')}.</p>
 	</footer>
 `;
