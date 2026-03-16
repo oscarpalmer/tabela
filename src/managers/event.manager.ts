@@ -1,6 +1,13 @@
 import {on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
 import type {State} from '../models/tabela.model';
+import {
+	ATTRIBUTE_DATA_EVENT,
+	ATTRIBUTE_DATA_FIELD,
+	ATTRIBUTE_DATA_SORT_DIRECTION,
+} from '../models/dom.model';
+import {CSS_TABLE} from '../models/style.model';
+import {EVENT_GROUP, EVENT_HEADING, EVENT_ROW} from '../models/event.model';
 
 export class EventManager {
 	constructor(public state: State) {
@@ -14,8 +21,8 @@ export class EventManager {
 	}
 
 	onSort(event: MouseEvent, target: HTMLElement): void {
-		const direction = target.getAttribute('data-sort-direction');
-		const field = target.getAttribute('data-field');
+		const direction = target.getAttribute(ATTRIBUTE_DATA_SORT_DIRECTION);
+		const field = target.getAttribute(ATTRIBUTE_DATA_FIELD);
 
 		if (field != null) {
 			this.state.managers.sort.toggle(event, field, direction);
@@ -24,8 +31,8 @@ export class EventManager {
 }
 
 function onClick(event: MouseEvent): void {
-	const target = findAncestor(event, '[data-event]');
-	const table = findAncestor(event, '.tabela__table');
+	const target = findAncestor(event, eventAttribute);
+	const table = findAncestor(event, tableClassName);
 
 	if (!(target instanceof HTMLElement) || !(table instanceof HTMLElement)) {
 		return;
@@ -37,18 +44,18 @@ function onClick(event: MouseEvent): void {
 		return;
 	}
 
-	const type = target?.getAttribute('data-event');
+	const type = target?.getAttribute(ATTRIBUTE_DATA_EVENT);
 
 	switch (type) {
-		case 'group':
+		case EVENT_GROUP:
 			manager.state.managers.group.handle(target);
 			break;
 
-		case 'heading':
+		case EVENT_HEADING:
 			manager.onSort(event, target);
 			break;
 
-		case 'row':
+		case EVENT_ROW:
 			manager.state.managers.selection.handle(event, target);
 			break;
 
@@ -58,8 +65,8 @@ function onClick(event: MouseEvent): void {
 }
 
 function onKeydown(event: KeyboardEvent): void {
-	const target = findAncestor(event, '[data-event]');
-	const table = findAncestor(event, '.tabela__table');
+	const target = findAncestor(event, eventAttribute);
+	const table = findAncestor(event, tableClassName);
 
 	if (!(target instanceof HTMLElement) || !(table instanceof HTMLElement)) {
 		return;
@@ -82,7 +89,11 @@ function onKeydown(event: KeyboardEvent): void {
 	manager.state.managers.navigation.handle(event);
 }
 
+const eventAttribute = `[${ATTRIBUTE_DATA_EVENT}]`;
+
 const mapped = new WeakMap<HTMLElement, EventManager>();
+
+const tableClassName = `.${CSS_TABLE}`;
 
 on(document, 'click', onClick);
 on(document, 'keydown', onKeydown, {passive: false});

@@ -9,12 +9,9 @@ import {createElement} from '../helpers/dom.helpers';
 import {getKey} from '../helpers/misc.helpers';
 import {preventSelection} from '../helpers/style.helper';
 import type {TabelaSelection} from '../models/selection.model';
-import {
-	CSS_TABELA_ROW_BODY,
-	CSS_TABELA_ROW_SELECTED,
-	CSS_TABELA_SELECTION,
-} from '../models/style.model';
+import {CSS_ROW_BODY, CSS_ROW_SELECTED, CSS_SELECTION, CSS_TABLE} from '../models/style.model';
 import type {State} from '../models/tabela.model';
+import {ARIA_SELECTED, ATTRIBUTE_DATA_KEY, ELEMENT_DIV} from '../models/dom.model';
 
 export class SelectionManager {
 	handlers = Object.freeze({
@@ -75,7 +72,7 @@ export class SelectionManager {
 	}
 
 	handle(event: MouseEvent, target: HTMLElement): void {
-		const key = getKey(target.getAttribute('data-key'));
+		const key = getKey(target.getAttribute(ATTRIBUTE_DATA_KEY));
 
 		if (key == null) {
 			return;
@@ -115,8 +112,13 @@ export class SelectionManager {
 
 		const keyed = isKey(from) && isKey(to);
 
-		const fromKey = keyed ? (from as Key) : getKey((from as HTMLElement).getAttribute('data-key'))!;
-		const toKey = keyed ? (to as Key) : getKey((to as HTMLElement).getAttribute('data-key'))!;
+		const fromKey = keyed
+			? (from as Key)
+			: getKey((from as HTMLElement).getAttribute(ATTRIBUTE_DATA_KEY))!;
+
+		const toKey = keyed
+			? (to as Key)
+			: getKey((to as HTMLElement).getAttribute(ATTRIBUTE_DATA_KEY))!;
 
 		if (fromKey === toKey) {
 			return;
@@ -217,33 +219,28 @@ export class SelectionManager {
 				continue;
 			}
 
-			setAttribute(element, 'aria-selected', String(!removed));
+			setAttribute(element, ARIA_SELECTED, String(!removed));
 
 			if (removed) {
-				element.classList.remove(CSS_TABELA_ROW_SELECTED);
+				element.classList.remove(CSS_ROW_SELECTED);
 			} else {
-				element.classList.add(CSS_TABELA_ROW_SELECTED);
+				element.classList.add(CSS_ROW_SELECTED);
 			}
 		}
 	}
 }
 
 function getPlaceholder(): HTMLElement {
-	placeholder ??= createElement(
-		'div',
-		{
-			className: CSS_TABELA_SELECTION,
-		},
-		{},
-		{},
-	);
+	placeholder ??= createElement(ELEMENT_DIV, {
+		className: CSS_SELECTION,
+	});
 
 	return placeholder;
 }
 
 function onMouseDown(event: MouseEvent): void {
 	if (shifted) {
-		const row = findAncestor(event.target as HTMLElement, `.${CSS_TABELA_ROW_BODY}`);
+		const row = findAncestor(event.target as HTMLElement, `.${CSS_ROW_BODY}`);
 
 		if (!(row instanceof HTMLElement)) {
 			return;
@@ -298,13 +295,13 @@ function onMouseUp(event: MouseEvent): void {
 
 	getPlaceholder().remove();
 
-	const row = findAncestor(event.target as HTMLElement, '.tabela__row--body');
+	const row = findAncestor(event.target as HTMLElement, bodyRowSelector);
 
 	if (row instanceof HTMLElement) {
 		endElement = row;
 
-		const endTable = findAncestor(endElement, '.tabela__table');
-		const startTable = findAncestor(startElement, '.tabela__table');
+		const endTable = findAncestor(endElement, tableSelector);
+		const startTable = findAncestor(startElement, tableSelector);
 
 		if (startTable != null && startTable === endTable) {
 			mapped.get(startTable)?.range(startElement, endElement);
@@ -317,7 +314,7 @@ function onMouseUp(event: MouseEvent): void {
 }
 
 function onShift(event: KeyboardEvent, value: boolean): void {
-	if (event.key === 'Shift') {
+	if (event.key === KEY_SHIFT) {
 		shifted = value;
 	}
 }
@@ -330,7 +327,13 @@ function onShiftUp(event: KeyboardEvent): void {
 	onShift(event, false);
 }
 
+const KEY_SHIFT = 'Shift';
+
 const mapped = new WeakMap<Element, SelectionManager>();
+
+const bodyRowSelector = `.${CSS_ROW_BODY}`;
+
+const tableSelector = `.${CSS_TABLE}`;
 
 let shifted = false;
 

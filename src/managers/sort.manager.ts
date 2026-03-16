@@ -5,7 +5,18 @@ import {getValue} from '@oscarpalmer/atoms/value/handle';
 import {setAttribute, setAttributes} from '@oscarpalmer/toretto/attribute';
 import {GroupComponent} from '../components/group.component';
 import type {DataItem} from '../models/data.model';
-import type {TabelaSort, TabelaSortDirection, TabelaSortItem} from '../models/sort.model';
+import {
+	ARIA_SORT,
+	ATTRIBUTE_DATA_SORT_DIRECTION,
+	ATTRIBUTE_DATA_SORT_POSITION,
+} from '../models/dom.model';
+import {
+	SORT_ASCENDING,
+	SORT_DESCENDING,
+	type TabelaSort,
+	type TabelaSortDirection,
+	type TabelaSortItem,
+} from '../models/sort.model';
 import type {State} from '../models/tabela.model';
 
 export class SortManager {
@@ -30,7 +41,7 @@ export class SortManager {
 
 		this.items.push({
 			key: field,
-			direction: direction ?? 'ascending',
+			direction: direction ?? SORT_ASCENDING,
 		});
 
 		this.sort();
@@ -40,7 +51,7 @@ export class SortManager {
 		if (event.ctrlKey || event.metaKey) {
 			this.add(field);
 		} else {
-			this.set([{field, direction: 'ascending'}]);
+			this.set([{field, direction: SORT_ASCENDING}]);
 		}
 	}
 
@@ -65,7 +76,7 @@ export class SortManager {
 			return;
 		}
 
-		item.direction = item.direction === 'ascending' ? 'descending' : 'ascending';
+		item.direction = item.direction === SORT_ASCENDING ? SORT_DESCENDING : SORT_ASCENDING;
 
 		this.sort();
 	}
@@ -110,14 +121,14 @@ export class SortManager {
 			const sorterItem = items[sorterIndex];
 
 			setAttributes(column.elements.wrapper, {
-				'aria-sort':
-					sorterItem == null ? 'none' : items.length > 1 ? 'other' : sorterItem.direction,
-				'data-sort-direction': sorterItem == null ? undefined : sorterItem.direction,
+				[ARIA_SORT]:
+					sorterItem == null ? SORT_NONE : items.length > 1 ? SORT_OTHER : sorterItem.direction,
+				[ATTRIBUTE_DATA_SORT_DIRECTION]: sorterItem == null ? undefined : sorterItem.direction,
 			});
 
 			setAttribute(
 				column.elements.sorter,
-				'data-sort-position',
+				ATTRIBUTE_DATA_SORT_POSITION,
 				sorterIndex > -1 && items.length > 1 ? sorterIndex + 1 : undefined,
 			);
 		}
@@ -130,11 +141,11 @@ export class SortManager {
 
 	toggle(event: MouseEvent, field: string, direction?: string | null): void {
 		switch (direction) {
-			case 'ascending':
+			case SORT_ASCENDING:
 				this.flip(field);
 				return;
 
-			case 'descending':
+			case SORT_DESCENDING:
 				this.removeOrClear(event, field);
 				return;
 
@@ -205,10 +216,14 @@ export function sortWithGroups(
 			);
 
 			if (comparison !== 0) {
-				return comparison * (sorter.direction === 'ascending' ? 1 : -1);
+				return comparison * (sorter.direction === SORT_ASCENDING ? 1 : -1);
 			}
 		}
 
 		return 0;
 	});
 }
+
+const SORT_NONE = 'none';
+
+const SORT_OTHER = 'other';

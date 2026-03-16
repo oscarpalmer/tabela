@@ -229,8 +229,14 @@ export class RenderManager {
 			}
 		}
 
-		if (count > 0) {
-			components.body.elements.group[down ? 'append' : 'prepend'](fragment);
+		if (count === 0) {
+			return;
+		}
+
+		if (down) {
+			components.body.elements.group.append(fragment);
+		} else {
+			components.body.elements.group.prepend(fragment);
 		}
 	}
 }

@@ -1,10 +1,13 @@
 import {createElement, createRowGroup} from '../helpers/dom.helpers';
 import type {BodyElements} from '../models/body.model';
-import {CSS_TABELA_FAKER, CSS_TABELA_ROWGROUP_BODY} from '../models/style.model';
+import {ATTRIBUTE_DATA_EVENT, ELEMENT_DIV} from '../models/dom.model';
+import {EVENT_BODY} from '../models/event.model';
+import {CSS_FAKER, CSS_ROWGROUP_BODY} from '../models/style.model';
+import type {State} from '../models/tabela.model';
 
 function createFaker(): HTMLDivElement {
-	return createElement('div', {
-		className: CSS_TABELA_FAKER,
+	return createElement(ELEMENT_DIV, {
+		className: CSS_FAKER,
 	});
 }
 
@@ -14,16 +17,16 @@ export class BodyComponent {
 		group: undefined as never,
 	};
 
-	constructor() {
-		const group = createRowGroup(false);
+	constructor(state: State) {
+		const group = createRowGroup(state.options.rowHeight, false);
 
 		this.elements.group = group;
 
-		group.className += ` ${CSS_TABELA_ROWGROUP_BODY}`;
+		group.className += ` ${CSS_ROWGROUP_BODY}`;
 
 		group.tabIndex = 0;
 
-		group.setAttribute('data-event', 'body');
+		group.setAttribute(ATTRIBUTE_DATA_EVENT, EVENT_BODY);
 
 		group.append(this.elements.faker);
 	}

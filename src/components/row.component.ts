@@ -3,8 +3,15 @@ import {getValue} from '@oscarpalmer/atoms/value/handle';
 import {setAttributes} from '@oscarpalmer/toretto/attribute';
 import {createCell, createRow} from '../helpers/dom.helpers';
 import type {RenderElementPool} from '../models/render.model';
-import {CSS_TABELA_ROW_BODY, CSS_TABELA_ROW_SELECTED} from '../models/style.model';
+import {CSS_ROW_BODY, CSS_ROW_SELECTED} from '../models/style.model';
 import type {State} from '../models/tabela.model';
+import {
+	ARIA_SELECTED,
+	ATTRIBUTE_DATA_ACTIVE,
+	ATTRIBUTE_DATA_EVENT,
+	ATTRIBUTE_DATA_KEY,
+} from '../models/dom.model';
+import {EVENT_ROW} from '../models/event.model';
 
 export function removeRow(pool: RenderElementPool, row: RowComponent): void {
 	if (row.element != null) {
@@ -20,7 +27,8 @@ export function removeRow(pool: RenderElementPool, row: RowComponent): void {
 }
 
 export function renderRow(state: State, row: RowComponent): void {
-	const element = row.element ?? state.managers.render.pool.rows.shift() ?? createRow();
+	const element =
+		row.element ?? state.managers.render.pool.rows.shift() ?? createRow(state.options.rowHeight);
 
 	row.element = element;
 
@@ -31,19 +39,19 @@ export function renderRow(state: State, row: RowComponent): void {
 	const key = String(row.key);
 
 	setAttributes(element, {
-		'aria-selected': String(selected),
-		'data-active': String(state.managers.navigation.active === row.key),
-		'data-event': 'row',
-		'data-key': key,
-		id: `tabela_${state.id}_${key}`,
+		[ARIA_SELECTED]: String(selected),
+		[ATTRIBUTE_DATA_ACTIVE]: String(state.managers.navigation.active === row.key),
+		[ATTRIBUTE_DATA_EVENT]: EVENT_ROW,
+		[ATTRIBUTE_DATA_KEY]: key,
+		id: `${state.prefix}${key}`,
 	});
 
-	element.classList.add(CSS_TABELA_ROW_BODY);
+	element.classList.add(CSS_ROW_BODY);
 
 	if (selected) {
-		element.classList.add(CSS_TABELA_ROW_SELECTED);
+		element.classList.add(CSS_ROW_SELECTED);
 	} else {
-		element.classList.remove(CSS_TABELA_ROW_SELECTED);
+		element.classList.remove(CSS_ROW_SELECTED);
 	}
 
 	const columns = state.managers.column.items;

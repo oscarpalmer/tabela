@@ -1,11 +1,12 @@
 import {setAttributes} from '@oscarpalmer/toretto/attribute';
 import {setStyles} from '@oscarpalmer/toretto/style';
 import {
-	CSS_TABELA_CELL,
-	CSS_TABELA_CELL_BODY,
-	CSS_TABELA_ROW,
-	CSS_TABELA_ROWGROUP,
+	CSS_CELL,
+	CSS_CELL_BODY,
+	CSS_ROW,
+	CSS_ROWGROUP,
 } from '../models/style.model';
+import {ELEMENT_DIV, ROLE_CELL, ROLE_ROW, ROLE_ROWGROUP} from '../models/dom.model';
 
 type RowGroupWithRow = {
 	group: HTMLDivElement;
@@ -14,10 +15,10 @@ type RowGroupWithRow = {
 
 export function createCell(width: number, body?: boolean): HTMLDivElement {
 	const cell = createElement(
-		'div',
+		ELEMENT_DIV,
 		{
-			className: CSS_TABELA_CELL,
-			role: 'cell',
+			className: CSS_CELL,
+			role: ROLE_CELL,
 		},
 		{},
 		{
@@ -26,7 +27,7 @@ export function createCell(width: number, body?: boolean): HTMLDivElement {
 	);
 
 	if (body ?? true) {
-		cell.classList.add(CSS_TABELA_CELL_BODY);
+		cell.classList.add(CSS_CELL_BODY);
 	}
 
 	return cell;
@@ -53,37 +54,37 @@ export function createElement<TagName extends keyof HTMLElementTagNameMap>(
 	return element;
 }
 
-export function createRowGroup(): RowGroupWithRow;
+export function createRowGroup(height: number): RowGroupWithRow;
 
-export function createRowGroup(withRow: boolean): HTMLDivElement;
+export function createRowGroup(height: number, withRow: boolean): HTMLDivElement;
 
-export function createRowGroup(withRow?: boolean) {
-	const group = createElement('div', {
-		className: CSS_TABELA_ROWGROUP,
-		role: 'rowgroup',
+export function createRowGroup(height: number, withRow?: boolean) {
+	const group = createElement(ELEMENT_DIV, {
+		className: CSS_ROWGROUP,
+		role: ROLE_ROWGROUP,
 	});
 
 	if (!(withRow ?? true)) {
 		return group;
 	}
 
-	const row = createRow();
+	const row = createRow(height);
 
 	group.append(row);
 
 	return {group, row};
 }
 
-export function createRow(): HTMLDivElement {
+export function createRow(height: number): HTMLDivElement {
 	const row = createElement(
-		'div',
+		ELEMENT_DIV,
 		{
-			className: CSS_TABELA_ROW,
-			role: 'row',
+			className: CSS_ROW,
+			role: ROLE_ROW,
 		},
 		{},
 		{
-			height: '32px',
+			height: `${height}px`,
 		},
 	);
 

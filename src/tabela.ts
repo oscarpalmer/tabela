@@ -14,11 +14,12 @@ import {SelectionManager} from './managers/selection.manager';
 import {SortManager} from './managers/sort.manager';
 import {StyleManager} from './managers/style.manager';
 import type {TabelaData} from './models/data.model';
+import {ARIA_LABEL, ATTRIBUTE_ROLE, ELEMENT_DIV, ROLE_TABLE} from './models/dom.model';
 import type {TabelaFilter} from './models/filter.model';
 import type {TabelaGroup} from './models/group.model';
 import type {TabelaSelection} from './models/selection.model';
 import type {TabelaSort} from './models/sort.model';
-import {CSS_TABELA, CSS_TABELA_TABLE} from './models/style.model';
+import {CSS_TABLE, CSS_WRAPPER} from './models/style.model';
 import type {Components, Managers, State} from './models/tabela.model';
 import type {TabelaOptions} from './models/tabela.options';
 
@@ -28,8 +29,6 @@ export class Tabela {
 	#element: HTMLElement;
 
 	#id = getId();
-
-	#table: HTMLElement;
 
 	#key: string;
 
@@ -47,7 +46,11 @@ export class Tabela {
 		style: undefined as never,
 	};
 
+	#prefix = `tabela_${this.#id}_`;
+
 	#state: State;
+
+	#table: HTMLElement;
 
 	readonly data: TabelaData;
 
@@ -59,35 +62,27 @@ export class Tabela {
 
 	readonly sort: TabelaSort;
 
-	get key(): string {
-		return this.#key;
-	}
-
 	constructor(element: HTMLElement, options: TabelaOptions) {
 		this.#element = element;
 
 		element.innerHTML = '';
 
-		element.classList.add(CSS_TABELA);
+		element.classList.add(CSS_WRAPPER);
 
 		this.#table = createElement(
-			'div',
+			ELEMENT_DIV,
 			{
-				className: CSS_TABELA_TABLE,
-				role: 'table',
+				className: CSS_TABLE,
+				role: ROLE_TABLE,
 			},
 			{
-				'aria-label': options.label,
+				[ARIA_LABEL]: options.label,
 			},
 		);
 
 		this.#key = options.key;
 
-		this.#components = {
-			body: new BodyComponent(),
-			footer: new FooterComponent(),
-			header: new HeaderComponent(),
-		};
+		this.#components = {} as never;
 
 		this.#state = {
 			options,
@@ -96,7 +91,12 @@ export class Tabela {
 			id: this.#id,
 			key: this.#key,
 			managers: this.#managers,
+			prefix: this.#prefix,
 		};
+
+		this.#components.body = new BodyComponent(this.#state);
+		this.#components.footer = new FooterComponent(this.#state);
+		this.#components.header = new HeaderComponent(this.#state);
 
 		this.#managers.column = new ColumnManager(this.#state);
 		this.#managers.data = new DataManager(this.#state);
@@ -149,14 +149,12 @@ export class Tabela {
 		managers.sort.destroy();
 
 		element.innerHTML = '';
-
 		table.innerHTML = '';
-		table.role = '';
 
-		element.classList.remove(CSS_TABELA);
+		element.classList.remove(CSS_WRAPPER);
 
-		table.removeAttribute('aria-label');
-		table.removeAttribute('role');
+		table.removeAttribute(ARIA_LABEL);
+		table.removeAttribute(ATTRIBUTE_ROLE);
 
 		this.#state.components = undefined as never;
 		this.#state.managers = undefined as never;

@@ -12,3 +12,7 @@ export type TabelaSortItem = {
 	direction: TabelaSortDirection;
 	field: string;
 };
+
+export const SORT_ASCENDING: TabelaSortDirection = 'ascending';
+
+export const SORT_DESCENDING: TabelaSortDirection = 'descending';

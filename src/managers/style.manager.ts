@@ -1,3 +1,18 @@
+import {
+	CSS_BUTTON,
+	CSS_CELL,
+	CSS_CELL_FOOTER,
+	CSS_CELL_GROUP,
+	CSS_HEADING,
+	CSS_ROW,
+	CSS_ROW_SELECTED,
+	CSS_ROWGROUP_BODY,
+	CSS_ROWGROUP_FOOTER,
+	CSS_ROWGROUP_HEADER,
+	CSS_SELECTION,
+	CSS_TABLE,
+	CSS_WRAPPER,
+} from '../models/style.model';
 import type {State} from '../models/tabela.model';
 
 export class StyleManager {
@@ -19,14 +34,14 @@ export class StyleManager {
 const styling = //css
 	`/** Table */
 
-:where(.tabela) {
+:where(.${CSS_WRAPPER}) {
 	flex: 1;
 	position: relative;
 	background-color: var(--oui-absolute);
 	border: 1px solid grey;
 }
 
-:where(.tabela__table) {
+:where(.${CSS_TABLE}) {
 	min-height: 24em;
 	display: flex;
 	flex-flow: column nowrap;
@@ -38,69 +53,69 @@ const styling = //css
 
 /** Row group */
 
-:where(.tabela__rowgroup--header),
-:where(.tabela__rowgroup--footer) {
+:where(.${CSS_ROWGROUP_HEADER}),
+:where(.${CSS_ROWGROUP_FOOTER}) {
 	background-color: white;
 	position: sticky;
 	left: 0;
 	z-index: 10;
 }
 
-:where(.tabela__rowgroup--header) {
+:where(.${CSS_ROWGROUP_HEADER}) {
 	top: 0;
 }
 
-:where(.tabela__rowgroup--footer) {
+:where(.${CSS_ROWGROUP_FOOTER}) {
 	bottom: 0;
 }
 
-:where(.tabela__rowgroup--body) {
+:where(.${CSS_ROWGROUP_BODY}) {
 	display: flex;
 	flex-flow: column nowrap;
 	flex: 1;
 }
 
-:where(.tabela__rowgroup--body:focus) {
+:where(.${CSS_ROWGROUP_BODY}:focus) {
 	outline: none;
 }
 
-:where(.tabela:has(.tabela__rowgroup--body:focus-visible)) {
+:where(.${CSS_WRAPPER}:has(.${CSS_ROWGROUP_BODY}:focus-visible)) {
 	outline: 2px solid var(--oui-blue-6);
 	outline-offset: 2px;
 }
 
 /** Row */
 
-:where(.tabela__row) {
+:where(.${CSS_ROW}) {
 	width: 100%;
 	display: flex;
 	flex-flow: row nowrap;
 }
 
-:where(.tabela__row:last-child .tabela__cell) {
+:where(.${CSS_ROW}:last-child .${CSS_CELL}) {
 	border-bottom-width: 0;
 }
 
-:where(.tabela__row--body),
-:where(.tabela__row--group) {
+:where(.${CSS_ROW}--body),
+:where(.${CSS_ROW}--group) {
 	flex: 1;
 	position: absolute;
 }
 
-:where(.tabela__row--selected) {
+:where(.${CSS_ROW_SELECTED}) {
 	background-color: var(--oui-blue-1);
 	color: var(--oui-blue-9);
 }
 
-:where(.tabela:has(.tabela__rowgroup--body:focus-visible) .tabela__row[data-active="true"]) {
+:where(.${CSS_WRAPPER}:has(.${CSS_ROWGROUP_BODY}:focus-visible) .${CSS_ROW}[data-active="true"]) {
 	outline: 2px solid var(--oui-blue-6);
 	outline-offset: 2px;
 }
 
 /** Cells */
 
-:where(.tabela__cell),
-:where(.tabela__heading) {
+:where(.${CSS_CELL}),
+:where(.${CSS_HEADING}) {
 	padding: 0.5em;
 	border-color: gray;
 	border-style: solid;
@@ -108,24 +123,24 @@ const styling = //css
 	line-height: 1;
 }
 
-:where(.tabela__row .tabela__cell:last-child),
-:where(.tabela__row .tabela__heading:last-child) {
+:where(.${CSS_WRAPPER} .${CSS_CELL}:last-child),
+:where(.${CSS_ROW} .${CSS_HEADING}:last-child) {
 	flex: 1;
 	border-right-width: 0;
 }
 
-:where(.tabela__cell) {
+:where(.${CSS_CELL}) {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
-:where(.tabela__cell--footer) {
+:where(.${CSS_CELL_FOOTER}) {
 	border-top-width: 1px;
 	border-bottom-width: 0;
 }
 
-:where(.tabela__cell--group) {
+:where(.${CSS_CELL_GROUP}) {
 	padding: 0;
 	display: flex;
 	flex-flow: row nowrap;
@@ -133,18 +148,18 @@ const styling = //css
 	gap: 0.5em;
 }
 
-:where(.tabela__cell--group .tabela__button) {
+:where(.${CSS_CELL_GROUP} .${CSS_BUTTON}) {
 	margin: 0 0 0 .25rem;
 }
 
 /** Misc. */
 
-:where(.tabela__button) {
+:where(.${CSS_BUTTON}) {
 	font-size: .75rem;
 	font-weight: bold;
 }
 
-:where(.tabela__selection) {
+:where(.${CSS_SELECTION}) {
 	background-color: color-mix(in oklch, var(--oui-blue-6), transparent);
 	border: 1px solid var(--oui-blue-6);
 	border-radius: .25rem;

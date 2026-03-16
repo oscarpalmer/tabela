@@ -4,7 +4,7 @@ import {isNullableOrWhitespace} from '@oscarpalmer/atoms/is';
 import type {Key, Simplify} from '@oscarpalmer/atoms/models';
 import {getString} from '@oscarpalmer/atoms/string';
 import {removeGroup, type GroupComponent} from '../components/group.component';
-import type {TabelaGroup} from '../models/group.model';
+import {GROUP_KEY_PREFIX, type TabelaGroup} from '../models/group.model';
 import type {State} from '../models/tabela.model';
 
 export class GroupManager {
@@ -74,7 +74,7 @@ export class GroupManager {
 	}
 
 	handle(button: HTMLElement): void {
-		const value = button.dataset.key?.replace(`tabela_${this.state.id}_group:`, '');
+		const value = button.dataset.key?.replace(`${this.state.prefix}${GROUP_KEY_PREFIX}`, '');
 		const group = this.get(value);
 
 		if (group == null) {

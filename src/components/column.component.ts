@@ -1,9 +1,17 @@
 import {createElement} from '../helpers/dom.helpers';
 import type {Column, TabelaColumn} from '../models/column.model';
 import {
-	CSS_TABELA_HEADING,
-	CSS_TABELA_HEADING_CONTENT,
-	CSS_TABELA_HEADING_SORTER,
+	ATTRIBUTE_DATA_EVENT,
+	ATTRIBUTE_DATA_FIELD,
+	ATTRIBUTE_ROLE,
+	ELEMENT_DIV,
+	ROLE_COLUMNHEADER,
+} from '../models/dom.model';
+import {EVENT_HEADING} from '../models/event.model';
+import {
+	CSS_HEADING,
+	CSS_HEADING_CONTENT,
+	CSS_HEADING_SORTER,
 } from '../models/style.model';
 
 export class ColumnComponent {
@@ -13,14 +21,14 @@ export class ColumnComponent {
 	constructor(column: TabelaColumn) {
 		const width =
 			Number.parseInt(getComputedStyle(document.body).fontSize, 10) *
-			(column.width ?? column.title.length * 1.5);
+			(column.width ?? column.label.length * 1.5);
 
 		this.options = {
 			...column,
 			width,
 		};
 
-		this.elements = createHeading(this.options.field, this.options.title, width);
+		this.elements = createHeading(this.options.field, this.options.label, width);
 	}
 
 	destroy(): void {
@@ -41,27 +49,27 @@ type ColumnElements = {
 
 function createHeading(field: string, title: string, width: number): ColumnElements {
 	const wrapper = createElement(
-		'div',
+		ELEMENT_DIV,
 		{
-			className: CSS_TABELA_HEADING,
-			role: 'columnheader',
+			className: CSS_HEADING,
+			[ATTRIBUTE_ROLE]: ROLE_COLUMNHEADER,
 		},
 		{
-			'data-event': 'heading',
-			'data-field': field,
+			[ATTRIBUTE_DATA_EVENT]: EVENT_HEADING,
+			[ATTRIBUTE_DATA_FIELD]: field,
 		},
 		{
 			width: `${width}px`,
 		},
 	);
 
-	const content = createElement('div', {
-		className: CSS_TABELA_HEADING_CONTENT,
+	const content = createElement(ELEMENT_DIV, {
+		className: CSS_HEADING_CONTENT,
 		textContent: title,
 	});
 
-	const sorter = createElement('div', {
-		className: CSS_TABELA_HEADING_SORTER,
+	const sorter = createElement(ELEMENT_DIV, {
+		className: CSS_HEADING_SORTER,
 	});
 
 	wrapper.append(content, sorter);

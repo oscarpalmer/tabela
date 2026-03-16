@@ -40,5 +40,6 @@ export type State = {
 	id: number;
 	key: string;
 	managers: Managers;
+	prefix: string;
 	options: TabelaOptions;
 };

@@ -1,8 +1,15 @@
 /// <reference types="vitest" />
-import {defineConfig} from 'vite';
+import {defineConfig} from 'vite-plus';
 
 export default defineConfig({
 	base: './',
+	fmt: {
+		arrowParens: 'avoid',
+		bracketSpacing: false,
+		singleQuote: true,
+		useTabs: true,
+	},
+	lint: {},
 	logLevel: 'silent',
 	pack: {
 		clean: false,

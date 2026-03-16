@@ -1,17 +1,18 @@
 import {createCell, createRowGroup} from '../helpers/dom.helpers';
 import type {FooterElements} from '../models/footer.model';
 import {
-	CSS_TABELA_CELL_FOOTER,
-	CSS_TABELA_ROW_FOOTER,
-	CSS_TABELA_ROWGROUP_FOOTER,
+	CSS_CELL_FOOTER,
+	CSS_ROW_FOOTER,
+	CSS_ROWGROUP_FOOTER,
 } from '../models/style.model';
+import type {State} from '../models/tabela.model';
 import type {ColumnComponent} from './column.component';
 
 export class FooterComponent {
 	readonly elements: FooterElements;
 
-	constructor() {
-		const {group, row} = createRowGroup();
+	constructor(state: State) {
+		const {group, row} = createRowGroup(state.options.rowHeight);
 
 		this.elements = {
 			group,
@@ -19,8 +20,8 @@ export class FooterComponent {
 			cells: [],
 		};
 
-		group.className += ` ${CSS_TABELA_ROWGROUP_FOOTER}`;
-		row.className += ` ${CSS_TABELA_ROW_FOOTER}`;
+		group.className += ` ${CSS_ROWGROUP_FOOTER}`;
+		row.className += ` ${CSS_ROW_FOOTER}`;
 	}
 
 	destroy(): void {
@@ -40,7 +41,7 @@ export class FooterComponent {
 		for (let index = 0; index < length; index += 1) {
 			const cell = createCell(columns[index].options.width ?? 4, false);
 
-			cell.className += ` ${CSS_TABELA_CELL_FOOTER}`;
+			cell.className += ` ${CSS_CELL_FOOTER}`;
 			cell.innerHTML = '&nbsp;';
 
 			elements.cells.push(cell);

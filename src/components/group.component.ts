@@ -1,8 +1,26 @@
 import {getString} from '@oscarpalmer/atoms/string';
 import {createElement} from '../helpers/dom.helpers';
-import type {GroupValue} from '../models/group.model';
-import {CSS_TABELA_ROW, CSS_TABELA_ROW_GROUP} from '../models/style.model';
+import {GROUP_KEY_PREFIX, type GroupValue} from '../models/group.model';
+import {
+	CSS_BUTTON,
+	CSS_BUTTON_GROUP,
+	CSS_CELL,
+	CSS_CELL_GROUP,
+	CSS_GROUP_SELECTED,
+	CSS_GROUP_TOTAL,
+	CSS_ROW,
+	CSS_ROW_GROUP,
+} from '../models/style.model';
 import type {State} from '../models/tabela.model';
+import {
+	ATTRIBUTE_DATA_EVENT,
+	ATTRIBUTE_DATA_KEY,
+	ATTRIBUTE_ROLE,
+	ELEMENT_DIV,
+	ROLE_CELL,
+	ROLE_ROW,
+} from '../models/dom.model';
+import {EVENT_GROUP} from '../models/event.model';
 
 export class GroupComponent {
 	element: HTMLElement | undefined;
@@ -25,7 +43,7 @@ export class GroupComponent {
 	) {
 		const stringified = getString(value);
 
-		this.key = `group:${stringified}`;
+		this.key = `${GROUP_KEY_PREFIX}${stringified}`;
 
 		this.value = {
 			stringified,
@@ -46,19 +64,19 @@ export function removeGroup(group: GroupComponent): void {
 
 export function renderGroup(state: State, component: GroupComponent): void {
 	component.element ??= createElement(
-		'div',
+		ELEMENT_DIV,
 		{
-			className: `${CSS_TABELA_ROW} ${CSS_TABELA_ROW_GROUP}`,
-			innerHTML: `<div class="tabela__cell tabela__cell--group" role="cell">
-	<button class="tabela__button tabela__button--group" data-event="group" data-key="tabela_${state.id}_${component.key}" type="button">
+			className: `${CSS_ROW} ${CSS_ROW_GROUP}`,
+			innerHTML: `<div class="${CSS_CELL} ${CSS_CELL_GROUP}" role="${ROLE_CELL}">
+	<button class="${CSS_BUTTON} ${CSS_BUTTON_GROUP}" ${ATTRIBUTE_DATA_EVENT}="${EVENT_GROUP}" ${ATTRIBUTE_DATA_KEY}="${state.prefix}_${component.key}" type="button">
 		<span aria-hidden="true"></span>
 		<span>Open/close</span>
 	</button>
 	<p>${component.label}</p>
-	<span class="tabela__group__total">${component.total}</span>
-	<span class="tabela__group__selected">${component.selected === 0 ? '' : component.selected}</span>
+	<span class="${CSS_GROUP_TOTAL}">${component.total}</span>
+	<span class="${CSS_GROUP_SELECTED}">${component.selected === 0 ? '' : component.selected}</span>
 </div>`,
-			role: 'row',
+			[ATTRIBUTE_ROLE]: ROLE_ROW,
 		},
 		{},
 		{
@@ -72,8 +90,8 @@ export function updateGroup(state: State, component: GroupComponent): void {
 		return;
 	}
 
-	const selected = component.element.querySelector<HTMLSpanElement>('.tabela__group__selected');
-	const total = component.element.querySelector<HTMLSpanElement>('.tabela__group__total');
+	const selected = component.element.querySelector<HTMLSpanElement>(selectedSelector);
+	const total = component.element.querySelector<HTMLSpanElement>(totalSelector);
 
 	if (selected != null) {
 		selected.textContent = component.selected === 0 ? '' : String(component.selected);
@@ -83,3 +101,7 @@ export function updateGroup(state: State, component: GroupComponent): void {
 		total.textContent = String(component.total);
 	}
 }
+
+const selectedSelector = `.${CSS_GROUP_SELECTED}`;
+
+const totalSelector = `.${CSS_GROUP_TOTAL}`;

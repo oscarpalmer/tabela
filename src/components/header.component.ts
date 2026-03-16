@@ -1,18 +1,19 @@
 import {createRowGroup} from '../helpers/dom.helpers';
 import type {HeaderElements} from '../models/header.model';
-import {CSS_TABELA_ROW_HEADER, CSS_TABELA_ROWGROUP_HEADER} from '../models/style.model';
+import {CSS_ROW_HEADER, CSS_ROWGROUP_HEADER} from '../models/style.model';
+import type {State} from '../models/tabela.model';
 import type {ColumnComponent} from './column.component';
 
 export class HeaderComponent {
 	readonly elements: HeaderElements;
 
-	constructor() {
-		const {group, row} = createRowGroup();
+	constructor(state: State) {
+		const {group, row} = createRowGroup(state.options.rowHeight);
 
 		this.elements = {group, row};
 
-		group.className += ` ${CSS_TABELA_ROWGROUP_HEADER}`;
-		row.className += ` ${CSS_TABELA_ROW_HEADER}`;
+		group.className += ` ${CSS_ROWGROUP_HEADER}`;
+		row.className += ` ${CSS_ROW_HEADER}`;
 	}
 
 	destroy(): void {

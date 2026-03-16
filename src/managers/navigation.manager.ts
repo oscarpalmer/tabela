@@ -4,6 +4,7 @@ import {getKey} from '../helpers/misc.helpers';
 import type {DataItem} from '../models/data.model';
 import type {State} from '../models/tabela.model';
 import {GroupComponent} from '../components/group.component';
+import {ARIA_ACTIVEDESCENDANT, ATTRIBUTE_DATA_ACTIVE} from '../models/dom.model';
 
 export class NavigationManager {
 	active: DataItem | undefined;
@@ -21,9 +22,9 @@ export class NavigationManager {
 
 		event.preventDefault();
 
-		const {components, id, managers} = this.state;
+		const {components, managers} = this.state;
 
-		const activeDescendant = components.body.elements.group.getAttribute('aria-activedescendant');
+		const activeDescendant = components.body.elements.group.getAttribute(ARIA_ACTIVEDESCENDANT);
 
 		const {items} = managers.data;
 		const {length} = items;
@@ -33,7 +34,7 @@ export class NavigationManager {
 		if (isNullableOrWhitespace(activeDescendant)) {
 			next = getDefaultIndex(event.key, length);
 		} else {
-			next = getIndex(this.state, event, activeDescendant, id)!;
+			next = getIndex(this.state, event, activeDescendant)!;
 		}
 
 		if (next != null) {
@@ -42,20 +43,20 @@ export class NavigationManager {
 	}
 
 	setActive(item: DataItem | undefined, scroll?: boolean): void {
-		const {components, id, managers, options} = this.state;
+		const {components, managers, options, prefix} = this.state;
 
 		this.active = item;
 
-		const active = components.body.elements.group.querySelectorAll('[data-active="true"]');
+		const active = components.body.elements.group.querySelectorAll(attributeDataActiveTrue);
 
 		for (const item of active) {
-			item.setAttribute('data-active', 'false');
+			item.setAttribute(ATTRIBUTE_DATA_ACTIVE, 'false');
 		}
 
 		const component = item instanceof GroupComponent ? item : managers.row.get(item!, false);
 
 		if (component != null) {
-			component.element?.setAttribute('data-active', 'true');
+			component.element?.setAttribute(ATTRIBUTE_DATA_ACTIVE, 'true');
 
 			if (scroll ?? true) {
 				if (component.element == null) {
@@ -72,8 +73,8 @@ export class NavigationManager {
 		}
 
 		components.body.elements.group.setAttribute(
-			'aria-activedescendant',
-			component == null ? '' : `tabela_${id}_${component.key}`,
+			ARIA_ACTIVEDESCENDANT,
+			component == null ? '' : `${prefix}${component.key}`,
 		);
 	}
 }
@@ -83,10 +84,10 @@ function getDefaultIndex(key: string, max: number): number {
 		case negativeDefaultKeys.has(key):
 			return -1;
 
-		case key === 'PageDown':
+		case key === KEY_PAGE_DOWN:
 			return Math.min(9, max - 1);
 
-		case key === 'PageUp':
+		case key === KEY_PAGE_UP:
 			return max < 10 ? 0 : max - 10;
 
 		default:
@@ -94,54 +95,49 @@ function getDefaultIndex(key: string, max: number): number {
 	}
 }
 
-function getIndex(
-	state: State,
-	event: KeyboardEvent,
-	active: string,
-	id: number,
-): number | undefined {
-	const key = getKey(active.replace(`tabela_${id}_`, ''));
+function getIndex(state: State, event: KeyboardEvent, active: string): number | undefined {
+	const key = getKey(active.replace(state.prefix, ''));
 
 	if (key == null) {
 		return;
 	}
 
 	if (absoluteKeys.has(event.key)) {
-		return event.key === 'Home' ? 0 : state.managers.data.size - 1;
+		return event.key === KEY_HOME ? 0 : state.managers.data.size - 1;
 	}
 
 	const index = state.managers.data.getIndex(key);
 
-	const offset = getOffset(event.key);
-
-	return clamp(index + offset, 0, state.managers.data.size - 1, true);
+	return clamp(index + (offset[event.key] ?? 0), 0, state.managers.data.size - 1, true);
 }
 
-function getOffset(key: string): number {
-	switch (key) {
-		case 'ArrowDown':
-			return 1;
+const KEY_ARROW_DOWN = 'ArrowDown';
 
-		case 'ArrowUp':
-			return -1;
+const KEY_ARROW_UP = 'ArrowUp';
 
-		case 'PageDown':
-			return 10;
+const KEY_END = 'End';
 
-		case 'PageUp':
-			return -10;
+const KEY_HOME = 'Home';
 
-		default:
-			return 0;
-	}
-}
+const KEY_PAGE_DOWN = 'PageDown';
 
-const absoluteKeys = new Set(['End', 'Home']);
+const KEY_PAGE_UP = 'PageUp';
 
-const arrowKeys = new Set(['ArrowDown', 'ArrowUp']);
+const absoluteKeys = new Set([KEY_END, KEY_HOME]);
 
-const negativeDefaultKeys = new Set(['ArrowUp', 'End']);
+const arrowKeys = new Set([KEY_ARROW_DOWN, KEY_ARROW_UP]);
 
-const pageKeys = new Set(['PageDown', 'PageUp']);
+export const attributeDataActiveTrue = `[${ATTRIBUTE_DATA_ACTIVE}="true"]`;
+
+const negativeDefaultKeys = new Set([KEY_ARROW_UP, KEY_END]);
+
+const offset: Record<string, number> = {
+	[KEY_ARROW_DOWN]: 1,
+	[KEY_ARROW_UP]: -1,
+	[KEY_PAGE_DOWN]: 10,
+	[KEY_PAGE_UP]: -10,
+};
+
+const pageKeys = new Set([KEY_PAGE_DOWN, KEY_PAGE_UP]);
 
 const allKeys = new Set([...absoluteKeys, ...arrowKeys, ...pageKeys]);

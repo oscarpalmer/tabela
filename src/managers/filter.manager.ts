@@ -4,7 +4,20 @@ import {endsWith, includes, startsWith} from '@oscarpalmer/atoms/string/match';
 import {equal} from '@oscarpalmer/atoms/value/equal';
 import {GroupComponent} from '../components/group.component';
 import type {DataItem} from '../models/data.model';
-import type {TabelaFilter, TabelaFilterComparison, TabelaFilterItem} from '../models/filter.model';
+import {
+	FILTER_CONTAINS,
+	FILTER_ENDS_WITH,
+	FILTER_EQUALS,
+	FILTER_GREATER_THAN,
+	FILTER_GREATER_THAN_OR_EQUAL,
+	FILTER_LESS_THAN,
+	FILTER_LESS_THAN_OR_EQUAL,
+	FILTER_NOT_CONTAINS,
+	FILTER_NOT_EQUALS,
+	FILTER_STARTS_WITH,
+	type TabelaFilter,
+	type TabelaFilterItem,
+} from '../models/filter.model';
 import type {State} from '../models/tabela.model';
 
 export class FilterManager {
@@ -156,17 +169,17 @@ export class FilterManager {
 	}
 }
 
-const comparators: Record<TabelaFilterComparison, (row: unknown, filter: unknown) => boolean> = {
-	contains: (row, filter) => includes(getString(row), getString(filter), true),
-	'ends-with': (row, filter) => endsWith(getString(row), getString(filter), true),
-	equals: (row, filter) => equalizer(row, filter),
-	'greater-than': (row, filter) => getNumber(row) > getNumber(filter),
-	'greater-than-or-equal': (row, filter) => getNumber(row) >= getNumber(filter),
-	'less-than': (row, filter) => getNumber(row) < getNumber(filter),
-	'less-than-or-equal': (row, filter) => getNumber(row) <= getNumber(filter),
-	'not-contains': (row, filter) => !includes(getString(row), getString(filter), true),
-	'not-equals': (row, filter) => !equalizer(row, filter),
-	'starts-with': (row, filter) => startsWith(getString(row), getString(filter), true),
+const comparators: Record<string, (row: unknown, filter: unknown) => boolean> = {
+	[FILTER_CONTAINS]: (row, filter) => includes(getString(row), getString(filter), true),
+	[FILTER_ENDS_WITH]: (row, filter) => endsWith(getString(row), getString(filter), true),
+	[FILTER_EQUALS]: (row, filter) => equalizer(row, filter),
+	[FILTER_GREATER_THAN]: (row, filter) => getNumber(row) > getNumber(filter),
+	[FILTER_GREATER_THAN_OR_EQUAL]: (row, filter) => getNumber(row) >= getNumber(filter),
+	[FILTER_LESS_THAN]: (row, filter) => getNumber(row) < getNumber(filter),
+	[FILTER_LESS_THAN_OR_EQUAL]: (row, filter) => getNumber(row) <= getNumber(filter),
+	[FILTER_NOT_CONTAINS]: (row, filter) => !includes(getString(row), getString(filter), true),
+	[FILTER_NOT_EQUALS]: (row, filter) => !equalizer(row, filter),
+	[FILTER_STARTS_WITH]: (row, filter) => startsWith(getString(row), getString(filter), true),
 };
 
 const equalizer = equal.initialize({

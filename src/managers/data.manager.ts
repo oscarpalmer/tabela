@@ -5,16 +5,17 @@ import {isPlainObject} from '@oscarpalmer/atoms/is';
 import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
 import {delay} from '@oscarpalmer/atoms/promise/delay';
 import {getValue} from '@oscarpalmer/atoms/value/handle';
+import type {ColumnComponent} from '../components/column.component';
 import {GroupComponent, updateGroup} from '../components/group.component';
 import type {DataItem, DataState, TabelaData} from '../models/data.model';
+import {SORT_ASCENDING} from '../models/sort.model';
 import type {State} from '../models/tabela.model';
 import {sortWithGroups} from './sort.manager';
-import type {ColumnComponent} from '../components/column.component';
 
 export class DataManager {
 	handlers = Object.freeze({
 		add: data => void this.add(data, true),
-		clear: () => void this.clear(),
+		clear: () => this.clear(),
 		get: active => this.get(active),
 		remove: items => void this.remove(items, true),
 		synchronize: (data, remove) => void this.synchronize(data, remove),
@@ -70,7 +71,7 @@ export class DataManager {
 				continue;
 			}
 
-			const groupValue = getValue(item, state.managers.group.field) as unknown;
+			const groupValue = getValue(item, state.managers.group.field) as Key;
 
 			let group = state.managers.group.get(groupValue);
 
@@ -78,7 +79,7 @@ export class DataManager {
 				groupColumn ??= state.managers.column.get(state.managers.group.field);
 
 				group = new GroupComponent(
-					`${groupColumn?.options.title ?? state.managers.group.field}: ${groupValue}`,
+					`${groupColumn?.options.label ?? state.managers.group.field}: ${groupValue}`,
 					groupValue,
 				);
 
@@ -263,14 +264,14 @@ export class DataManager {
 		if (state.managers.group.enabled) {
 			sortWithGroups(state, state.values.array, [
 				{
-					direction: 'ascending',
+					direction: SORT_ASCENDING,
 					key: state.key,
 				},
 			]);
 		} else {
 			sort(state.values.array as PlainObject[], [
 				{
-					direction: 'ascending',
+					direction: SORT_ASCENDING,
 					key: state.key,
 				},
 			]);
@@ -316,7 +317,7 @@ export class DataManager {
 				const [value, items] = entries[index];
 
 				const group = new GroupComponent(
-					`${column?.options.title ?? state.managers.group.field}: ${value}`,
+					`${column?.options.label ?? state.managers.group.field}: ${value}`,
 					value,
 				);
 
