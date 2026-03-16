@@ -1,12 +1,7 @@
 import {setAttributes} from '@oscarpalmer/toretto/attribute';
 import {setStyles} from '@oscarpalmer/toretto/style';
-import {
-	CSS_CELL,
-	CSS_CELL_BODY,
-	CSS_ROW,
-	CSS_ROWGROUP,
-} from '../models/style.model';
 import {ELEMENT_DIV, ROLE_CELL, ROLE_ROW, ROLE_ROWGROUP} from '../models/dom.model';
+import {CSS_CELL, CSS_CELL_BODY, CSS_ROW, CSS_ROWGROUP} from '../models/style.model';
 
 type RowGroupWithRow = {
 	group: HTMLDivElement;

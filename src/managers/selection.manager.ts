@@ -4,23 +4,22 @@ import {setAttribute} from '@oscarpalmer/toretto/attribute';
 import {getPosition, on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
 import type {EventPosition} from '@oscarpalmer/toretto/models';
-import {GroupComponent} from '../components/group.component';
 import {createElement} from '../helpers/dom.helpers';
-import {getKey} from '../helpers/misc.helpers';
+import {getKey, isGroupKey} from '../helpers/misc.helpers';
 import {preventSelection} from '../helpers/style.helper';
+import {ARIA_SELECTED, ATTRIBUTE_DATA_KEY, ELEMENT_DIV} from '../models/dom.model';
 import type {TabelaSelection} from '../models/selection.model';
 import {CSS_ROW_BODY, CSS_ROW_SELECTED, CSS_SELECTION, CSS_TABLE} from '../models/style.model';
 import type {State} from '../models/tabela.model';
-import {ARIA_SELECTED, ATTRIBUTE_DATA_KEY, ELEMENT_DIV} from '../models/dom.model';
 
 export class SelectionManager {
-	handlers = Object.freeze({
+	handlers: TabelaSelection = {
 		add: keys => this.add(keys),
 		clear: () => this.clear(),
 		remove: keys => this.remove(keys),
 		set: keys => this.set(keys),
 		toggle: () => this.toggle(),
-	} satisfies TabelaSelection);
+	};
 
 	items = new Set<Key>();
 
@@ -124,7 +123,7 @@ export class SelectionManager {
 			return;
 		}
 
-		const {items} = state.managers.data;
+		const {keys} = state.managers.data;
 
 		const fromIndex = state.managers.data.getIndex(fromKey);
 		const toIndex = state.managers.data.getIndex(toKey);
@@ -138,10 +137,10 @@ export class SelectionManager {
 		const selected: Key[] = [];
 
 		for (let index = start; index <= end; index += 1) {
-			const item = items[index];
+			const key = keys[index];
 
-			if (!(item instanceof GroupComponent)) {
-				selected.push(item as Key);
+			if (!isGroupKey(key)) {
+				selected.push(key);
 			}
 		}
 
@@ -191,12 +190,12 @@ export class SelectionManager {
 
 	toggle(): void {
 		const {items, state} = this;
-		const data = state.managers.data.items;
+		const {keys} = state.managers.data;
 
-		if (items.size === data.length - state.managers.group.items.length) {
+		if (items.size === keys.length - state.managers.group.items.length) {
 			this.clear();
 		} else {
-			this.set(data.filter(key => !(key instanceof GroupComponent)) as Key[]);
+			this.set(keys.filter(key => !isGroupKey(key)));
 		}
 	}
 

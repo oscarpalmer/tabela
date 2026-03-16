@@ -1,4 +1,5 @@
 import type {Key} from '@oscarpalmer/atoms/models';
+import {GROUP_KEY_EXPRESSION} from '../models/group.model';
 
 export function getKey(value: unknown): Key | undefined {
 	if (typeof value === 'number') {
@@ -10,6 +11,10 @@ export function getKey(value: unknown): Key | undefined {
 	}
 
 	return integerExpression.test(value) ? Number.parseInt(value, 10) : value;
+}
+
+export function isGroupKey(key: unknown): boolean {
+	return typeof key === 'string' && GROUP_KEY_EXPRESSION.test(key);
 }
 
 const integerExpression = /^\d+$/;

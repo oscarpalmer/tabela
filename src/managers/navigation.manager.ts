@@ -1,13 +1,12 @@
 import {isNullableOrWhitespace} from '@oscarpalmer/atoms/is';
+import type {Key} from '@oscarpalmer/atoms/models';
 import {clamp} from '@oscarpalmer/atoms/number';
-import {getKey} from '../helpers/misc.helpers';
-import type {DataItem} from '../models/data.model';
-import type {State} from '../models/tabela.model';
-import {GroupComponent} from '../components/group.component';
+import {getKey, isGroupKey} from '../helpers/misc.helpers';
 import {ARIA_ACTIVEDESCENDANT, ATTRIBUTE_DATA_ACTIVE} from '../models/dom.model';
+import type {State} from '../models/tabela.model';
 
 export class NavigationManager {
-	active: DataItem | undefined;
+	active: Key | undefined;
 
 	constructor(public state: State) {}
 
@@ -26,8 +25,8 @@ export class NavigationManager {
 
 		const activeDescendant = components.body.elements.group.getAttribute(ARIA_ACTIVEDESCENDANT);
 
-		const {items} = managers.data;
-		const {length} = items;
+		const {keys} = managers.data;
+		const {length} = keys;
 
 		let next: number;
 
@@ -38,11 +37,11 @@ export class NavigationManager {
 		}
 
 		if (next != null) {
-			this.setActive(items.at(next));
+			this.setActive(keys.at(next));
 		}
 	}
 
-	setActive(item: DataItem | undefined, scroll?: boolean): void {
+	setActive(item: Key | undefined, scroll?: boolean): void {
 		const {components, managers, options, prefix} = this.state;
 
 		this.active = item;
@@ -53,7 +52,9 @@ export class NavigationManager {
 			item.setAttribute(ATTRIBUTE_DATA_ACTIVE, 'false');
 		}
 
-		const component = item instanceof GroupComponent ? item : managers.row.get(item!, false);
+		const component = isGroupKey(item)
+			? managers.group.getForKey(item as string)
+			: managers.row.get(item!, false);
 
 		if (component != null) {
 			component.element?.setAttribute(ATTRIBUTE_DATA_ACTIVE, 'true');

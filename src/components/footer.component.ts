@@ -1,10 +1,6 @@
 import {createCell, createRowGroup} from '../helpers/dom.helpers';
 import type {FooterElements} from '../models/footer.model';
-import {
-	CSS_CELL_FOOTER,
-	CSS_ROW_FOOTER,
-	CSS_ROWGROUP_FOOTER,
-} from '../models/style.model';
+import {CSS_CELL_FOOTER, CSS_ROW_FOOTER, CSS_ROWGROUP_FOOTER} from '../models/style.model';
 import type {State} from '../models/tabela.model';
 import type {ColumnComponent} from './column.component';
 

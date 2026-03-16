@@ -8,11 +8,7 @@ import {
 	ROLE_COLUMNHEADER,
 } from '../models/dom.model';
 import {EVENT_HEADING} from '../models/event.model';
-import {
-	CSS_HEADING,
-	CSS_HEADING_CONTENT,
-	CSS_HEADING_SORTER,
-} from '../models/style.model';
+import {CSS_HEADING, CSS_HEADING_CONTENT, CSS_HEADING_SORTER} from '../models/style.model';
 
 export class ColumnComponent {
 	elements: ColumnElements;

@@ -7,35 +7,36 @@ import {delay} from '@oscarpalmer/atoms/promise/delay';
 import {getValue} from '@oscarpalmer/atoms/value/handle';
 import type {ColumnComponent} from '../components/column.component';
 import {GroupComponent, updateGroup} from '../components/group.component';
-import type {DataItem, DataState, TabelaData} from '../models/data.model';
+import type {DataState, DataValue, TabelaData} from '../models/data.model';
 import {SORT_ASCENDING} from '../models/sort.model';
 import type {State} from '../models/tabela.model';
 import {sortWithGroups} from './sort.manager';
+import {isGroupKey} from '../helpers/misc.helpers';
 
 export class DataManager {
-	handlers = Object.freeze({
+	handlers: TabelaData = {
 		add: data => void this.add(data, true),
 		clear: () => this.clear(),
 		get: active => this.get(active),
 		remove: items => void this.remove(items, true),
-		synchronize: (data, remove) => void this.synchronize(data, remove),
-		update: data => void this.update(data),
-	} satisfies TabelaData);
+		synchronize: (data, remove) => void this.synchronize(data, remove === true),
+		update: data => void this.update(data, true),
+	};
 
 	state: DataState;
 
-	get items(): DataItem[] {
-		return this.state.items.active ?? this.state.items.original;
+	get keys(): Key[] {
+		return this.state.keys.active ?? this.state.keys.original;
 	}
 
 	get size(): number {
-		return this.items.length;
+		return this.keys.length;
 	}
 
 	constructor(state: State) {
 		this.state = {
 			...state,
-			items: {
+			keys: {
 				original: [],
 			},
 			values: {
@@ -54,6 +55,8 @@ export class DataManager {
 		let groupColumn: ColumnComponent | undefined;
 		let {length} = data;
 
+		let added = 0;
+
 		for (let index = 0; index < length; index += 1) {
 			const item = data[index];
 			const key = getValue(item, state.key) as Key;
@@ -67,13 +70,15 @@ export class DataManager {
 			state.values.array.push(item);
 			state.values.mapped.set(key, item);
 
+			added += 1;
+
 			if (!state.managers.group.enabled) {
 				continue;
 			}
 
 			const groupValue = getValue(item, state.managers.group.field) as Key;
 
-			let group = state.managers.group.get(groupValue);
+			let group = state.managers.group.getForValue(groupValue);
 
 			if (group == null) {
 				groupColumn ??= state.managers.column.get(state.managers.group.field);
@@ -83,7 +88,7 @@ export class DataManager {
 					groupValue,
 				);
 
-				state.values.array.push(group);
+				state.values.array.push(group.key);
 				state.managers.group.add(group);
 			}
 
@@ -102,9 +107,9 @@ export class DataManager {
 			updateGroup(state, groups[index]);
 		}
 
-		if (updates.length > 0) {
-			void this.update(updates);
-		} else if (render) {
+		await this.update(updates, added === 0);
+
+		if (added > 0 && render) {
 			this.render();
 		}
 	}
@@ -120,8 +125,8 @@ export class DataManager {
 
 		state.values.mapped.clear();
 
-		state.items.active = undefined;
-		state.items.original.length = 0;
+		state.keys.active = undefined;
+		state.keys.original.length = 0;
 		state.values.array.length = 0;
 
 		this.handlers = undefined as never;
@@ -133,29 +138,23 @@ export class DataManager {
 
 		return (active ?? false)
 			? select(
-					state.items.active ?? [],
-					key => !(key instanceof GroupComponent),
+					state.keys.active ?? [],
+					key => !isGroupKey(key),
 					key => state.values.mapped.get(key as Key)!,
 				)
-			: (state.values.array.filter(item => !(item instanceof GroupComponent)) as PlainObject[]);
+			: (state.values.array.filter(item => !isGroupKey(item)) as PlainObject[]);
 	}
 
-	getIndex(item: DataItem): number {
-		if (item instanceof GroupComponent) {
-			return this.items.indexOf(item);
-		}
-
-		return this.items.findIndex(value =>
-			value instanceof GroupComponent ? value.key === item : value === item,
-		);
+	getIndex(item: Key): number {
+		return this.keys.indexOf(item);
 	}
 
 	async remove(items: Array<Key | PlainObject>, render: boolean): Promise<void> {
 		const {state} = this;
 
-		const keys = items.map(
-			value => (isPlainObject(value) ? getValue(value, state.key) : value) as Key,
-		);
+		const keys = items
+			.map(value => (isPlainObject(value) ? getValue(value, state.key) : value) as Key)
+			.filter(key => !isGroupKey(key));
 
 		const {length} = keys;
 
@@ -164,12 +163,12 @@ export class DataManager {
 		}
 	}
 
-	async removeItems(items: DataItem[], clear: boolean, render: boolean): Promise<void> {
+	async removeItems(keys: Key[], clear: boolean, render: boolean): Promise<void> {
 		const {state} = this;
 
 		if (clear) {
-			state.items.active = undefined;
-			state.items.original = [];
+			state.keys.active = undefined;
+			state.keys.original = [];
 			state.values.array = [];
 
 			state.values.mapped.clear();
@@ -185,34 +184,34 @@ export class DataManager {
 
 		const groups: GroupComponent[] = [];
 
-		const chunked = chunk(items);
+		const chunked = chunk(keys);
 		const chunkedLength = chunked.length;
 
 		for (let chunkedIndex = 0; chunkedIndex < chunkedLength; chunkedIndex += 1) {
 			const chunk = chunked[chunkedIndex];
 			const chunkLength = chunk.length;
 
-			for (let itemIndex = 0; itemIndex < chunkLength; itemIndex += 1) {
-				const item = chunk[itemIndex];
-				const dataIndex = state.items.original.indexOf(item);
+			for (let keyIndex = 0; keyIndex < chunkLength; keyIndex += 1) {
+				const key = chunk[keyIndex];
+				const dataIndex = state.keys.original.indexOf(key);
 
 				let dataValue: PlainObject | undefined;
 
 				[dataValue] = state.values.array.splice(dataIndex, 1) as PlainObject[];
 
-				state.items.original.splice(dataIndex, 1);
-				state.managers.row.remove(item as never);
-				state.values.mapped.delete(item as Key);
+				state.keys.original.splice(dataIndex, 1);
+				state.managers.row.remove(key as never);
+				state.values.mapped.delete(key as Key);
 
-				if (!state.managers.group.enabled || item instanceof GroupComponent) {
+				if (!state.managers.group.enabled || isGroupKey(key)) {
 					continue;
 				}
 
-				state.managers.group.collapsed.delete(item as never);
+				state.managers.group.collapsed.delete(key as never);
 
-				const groupKey = getValue(dataValue, state.managers.group.field) as unknown;
+				const groupValue = getValue(dataValue, state.managers.group.field) as unknown;
 
-				const group = state.managers.group.get(groupKey);
+				const group = state.managers.group.getForValue(groupValue);
 
 				if (group == null) {
 					continue;
@@ -232,16 +231,16 @@ export class DataManager {
 					groups.splice(groupIndex, 1);
 				}
 
-				groupIndex = state.values.array.indexOf(group);
+				groupIndex = state.values.array.indexOf(group.key);
 
 				if (groupIndex > -1) {
-					state.items.original.splice(groupIndex, 1);
+					state.keys.original.splice(groupIndex, 1);
 					state.values.array.splice(groupIndex, 1);
 				}
 
 				state.managers.group.remove(group);
 
-				if (items.length >= 10_000) {
+				if (keys.length >= 10_000) {
 					await delay(25);
 				}
 			}
@@ -277,12 +276,12 @@ export class DataManager {
 			]);
 		}
 
-		state.items.original = state.values.array.map(item =>
-			item instanceof GroupComponent ? item : (getValue(item, state.key) as Key),
+		state.keys.original = state.values.array.map(item =>
+			typeof item === 'string' ? item : (getValue(item, state.key) as Key),
 		);
 
 		state.values.mapped = toMap(
-			state.values.array.filter(item => !(item instanceof GroupComponent)) as PlainObject[],
+			state.values.array.filter(item => !isGroupKey(item)) as PlainObject[],
 			item => getValue(item, state.key) as Key,
 		);
 
@@ -298,7 +297,7 @@ export class DataManager {
 	set(data: PlainObject[]): void {
 		const {state} = this;
 
-		const array: Array<GroupComponent | PlainObject> = data.slice();
+		const array: DataValue[] = data.slice();
 
 		if (state.managers.group.enabled) {
 			const column = state.managers.column.get(state.managers.group.field);
@@ -325,7 +324,7 @@ export class DataManager {
 
 				groups.push(group);
 
-				array.push(group);
+				array.push(group.key);
 			}
 
 			state.managers.group.set(groups);
@@ -336,10 +335,10 @@ export class DataManager {
 		this.render();
 	}
 
-	async synchronize(data: PlainObject[], remove?: boolean): Promise<void> {
+	async synchronize(data: PlainObject[], remove: boolean): Promise<void> {
 		const {state} = this;
 
-		const add: PlainObject[] = [];
+		const added: PlainObject[] = [];
 		const updated: PlainObject[] = [];
 
 		const keys = new Set<Key>([]);
@@ -353,7 +352,7 @@ export class DataManager {
 			if (state.values.mapped.has(key)) {
 				updated.push(object);
 			} else {
-				add.push(object);
+				added.push(object);
 			}
 
 			keys.add(key);
@@ -363,9 +362,9 @@ export class DataManager {
 			return;
 		}
 
-		if (remove ?? false) {
-			const toRemove = state.items.original.filter(
-				key => !(key instanceof GroupComponent) && !keys.has(key),
+		if (remove) {
+			const toRemove = state.keys.original.filter(
+				key => !isGroupKey(key) && !keys.has(key),
 			) as Key[];
 
 			if (toRemove.length > 0) {
@@ -373,31 +372,34 @@ export class DataManager {
 			}
 		}
 
-		await this.update(updated);
+		await this.update(updated, added.length === 0);
 
-		if (add.length > 0) {
-			await this.add(add, false);
-		}
+		await this.add(added, false);
 
-		if (add.length > 0 || (remove ?? false)) {
+		if (added.length > 0 || remove) {
 			this.render();
 		}
 	}
 
-	async update(data: PlainObject[]): Promise<void> {
+	async update(data: PlainObject[], render: boolean): Promise<void> {
 		const {state} = this;
 
 		const {length} = data;
 
-		for (let index = 0; index < length; index += 1) {
-			const object = data[index];
+		for (let dataIndex = 0; dataIndex < length; dataIndex += 1) {
+			const dataItem = data[dataIndex];
 
-			const key = getValue(object, state.key) as Key;
-			const value = state.values.mapped.get(key);
+			const key = getValue(dataItem, state.key) as Key;
 
-			if (value != null) {
-				state.values.mapped.set(key, {...value, ...object} as PlainObject);
+			const keyIndex = state.keys.original.indexOf(key);
 
+			if (keyIndex === -1) {
+				continue;
+			}
+
+			Object.assign(state.values.array[keyIndex], dataItem);
+
+			if (render) {
 				state.managers.row.update(key);
 			}
 		}

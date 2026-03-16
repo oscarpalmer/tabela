@@ -3,8 +3,6 @@ import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
 import {compare} from '@oscarpalmer/atoms/value/compare';
 import {getValue} from '@oscarpalmer/atoms/value/handle';
 import {setAttribute, setAttributes} from '@oscarpalmer/toretto/attribute';
-import {GroupComponent} from '../components/group.component';
-import type {DataItem} from '../models/data.model';
 import {
 	ARIA_SORT,
 	ATTRIBUTE_DATA_SORT_DIRECTION,
@@ -18,15 +16,17 @@ import {
 	type TabelaSortItem,
 } from '../models/sort.model';
 import type {State} from '../models/tabela.model';
+import type {DataValue} from '../models/data.model';
+import {isGroupKey} from '../helpers/misc.helpers';
 
 export class SortManager {
-	handlers = Object.freeze({
+	handlers: TabelaSort = {
 		add: (field, direction) => this.add(field, direction),
 		flip: field => this.flip(field),
 		clear: () => this.clear(),
 		remove: field => this.remove(field),
 		set: items => this.set(items),
-	} satisfies TabelaSort);
+	};
 
 	items: PlainObject[] = [];
 
@@ -133,7 +133,7 @@ export class SortManager {
 			);
 		}
 
-		state.managers.data.state.items.active =
+		state.managers.data.state.keys.active =
 			items.length === 0 ? undefined : getSortedItems(state, items);
 
 		state.managers.render.update(true, true);
@@ -156,11 +156,11 @@ export class SortManager {
 	}
 }
 
-function getSortedItems(state: State, sorters: PlainObject[]): DataItem[] {
+function getSortedItems(state: State, sorters: PlainObject[]): Key[] {
 	const data =
-		state.managers.data.state.items.active?.map(key =>
-			key instanceof GroupComponent ? key : state.managers.data.state.values.mapped.get(key)!,
-		) ?? state.managers.data.state.values.array.slice();
+		(state.managers.data.state.keys.active?.map(key =>
+			isGroupKey(key) ? key : state.managers.data.state.values.mapped.get(key)!,
+		) as DataValue[]) ?? state.managers.data.state.values.array;
 
 	if (!state.managers.group.enabled) {
 		return sort(data as PlainObject[], sorters as never).map(
@@ -169,27 +169,28 @@ function getSortedItems(state: State, sorters: PlainObject[]): DataItem[] {
 	}
 
 	return sortWithGroups(state, data, sorters).map(item =>
-		item instanceof GroupComponent ? item : (getValue(item, state.key) as Key),
+		typeof item === 'string' ? item : (getValue(item, state.key) as Key),
 	);
 }
 
 export function sortWithGroups(
 	state: State,
-	data: Array<GroupComponent | PlainObject>,
+	data: DataValue[],
 	sorters: PlainObject[],
-): Array<GroupComponent | PlainObject> {
+): DataValue[] {
 	const {length} = sorters;
 
 	return data.sort((first, second) => {
-		const firstValue =
-			first instanceof GroupComponent
-				? first.value.stringified
-				: getValue(first, state.managers.group.field);
+		const firstIsGroup = typeof first === 'string';
+		const secondIsGroup = typeof second === 'string';
 
-		const secondValue =
-			second instanceof GroupComponent
-				? second.value.stringified
-				: getValue(second, state.managers.group.field);
+		const firstValue = firstIsGroup
+			? state.managers.group.getForKey(first)?.value.stringified
+			: getValue(first, state.managers.group.field);
+
+		const secondValue = secondIsGroup
+			? state.managers.group.getForKey(second)?.value.stringified
+			: getValue(second, state.managers.group.field);
 
 		const firstOrder = state.managers.group.order[firstValue as never];
 		const secondOrder = state.managers.group.order[secondValue as never];
@@ -199,9 +200,6 @@ export function sortWithGroups(
 		if (groupComparison !== 0) {
 			return groupComparison;
 		}
-
-		const firstIsGroup = first instanceof GroupComponent;
-		const secondIsGroup = second instanceof GroupComponent;
 
 		if (firstIsGroup || secondIsGroup) {
 			return firstIsGroup && secondIsGroup ? 0 : firstIsGroup ? -1 : 1;

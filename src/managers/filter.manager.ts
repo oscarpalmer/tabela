@@ -1,9 +1,9 @@
+import type {Key} from '@oscarpalmer/atoms/models';
 import {getNumber} from '@oscarpalmer/atoms/number';
 import {getString} from '@oscarpalmer/atoms/string';
 import {endsWith, includes, startsWith} from '@oscarpalmer/atoms/string/match';
 import {equal} from '@oscarpalmer/atoms/value/equal';
-import {GroupComponent} from '../components/group.component';
-import type {DataItem} from '../models/data.model';
+import {isGroupKey} from '../helpers/misc.helpers';
 import {
 	FILTER_CONTAINS,
 	FILTER_ENDS_WITH,
@@ -21,12 +21,12 @@ import {
 import type {State} from '../models/tabela.model';
 
 export class FilterManager {
-	handlers = Object.freeze({
+	handlers: TabelaFilter = {
 		add: item => this.add(item),
 		clear: () => this.clear(),
 		remove: value => this.remove(value),
 		set: items => this.set(items),
-	} satisfies TabelaFilter);
+	};
 
 	items: Record<string, TabelaFilterItem[]> = {};
 
@@ -65,15 +65,15 @@ export class FilterManager {
 	filter(): void {
 		const {state} = this;
 
-		const filtered: DataItem[] = [];
+		const filtered: Key[] = [];
 		const filters = Object.entries(this.items);
 
-		const itemsLength = state.managers.data.state.items.original.length;
+		const itemsLength = state.managers.data.state.keys.original.length;
 
 		rowLoop: for (let itemIndex = 0; itemIndex < itemsLength; itemIndex += 1) {
-			const item = state.managers.data.state.items.original[itemIndex];
+			const item = state.managers.data.state.keys.original[itemIndex];
 
-			if (item instanceof GroupComponent) {
+			if (isGroupKey(item)) {
 				filtered.push(item);
 
 				continue;
@@ -104,7 +104,7 @@ export class FilterManager {
 			filtered.push(item);
 		}
 
-		state.managers.data.state.items.active = filtered;
+		state.managers.data.state.keys.active = filtered;
 
 		if (state.managers.sort.items.length > 0) {
 			state.managers.sort.sort();

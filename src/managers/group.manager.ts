@@ -1,10 +1,11 @@
 import {sort} from '@oscarpalmer/atoms/array';
+import {toMap} from '@oscarpalmer/atoms/array/to-map';
 import {toRecord} from '@oscarpalmer/atoms/array/to-record';
 import {isNullableOrWhitespace} from '@oscarpalmer/atoms/is';
 import type {Key, Simplify} from '@oscarpalmer/atoms/models';
 import {getString} from '@oscarpalmer/atoms/string';
 import {removeGroup, type GroupComponent} from '../components/group.component';
-import {GROUP_KEY_PREFIX, type TabelaGroup} from '../models/group.model';
+import type {TabelaGroup} from '../models/group.model';
 import type {State} from '../models/tabela.model';
 
 export class GroupManager {
@@ -14,7 +15,7 @@ export class GroupManager {
 
 	field!: string;
 
-	handlers = Object.freeze({
+	handlers: TabelaGroup = {
 		set: (group?: string) => {
 			if (group === this.field) {
 				return;
@@ -25,9 +26,11 @@ export class GroupManager {
 
 			this.state.managers.data.set(this.state.managers.data.get());
 		},
-	} satisfies TabelaGroup);
+	};
 
 	items: GroupComponent[] = [];
+
+	mapped = new Map<string, GroupComponent>();
 
 	order: Record<never, number> = {};
 
@@ -67,15 +70,19 @@ export class GroupManager {
 		this.state = undefined as never;
 	}
 
-	get(value: unknown) {
+	getForKey(key: string): GroupComponent | undefined {
+		return this.mapped.get(key);
+	}
+
+	getForValue(value: unknown): GroupComponent | undefined {
 		const asString = getString(value);
 
 		return this.items.find(item => item.value.stringified === asString);
 	}
 
 	handle(button: HTMLElement): void {
-		const value = button.dataset.key?.replace(`${this.state.prefix}${GROUP_KEY_PREFIX}`, '');
-		const group = this.get(value);
+		const key = button.dataset.key?.replace(`${this.state.prefix}_`, '');
+		const group = this.getForKey(key ?? '');
 
 		if (group == null) {
 			return;
@@ -87,15 +94,15 @@ export class GroupManager {
 
 		const index = items.indexOf(group);
 
-		let first = state.managers.data.state.items.original.indexOf(items[index]) + 1;
+		let first = state.managers.data.state.keys.original.indexOf(group.key) + 1;
 
 		const last =
 			items[index + 1] == null
-				? state.managers.data.state.items.original.length - 1
-				: state.managers.data.state.items.original.indexOf(items[index + 1]) - 1;
+				? state.managers.data.state.keys.original.length - 1
+				: state.managers.data.state.keys.original.indexOf(items[index + 1].key) - 1;
 
 		for (; first <= last; first += 1) {
-			const key = state.managers.data.state.items.original[first] as Key;
+			const key = state.managers.data.state.keys.original[first] as Key;
 
 			if (group.expanded) {
 				collapsed.delete(key);
@@ -121,6 +128,8 @@ export class GroupManager {
 
 	set(items: GroupComponent[]) {
 		this.items = sort(items, item => item.label);
+
+		this.mapped = toMap(items, group => group.key);
 
 		this.order = toRecord(
 			items as Simplify<GroupComponent>[],

@@ -62,7 +62,7 @@ export class RowManager {
 	update(key: Key): void {
 		const row = this.components.get(key);
 
-		if (row != null) {
+		if (row?.element != null) {
 			renderRow(this.state, row);
 		}
 	}

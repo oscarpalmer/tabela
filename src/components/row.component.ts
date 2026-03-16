@@ -27,23 +27,24 @@ export function removeRow(pool: RenderElementPool, row: RowComponent): void {
 }
 
 export function renderRow(state: State, row: RowComponent): void {
-	const element =
-		row.element ?? state.managers.render.pool.rows.shift() ?? createRow(state.options.rowHeight);
+	const {managers, options, prefix} = state;
+
+	const element = row.element ?? managers.render.pool.rows.shift() ?? createRow(options.rowHeight);
 
 	row.element = element;
 
 	element.innerHTML = '';
 
-	const selected = state.managers.selection.items.has(row.key);
+	const selected = managers.selection.items.has(row.key);
 
 	const key = String(row.key);
 
 	setAttributes(element, {
 		[ARIA_SELECTED]: String(selected),
-		[ATTRIBUTE_DATA_ACTIVE]: String(state.managers.navigation.active === row.key),
+		[ATTRIBUTE_DATA_ACTIVE]: String(managers.navigation.active === row.key),
 		[ATTRIBUTE_DATA_EVENT]: EVENT_ROW,
 		[ATTRIBUTE_DATA_KEY]: key,
-		id: `${state.prefix}${key}`,
+		id: `${prefix}${key}`,
 	});
 
 	element.classList.add(CSS_ROW_BODY);
@@ -54,10 +55,10 @@ export function renderRow(state: State, row: RowComponent): void {
 		element.classList.remove(CSS_ROW_SELECTED);
 	}
 
-	const columns = state.managers.column.items;
+	const columns = managers.column.items;
 	const {length} = columns;
 
-	const data = state.managers.data.state.values.mapped.get(row.key);
+	const data = managers.data.state.values.mapped.get(row.key);
 
 	if (data == null) {
 		return;
@@ -65,16 +66,15 @@ export function renderRow(state: State, row: RowComponent): void {
 
 	for (let index = 0; index < length; index += 1) {
 		const {options} = columns[index];
+		const {field, width} = options;
 
-		state.managers.render.pool.cells[options.field] ??= [];
+		managers.render.pool.cells[field] ??= [];
 
-		const cell =
-			state.managers.render.pool.cells[columns[index].options.field].shift() ??
-			createCell(options.width);
+		const cell = managers.render.pool.cells[field].shift() ?? createCell(width);
 
-		cell.textContent = String(getValue(data, options.field));
+		cell.textContent = String(getValue(data, field));
 
-		row.cells[options.field] = cell;
+		row.cells[field] = cell;
 
 		element.append(cell);
 	}
