@@ -1,3 +1,4 @@
+import type {Key} from '@oscarpalmer/atoms/models';
 import type {State} from './tabela.model';
 
 export type RenderElementPool = {
@@ -14,3 +15,8 @@ export type RenderState = {
 	active: boolean;
 	top: number;
 } & State;
+
+export type RenderVisible = {
+	indiced: Map<number, Key>;
+	keys: Set<Key>;
+};

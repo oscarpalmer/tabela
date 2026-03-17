@@ -1,11 +1,11 @@
 export type Column = {
-	field: string;
+	key: string;
 	label: string;
 	width: number;
 };
 
 export type TabelaColumn = {
-	field: string;
+	key: string;
 	label: string;
 	width?: number;
 };

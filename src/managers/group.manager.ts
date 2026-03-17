@@ -5,24 +5,32 @@ import {isNullableOrWhitespace} from '@oscarpalmer/atoms/is';
 import type {Key, Simplify} from '@oscarpalmer/atoms/models';
 import {getString} from '@oscarpalmer/atoms/string';
 import {removeGroup, type GroupComponent} from '../components/group.component';
-import type {TabelaGroup} from '../models/group.model';
+import {
+	EVENT_GROUP_ADD,
+	EVENT_GROUP_CLEAR,
+	EVENT_GROUP_REMOVE,
+	EVENT_GROUP_TOGGLE,
+} from '../models/event.model';
+import type {TabelaGroupHandlers, TabelaGroupToggle} from '../models/group.model';
 import type {State} from '../models/tabela.model';
+import {compare} from '@oscarpalmer/atoms/value/compare';
+import {getGroup} from '../helpers/misc.helpers';
 
 export class GroupManager {
 	collapsed = new Set<Key>();
 
 	enabled = false;
 
-	field!: string;
+	key!: string;
 
-	handlers: TabelaGroup = {
+	handlers: TabelaGroupHandlers = {
 		set: (group?: string) => {
-			if (group === this.field) {
+			if (group === this.key) {
 				return;
 			}
 
 			this.enabled = !isNullableOrWhitespace(group);
-			this.field = group ?? '';
+			this.key = group ?? '';
 
 			this.state.managers.data.set(this.state.managers.data.get());
 		},
@@ -40,20 +48,34 @@ export class GroupManager {
 		}
 
 		this.enabled = true;
-		this.field = state.options.grouping;
+		this.key = state.options.grouping;
 	}
 
-	add(group: GroupComponent): void {
+	add(group: GroupComponent, emit: boolean): void {
 		this.set([...this.items, group]);
+
+		if (emit) {
+			this.state.managers.event.emit(EVENT_GROUP_ADD, [getGroup(group)]);
+		}
 	}
 
 	clear(): void {
+		if (this.items.length === 0) {
+			return;
+		}
+
 		const groups = this.items.splice(0);
 		const {length} = groups;
 
 		for (let index = 0; index < length; index += 1) {
-			this.remove(groups[index]);
+			this.remove(groups[index], false);
 		}
+
+		this.collapsed.clear();
+
+		this.set([]);
+
+		this.state.managers.event.emit(EVENT_GROUP_CLEAR);
 	}
 
 	destroy(): void {
@@ -111,6 +133,11 @@ export class GroupManager {
 			}
 		}
 
+		state.managers.event.emit(EVENT_GROUP_TOGGLE, {
+			collapsed: group.expanded ? [] : [getGroup(group)],
+			expanded: group.expanded ? [getGroup(group)] : [],
+		});
+
 		if (Object.keys(state.managers.filter.items).length > 0) {
 			state.managers.filter.filter();
 		} else if (state.managers.sort.items.length > 0) {
@@ -120,14 +147,20 @@ export class GroupManager {
 		}
 	}
 
-	remove(group: GroupComponent): void {
+	remove(group: GroupComponent, update: boolean): void {
 		removeGroup(group);
 
+		if (!update) {
+			return;
+		}
+
 		this.set(this.items.filter(item => item !== group));
+
+		this.state.managers.event.emit(EVENT_GROUP_REMOVE, [getGroup(group)]);
 	}
 
 	set(items: GroupComponent[]) {
-		this.items = sort(items, item => item.label);
+		this.items = sort(items, (first, second) => compare(first.label, second.label));
 
 		this.mapped = toMap(items, group => group.key);
 

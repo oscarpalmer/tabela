@@ -4,6 +4,8 @@ import {
 	CSS_CELL_FOOTER,
 	CSS_CELL_GROUP,
 	CSS_HEADING,
+	CSS_HEADING_CONTENT,
+	CSS_HEADING_SORTER,
 	CSS_ROW,
 	CSS_ROW_SELECTED,
 	CSS_ROWGROUP_BODY,
@@ -133,6 +135,37 @@ const styling = //css
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+
+:where(.${CSS_HEADING}) {
+	display: flex;
+	flex-flow: row nowrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5em;
+	cursor: pointer;
+}
+
+:where(.${CSS_HEADING_CONTENT}) {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+:where(.${CSS_HEADING}[data-sort-direction] .${CSS_HEADING_SORTER})::after {
+	width: 1em;
+	height: 1em;
+	display: inline-flex;
+	font-size: .75em;
+	font-weight: bold;
+}
+
+:where(.${CSS_HEADING}[data-sort-direction="ascending"] .${CSS_HEADING_SORTER})::after {
+	content: '\\21C8';
+}
+
+:where(.${CSS_HEADING}[data-sort-direction="descending"] .${CSS_HEADING_SORTER})::after {
+	content: '\\21CA';
 }
 
 :where(.${CSS_CELL_FOOTER}) {

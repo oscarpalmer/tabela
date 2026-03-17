@@ -15,8 +15,9 @@ import {SortManager} from './managers/sort.manager';
 import {StyleManager} from './managers/style.manager';
 import type {TabelaData} from './models/data.model';
 import {ARIA_LABEL, ATTRIBUTE_ROLE, ELEMENT_DIV, ROLE_TABLE} from './models/dom.model';
+import type {TabelaEvents} from './models/event.model';
 import type {TabelaFilter} from './models/filter.model';
-import type {TabelaGroup} from './models/group.model';
+import type {TabelaGroupHandlers} from './models/group.model';
 import type {TabelaSelection} from './models/selection.model';
 import type {TabelaSort} from './models/sort.model';
 import {CSS_TABLE, CSS_WRAPPER} from './models/style.model';
@@ -54,9 +55,11 @@ export class Tabela {
 
 	readonly data: TabelaData;
 
+	readonly events: TabelaEvents;
+
 	readonly filter: TabelaFilter;
 
-	readonly group: TabelaGroup;
+	readonly group: TabelaGroupHandlers;
 
 	readonly selection: TabelaSelection;
 
@@ -121,6 +124,7 @@ export class Tabela {
 		this.#managers.data.set(options.data);
 
 		this.data = this.#managers.data.handlers;
+		this.events = this.#managers.event.handlers;
 		this.filter = this.#managers.filter.handlers;
 		this.group = this.#managers.group.handlers;
 		this.selection = this.#managers.selection.handlers;

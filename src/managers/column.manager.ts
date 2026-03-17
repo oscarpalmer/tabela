@@ -20,31 +20,31 @@ export class ColumnManager {
 		this.state = undefined as never;
 	}
 
-	get(field: string): ColumnComponent | undefined {
-		return this.items.find(item => item.options.field === field);
+	get(key: string): ColumnComponent | undefined {
+		return this.items.find(item => item.options.key === key);
 	}
 
-	remove(field: string): void;
+	remove(key: string): void;
 
-	remove(fields: string[]): void;
+	remove(keys: string[]): void;
 
 	remove(value: unknown): void {
 		const {items, state} = this;
 		const {components, managers} = state;
 
-		const fields = (Array.isArray(value) ? value : [value]).filter(
+		const keys = (Array.isArray(value) ? value : [value]).filter(
 			item => typeof item === 'string',
 		);
 
-		const {length} = fields;
+		const {length} = keys;
 
 		if (length === 0) {
 			return;
 		}
 
-		for (let fieldIndex = 0; fieldIndex < length; fieldIndex += 1) {
+		for (let keyIndex = 0; keyIndex < length; keyIndex += 1) {
 			const itemIndex = items.findIndex(
-				component => component.options.field === fields[fieldIndex],
+				component => component.options.key === keys[keyIndex],
 			);
 
 			if (itemIndex > -1) {
@@ -57,7 +57,7 @@ export class ColumnManager {
 		components.header.update(items);
 		components.footer.update(items);
 
-		managers.render.removeCells(fields);
+		managers.render.removeCells(keys);
 	}
 
 	set(columns: TabelaColumn[]): void {

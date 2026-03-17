@@ -1,17 +1,47 @@
+import type {GenericCallback} from '@oscarpalmer/atoms/models';
 import {on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
-import type {State} from '../models/tabela.model';
+import {isEvent} from '../helpers/misc.helpers';
 import {
 	ATTRIBUTE_DATA_EVENT,
-	ATTRIBUTE_DATA_FIELD,
+	ATTRIBUTE_DATA_KEY,
 	ATTRIBUTE_DATA_SORT_DIRECTION,
 } from '../models/dom.model';
+import {
+	EVENT_GROUP,
+	EVENT_HEADING,
+	EVENT_ROW,
+	type EventMap,
+	type EventName,
+	type Events,
+	type TabelaEvents,
+} from '../models/event.model';
 import {CSS_TABLE} from '../models/style.model';
-import {EVENT_GROUP, EVENT_HEADING, EVENT_ROW} from '../models/event.model';
+import type {State} from '../models/tabela.model';
 
 export class EventManager {
+	events: Events = {};
+
+	handlers: TabelaEvents = {
+		subscribe: (name, callback) => this.subscribe(name, callback),
+		unsubscribe: (name, callback) => this.unsubscribe(name, callback),
+	};
+
 	constructor(public state: State) {
 		mapped.set(state.element, this);
+	}
+
+	emit<Name extends EventName>(name: Name, ...parameters: Parameters<EventMap[Name]>): void {
+		if (this.events[name] == null) {
+			return;
+		}
+
+		const handlers = [...this.events[name]];
+		const {length} = handlers;
+
+		for (let index = 0; index < length; index += 1) {
+			(handlers[index] as GenericCallback)(...parameters);
+		}
 	}
 
 	destroy(): void {
@@ -22,10 +52,26 @@ export class EventManager {
 
 	onSort(event: MouseEvent, target: HTMLElement): void {
 		const direction = target.getAttribute(ATTRIBUTE_DATA_SORT_DIRECTION);
-		const field = target.getAttribute(ATTRIBUTE_DATA_FIELD);
+		const key = target.getAttribute(ATTRIBUTE_DATA_KEY);
 
-		if (field != null) {
-			this.state.managers.sort.toggle(event, field, direction);
+		if (key != null) {
+			this.state.managers.sort.toggle(event, key, direction);
+		}
+	}
+
+	subscribe(name: string, callback: GenericCallback): void {
+		if (!isEvent(name) || typeof callback !== 'function') {
+			return;
+		}
+
+		(this.events as Record<string, Set<unknown>>)[name] ??= new Set();
+
+		(this.events[name] as Set<unknown>).add(callback);
+	}
+
+	unsubscribe(name: string, callback: GenericCallback): void {
+		if (isEvent(name) && typeof callback === 'function') {
+			this.events[name]?.delete(callback);
 		}
 	}
 }

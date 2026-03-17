@@ -1,7 +1,7 @@
 export type TabelaFilter = {
 	add(item: TabelaFilterItem): void;
 	clear(): void;
-	remove(field: string): void;
+	remove(key: string): void;
 	remove(item: TabelaFilterItem): void;
 	set(items: TabelaFilterItem[]): void;
 };
@@ -20,7 +20,7 @@ export type TabelaFilterComparison =
 
 export type TabelaFilterItem = {
 	comparison: TabelaFilterComparison;
-	field: string;
+	key: string;
 	value: unknown;
 };
 

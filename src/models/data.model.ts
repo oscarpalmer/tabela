@@ -19,11 +19,11 @@ type DataValues = {
 };
 
 export type TabelaData = {
-	add(data: PlainObject[]): void;
-	clear(): void;
+	add(data: PlainObject[]): Promise<void>;
+	clear(): Promise<void>;
 	get(active?: boolean): PlainObject[];
-	remove(keys: Key[]): void;
-	remove(data: PlainObject[]): void;
-	synchronize(data: PlainObject[], remove?: boolean): void;
-	update(data: PlainObject[]): void;
+	remove(keys: Key[]): Promise<void>;
+	remove(data: PlainObject[]): Promise<void>;
+	synchronize(data: PlainObject[], remove?: boolean): Promise<void>;
+	update(data: PlainObject[]): Promise<void>;
 };

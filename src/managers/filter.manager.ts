@@ -33,27 +33,35 @@ export class FilterManager {
 	constructor(public state: State) {}
 
 	add(item: TabelaFilterItem): void {
-		if (this.items[item.field] == null) {
-			this.items[item.field] = [];
+		const {items, state} = this;
+
+		if (items[item.key] == null) {
+			items[item.key] = [];
 		} else {
-			const index = this.items[item.field].findIndex(existing => equal(existing, item));
+			const index = items[item.key].findIndex(existing => equal(existing, item));
 
 			if (index > -1) {
 				return;
 			}
 		}
 
-		this.items[item.field].push(item);
+		items[item.key].push(item);
+
+		state.managers.event.emit('filter:add', [item]);
 
 		this.filter();
 	}
 
 	clear(): void {
-		if (Object.keys(this.items).length > 0) {
-			this.items = {};
-
-			this.filter();
+		if (Object.keys(this.items).length === 0) {
+			return;
 		}
+
+		this.items = {};
+
+		this.state.managers.event.emit('filter:clear');
+
+		this.filter();
 	}
 
 	destroy(): void {
@@ -86,9 +94,9 @@ export class FilterManager {
 			}
 
 			filterLoop: for (let filterIndex = 0; filterIndex < filters.length; filterIndex += 1) {
-				const [field, items] = filters[filterIndex];
+				const [key, items] = filters[filterIndex];
 
-				const value = row[field];
+				const value = row[key];
 
 				for (let itemIndex = 0; itemIndex < items.length; itemIndex += 1) {
 					const filter = items[itemIndex];
@@ -114,6 +122,8 @@ export class FilterManager {
 	}
 
 	remove(value: string | TabelaFilterItem): void {
+		const removed: TabelaFilterItem[] = [];
+
 		if (typeof value === 'string') {
 			if (this.items[value] == null) {
 				return;
@@ -121,31 +131,37 @@ export class FilterManager {
 
 			const keyed: Record<string, TabelaFilterItem[]> = {};
 
-			const filters = Object.keys(this.items);
-			const {length} = filters;
+			const keys = Object.keys(this.items);
+			const {length} = keys;
 
 			for (let index = 0; index < length; index += 1) {
-				const field = filters[index];
+				const key = keys[index];
 
-				if (field !== value) {
-					keyed[field] = this.items[field];
+				if (key === value) {
+					removed.push(...this.items[key]);
+				} else {
+					keyed[key] = this.items[key];
 				}
 			}
 
 			this.items = keyed;
 		} else {
-			const {field} = value;
+			const {key} = value;
 
-			if (this.items[field] == null) {
+			if (this.items[key] == null) {
 				return;
 			}
 
-			const index = this.items[field].findIndex(item => equal(item, value));
+			const index = this.items[key].findIndex(item => equal(item, value));
 
 			if (index === -1) {
 				return;
 			}
+
+			removed.push(this.items[key][index]);
 		}
+
+		this.state.managers.event.emit('filter:remove', removed);
 
 		this.filter();
 	}
@@ -158,9 +174,9 @@ export class FilterManager {
 		for (let index = 0; index < length; index += 1) {
 			const item = items[index];
 
-			keyed[item.field] ??= [];
+			keyed[item.key] ??= [];
 
-			keyed[item.field].push(item);
+			keyed[item.key].push(item);
 		}
 
 		this.items = keyed;

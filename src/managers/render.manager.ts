@@ -1,10 +1,14 @@
-import type {Key} from '@oscarpalmer/atoms/models';
 import {on} from '@oscarpalmer/toretto/event';
 import type {RemovableEventListener} from '@oscarpalmer/toretto/models';
 import {renderGroup} from '../components/group.component';
 import {removeRow, renderRow} from '../components/row.component';
 import {isGroupKey} from '../helpers/misc.helpers';
-import type {RenderElementPool, RenderRange, RenderState} from '../models/render.model';
+import type {
+	RenderElementPool,
+	RenderRange,
+	RenderState,
+	RenderVisible,
+} from '../models/render.model';
 import type {State} from '../models/tabela.model';
 
 function getRange(state: State, down: boolean): RenderRange {
@@ -58,7 +62,10 @@ export class RenderManager {
 
 	state: RenderState;
 
-	visible = new Map<number, Key>();
+	visible: RenderVisible = {
+		indiced: new Map(),
+		keys: new Set(),
+	};
 
 	constructor(state: State) {
 		this.listener = on(state.element, 'scroll', onScroll.bind(this));
@@ -74,7 +81,9 @@ export class RenderManager {
 		const {listener, pool, visible} = this;
 
 		listener();
-		visible.clear();
+
+		visible.indiced.clear();
+		visible.keys.clear();
 
 		const cells = Object.values(pool.cells).flat();
 
@@ -100,15 +109,15 @@ export class RenderManager {
 		this.visible = undefined as never;
 	}
 
-	removeCells(fields: string[]): void {
+	removeCells(keys: string[]): void {
 		const {pool, state, visible} = this;
-		const {length} = fields;
+		const {length} = keys;
 
 		for (let index = 0; index < length; index += 1) {
-			delete pool.cells[fields[index]];
+			delete pool.cells[keys[index]];
 		}
 
-		for (const [, key] of visible) {
+		for (const [, key] of visible.indiced) {
 			if (isGroupKey(key)) {
 				continue;
 			}
@@ -120,11 +129,11 @@ export class RenderManager {
 			}
 
 			for (let index = 0; index < length; index += 1) {
-				row.cells[fields[index]].innerHTML = '';
+				row.cells[keys[index]].innerHTML = '';
 
-				row.cells[fields[index]].remove();
+				row.cells[keys[index]].remove();
 
-				delete row.cells[fields[index]];
+				delete row.cells[keys[index]];
 			}
 		}
 	}
@@ -153,10 +162,11 @@ export class RenderManager {
 
 		let remove = rerender ?? false;
 
-		for (const [index, key] of visible) {
+		for (const [index, key] of visible.indiced) {
 			if (isGroupKey(key)) {
 				if (remove || !indices.has(index)) {
-					visible.delete(index);
+					visible.indiced.delete(index);
+					visible.keys.delete(key);
 
 					state.managers.group.getForKey(key as string)?.element?.remove();
 				}
@@ -167,7 +177,8 @@ export class RenderManager {
 			const row = managers.row.get(key, false);
 
 			if (remove || row == null || !indices.has(index) || managers.group.collapsed.has(key)) {
-				visible.delete(index);
+				visible.indiced.delete(index);
+				visible.keys.delete(key);
 
 				if (row != null) {
 					removeRow(pool, row);
@@ -183,7 +194,7 @@ export class RenderManager {
 		let offset = 0;
 
 		for (let index = range.start; index <= range.end + offset; index += 1) {
-			if (visible.has(index)) {
+			if (visible.indiced.has(index)) {
 				continue;
 			}
 
@@ -200,7 +211,8 @@ export class RenderManager {
 
 				renderGroup(state, group);
 
-				visible.set(index, group.key);
+				visible.indiced.set(index, group.key);
+				visible.keys.add(group.key);
 
 				if (group.element != null) {
 					group.element.style.transform = `translateY(${(index - offset) * options.rowHeight}px)`;
@@ -227,7 +239,8 @@ export class RenderManager {
 
 			renderRow(state, row);
 
-			visible.set(index, key);
+			visible.indiced.set(index, key);
+			visible.keys.add(key);
 
 			if (row.element != null) {
 				row.element.style.transform = `translateY(${(index - offset) * options.rowHeight}px)`;

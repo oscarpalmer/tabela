@@ -17,4 +17,5 @@ export default defineConfig({
 	},
 	entry: './src/index.ts',
 	minify: 'dce-only',
+	unbundle: false,
 });

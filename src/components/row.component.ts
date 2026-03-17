@@ -66,15 +66,15 @@ export function renderRow(state: State, row: RowComponent): void {
 
 	for (let index = 0; index < length; index += 1) {
 		const {options} = columns[index];
-		const {field, width} = options;
+		const {key, width} = options;
 
-		managers.render.pool.cells[field] ??= [];
+		managers.render.pool.cells[key] ??= [];
 
-		const cell = managers.render.pool.cells[field].shift() ?? createCell(width);
+		const cell = managers.render.pool.cells[key].shift() ?? createCell(width);
 
-		cell.textContent = String(getValue(data, field));
+		cell.textContent = String(getValue(data, key));
 
-		row.cells[field] = cell;
+		row.cells[key] = cell;
 
 		element.append(cell);
 	}

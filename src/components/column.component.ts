@@ -2,7 +2,7 @@ import {createElement} from '../helpers/dom.helpers';
 import type {Column, TabelaColumn} from '../models/column.model';
 import {
 	ATTRIBUTE_DATA_EVENT,
-	ATTRIBUTE_DATA_FIELD,
+	ATTRIBUTE_DATA_KEY,
 	ATTRIBUTE_ROLE,
 	ELEMENT_DIV,
 	ROLE_COLUMNHEADER,
@@ -24,7 +24,7 @@ export class ColumnComponent {
 			width,
 		};
 
-		this.elements = createHeading(this.options.field, this.options.label, width);
+		this.elements = createHeading(this.options.key, this.options.label, width);
 	}
 
 	destroy(): void {
@@ -43,7 +43,7 @@ type ColumnElements = {
 	wrapper: HTMLDivElement;
 };
 
-function createHeading(field: string, title: string, width: number): ColumnElements {
+function createHeading(key: string, title: string, width: number): ColumnElements {
 	const wrapper = createElement(
 		ELEMENT_DIV,
 		{
@@ -52,7 +52,7 @@ function createHeading(field: string, title: string, width: number): ColumnEleme
 		},
 		{
 			[ATTRIBUTE_DATA_EVENT]: EVENT_HEADING,
-			[ATTRIBUTE_DATA_FIELD]: field,
+			[ATTRIBUTE_DATA_KEY]: key,
 		},
 		{
 			width: `${width}px`,

@@ -10,8 +10,6 @@ export const ATTRIBUTE_DATA_ACTIVE = 'data-active';
 
 export const ATTRIBUTE_DATA_EVENT = 'data-event';
 
-export const ATTRIBUTE_DATA_FIELD = 'data-field';
-
 export const ATTRIBUTE_DATA_KEY = 'data-key';
 
 export const ATTRIBUTE_DATA_SORT_DIRECTION = 'data-sort-direction';

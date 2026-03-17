@@ -7,20 +7,30 @@ import {delay} from '@oscarpalmer/atoms/promise/delay';
 import {getValue} from '@oscarpalmer/atoms/value/handle';
 import type {ColumnComponent} from '../components/column.component';
 import {GroupComponent, updateGroup} from '../components/group.component';
+import {getGroup, isGroupKey} from '../helpers/misc.helpers';
 import type {DataState, DataValue, TabelaData} from '../models/data.model';
+import {
+	EVENT_DATA_ADD,
+	EVENT_DATA_CLEAR,
+	EVENT_DATA_REMOVE,
+	EVENT_DATA_SYNCHRONIZE,
+	EVENT_DATA_UPDATE,
+	EVENT_GROUP_ADD,
+	EVENT_GROUP_REMOVE,
+	EVENT_GROUP_UPDATE,
+} from '../models/event.model';
 import {SORT_ASCENDING} from '../models/sort.model';
 import type {State} from '../models/tabela.model';
 import {sortWithGroups} from './sort.manager';
-import {isGroupKey} from '../helpers/misc.helpers';
 
 export class DataManager {
 	handlers: TabelaData = {
-		add: data => void this.add(data, true),
+		add: data => this.add(data, true),
 		clear: () => this.clear(),
 		get: active => this.get(active),
-		remove: items => void this.remove(items, true),
-		synchronize: (data, remove) => void this.synchronize(data, remove === true),
-		update: data => void this.update(data, true),
+		remove: items => this.remove(items, true),
+		synchronize: (data, remove) => this.synchronize(data, remove === true),
+		update: data => this.update(data, true),
 	};
 
 	state: DataState;
@@ -49,47 +59,52 @@ export class DataManager {
 	async add(data: PlainObject[], render: boolean): Promise<void> {
 		const {state} = this;
 
-		const groups: GroupComponent[] = [];
-		const updates: PlainObject[] = [];
+		const addedData: PlainObject[] = [];
+		const updatedData: PlainObject[] = [];
+
+		const addedGroups: GroupComponent[] = [];
+		const updatedGroups: GroupComponent[] = [];
 
 		let groupColumn: ColumnComponent | undefined;
 		let {length} = data;
-
-		let added = 0;
 
 		for (let index = 0; index < length; index += 1) {
 			const item = data[index];
 			const key = getValue(item, state.key) as Key;
 
 			if (state.values.mapped.has(key)) {
-				updates.push(item);
+				updatedData.push(item);
 
 				continue;
 			}
 
+			addedData.push(item);
+
 			state.values.array.push(item);
 			state.values.mapped.set(key, item);
-
-			added += 1;
 
 			if (!state.managers.group.enabled) {
 				continue;
 			}
 
-			const groupValue = getValue(item, state.managers.group.field) as Key;
+			const groupValue = getValue(item, state.managers.group.key) as Key;
 
 			let group = state.managers.group.getForValue(groupValue);
 
 			if (group == null) {
-				groupColumn ??= state.managers.column.get(state.managers.group.field);
+				groupColumn ??= state.managers.column.get(state.managers.group.key);
 
 				group = new GroupComponent(
-					`${groupColumn?.options.label ?? state.managers.group.field}: ${groupValue}`,
+					`${groupColumn?.options.label ?? state.managers.group.key}: ${groupValue}`,
 					groupValue,
 				);
 
 				state.values.array.push(group.key);
-				state.managers.group.add(group);
+				state.managers.group.add(group, false);
+
+				addedGroups.push(group);
+			} else if (!addedGroups.includes(group) && !updatedGroups.includes(group)) {
+				updatedGroups.push(group);
 			}
 
 			if (!group.expanded) {
@@ -97,26 +112,44 @@ export class DataManager {
 			}
 
 			group.total += 1;
-
-			groups.push(group);
 		}
 
-		length = groups.length;
+		length = addedGroups.length;
 
-		for (let index = 0; index < length; index += 1) {
-			updateGroup(state, groups[index]);
+		if (length > 0) {
+			state.managers.event.emit(EVENT_GROUP_ADD, addedGroups.map(getGroup));
+
+			for (let index = 0; index < length; index += 1) {
+				updateGroup(state, addedGroups[index], false);
+			}
 		}
 
-		await this.update(updates, added === 0);
+		length = updatedGroups.length;
 
-		if (added > 0 && render) {
+		if (length > 0) {
+			for (let index = 0; index < length; index += 1) {
+				updateGroup(state, updatedGroups[index], false);
+			}
+
+			state.managers.event.emit(EVENT_GROUP_UPDATE, updatedGroups.map(getGroup));
+		}
+
+		await this.update(updatedData, addedData.length === 0);
+
+		if (addedData.length === 0) {
+			return;
+		}
+
+		state.managers.event.emit(EVENT_DATA_ADD, addedData);
+
+		if (render) {
 			this.render();
 		}
 	}
 
-	clear(): void {
+	async clear(): Promise<void> {
 		if (this.state.values.array.length > 0) {
-			void this.removeItems([], true, true);
+			return this.removeItems([], true, true).then(() => undefined);
 		}
 	}
 
@@ -136,9 +169,9 @@ export class DataManager {
 	get(active?: boolean): PlainObject[] {
 		const {state} = this;
 
-		return (active ?? false)
+		return (active ?? false) && state.keys.active != null
 			? select(
-					state.keys.active ?? [],
+					state.keys.active,
 					key => !isGroupKey(key),
 					key => state.values.mapped.get(key as Key)!,
 				)
@@ -149,7 +182,11 @@ export class DataManager {
 		return this.keys.indexOf(item);
 	}
 
-	async remove(items: Array<Key | PlainObject>, render: boolean): Promise<void> {
+	async remove(items: Array<Key | PlainObject>, render: false): Promise<PlainObject[]>;
+
+	async remove(items: Array<Key | PlainObject>, render: true): Promise<void>;
+
+	async remove(items: Array<Key | PlainObject>, render: boolean): Promise<unknown> {
 		const {state} = this;
 
 		const keys = items
@@ -158,12 +195,18 @@ export class DataManager {
 
 		const {length} = keys;
 
-		if (length > 0) {
-			return this.removeItems(keys, false, render === true);
-		}
+		return length === 0
+			? render
+				? undefined
+				: []
+			: this.removeItems(keys, false, render as never);
 	}
 
-	async removeItems(keys: Key[], clear: boolean, render: boolean): Promise<void> {
+	async removeItems(data: Key[], clear: boolean, render: false): Promise<PlainObject[]>;
+
+	async removeItems(data: Key[], clear: boolean, render: true): Promise<void>;
+
+	async removeItems(keys: Key[], clear: boolean, render: boolean): Promise<unknown> {
 		const {state} = this;
 
 		if (clear) {
@@ -179,10 +222,17 @@ export class DataManager {
 				state.managers.group.clear();
 			}
 
-			return this.render();
+			state.managers.event.emit(EVENT_DATA_CLEAR);
+
+			this.render();
+
+			return render ? undefined : [];
 		}
 
-		const groups: GroupComponent[] = [];
+		const removedGroups: GroupComponent[] = [];
+		const updatedGroups: GroupComponent[] = [];
+
+		const removedData: PlainObject[] = [];
 
 		const chunked = chunk(keys);
 		const chunkedLength = chunked.length;
@@ -199,6 +249,8 @@ export class DataManager {
 
 				[dataValue] = state.values.array.splice(dataIndex, 1) as PlainObject[];
 
+				removedData.push(dataValue);
+
 				state.keys.original.splice(dataIndex, 1);
 				state.managers.row.remove(key as never);
 				state.values.mapped.delete(key as Key);
@@ -209,7 +261,7 @@ export class DataManager {
 
 				state.managers.group.collapsed.delete(key as never);
 
-				const groupValue = getValue(dataValue, state.managers.group.field) as unknown;
+				const groupValue = getValue(dataValue, state.managers.group.key) as unknown;
 
 				const group = state.managers.group.getForValue(groupValue);
 
@@ -220,15 +272,15 @@ export class DataManager {
 				group.total -= 1;
 
 				if (group.total > 0) {
-					groups.push(group);
+					updatedGroups.push(group);
 
 					continue;
 				}
 
-				let groupIndex = groups.indexOf(group);
+				let groupIndex = updatedGroups.indexOf(group);
 
 				if (groupIndex > -1) {
-					groups.splice(groupIndex, 1);
+					updatedGroups.splice(groupIndex, 1);
 				}
 
 				groupIndex = state.values.array.indexOf(group.key);
@@ -238,7 +290,9 @@ export class DataManager {
 					state.values.array.splice(groupIndex, 1);
 				}
 
-				state.managers.group.remove(group);
+				removedGroups.push(group);
+
+				state.managers.group.remove(group, false);
 
 				if (keys.length >= 10_000) {
 					await delay(25);
@@ -246,15 +300,29 @@ export class DataManager {
 			}
 		}
 
-		const {length} = groups;
+		let {length} = updatedGroups;
 
-		for (let index = 0; index < length; index += 1) {
-			updateGroup(state, groups[index]);
+		if (length > 0) {
+			for (let index = 0; index < length; index += 1) {
+				updateGroup(state, updatedGroups[index], false);
+			}
+
+			state.managers.event.emit(EVENT_GROUP_UPDATE, updatedGroups.map(getGroup));
 		}
+
+		length = removedGroups.length;
+
+		if (length > 0) {
+			state.managers.event.emit(EVENT_GROUP_REMOVE, removedGroups.map(getGroup));
+		}
+
+		state.managers.event.emit(EVENT_DATA_REMOVE, removedData);
 
 		if (render) {
-			return this.render();
+			this.render();
 		}
+
+		return render ? undefined : removedData;
 	}
 
 	render(): void {
@@ -275,6 +343,8 @@ export class DataManager {
 				},
 			]);
 		}
+
+		state.keys.active = undefined;
 
 		state.keys.original = state.values.array.map(item =>
 			typeof item === 'string' ? item : (getValue(item, state.key) as Key),
@@ -300,9 +370,9 @@ export class DataManager {
 		const array: DataValue[] = data.slice();
 
 		if (state.managers.group.enabled) {
-			const column = state.managers.column.get(state.managers.group.field);
+			const column = state.managers.column.get(state.managers.group.key);
 
-			const grouped = toRecord.arrays(data, state.managers.group.field) as Record<
+			const grouped = toRecord.arrays(data, state.managers.group.key) as Record<
 				string,
 				PlainObject[]
 			>;
@@ -316,7 +386,7 @@ export class DataManager {
 				const [value, items] = entries[index];
 
 				const group = new GroupComponent(
-					`${column?.options.label ?? state.managers.group.field}: ${value}`,
+					`${column?.options.label ?? state.managers.group.key}: ${value}`,
 					value,
 				);
 
@@ -362,19 +432,27 @@ export class DataManager {
 			return;
 		}
 
+		let removed: PlainObject[] = [];
+
 		if (remove) {
 			const toRemove = state.keys.original.filter(
 				key => !isGroupKey(key) && !keys.has(key),
 			) as Key[];
 
 			if (toRemove.length > 0) {
-				await this.remove(toRemove, false);
+				removed = await this.remove(toRemove, false);
 			}
 		}
 
 		await this.update(updated, added.length === 0);
 
 		await this.add(added, false);
+
+		state.managers.event.emit(EVENT_DATA_SYNCHRONIZE, {
+			added,
+			removed,
+			updated,
+		});
 
 		if (added.length > 0 || remove) {
 			this.render();
@@ -386,22 +464,30 @@ export class DataManager {
 
 		const {length} = data;
 
-		for (let dataIndex = 0; dataIndex < length; dataIndex += 1) {
-			const dataItem = data[dataIndex];
+		const updated: PlainObject[] = [];
 
-			const key = getValue(dataItem, state.key) as Key;
+		for (let index = 0; index < length; index += 1) {
+			const item = data[index];
 
-			const keyIndex = state.keys.original.indexOf(key);
+			const key = getValue(item, state.key) as Key;
 
-			if (keyIndex === -1) {
+			const existing = state.keys.original.indexOf(key);
+
+			if (existing === -1) {
 				continue;
 			}
 
-			Object.assign(state.values.array[keyIndex], dataItem);
+			Object.assign(state.values.array[existing], item);
 
-			if (render) {
+			updated.push(state.values.array[existing] as PlainObject);
+
+			if (render && state.managers.render.visible.keys.has(key)) {
 				state.managers.row.update(key);
 			}
+		}
+
+		if (updated.length > 0) {
+			state.managers.event.emit(EVENT_DATA_UPDATE, updated);
 		}
 	}
 }

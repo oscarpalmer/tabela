@@ -1,6 +1,6 @@
 {
 	"name": "@oscarpalmer/tabela",
-	"version": "0.14.0",
+	"version": "0.15.0",
 	"description": "A modern table.",
 	"keywords": [],
 	"license": "MIT",
@@ -37,12 +37,10 @@
 		"www:js": "vpx tsdown -c ./www/.app/js/tsdown.config.ts --watch"
 	},
 	"dependencies": {
-		"@oscarpalmer/atoms": "^0.165",
+		"@oscarpalmer/atoms": "^0.166",
 		"@oscarpalmer/toretto": "^0.41"
 	},
 	"devDependencies": {
-		"@oscarpalmer/abydon": "^0.19",
-		"@oscarpalmer/oui": "^0.19",
 		"@types/node": "^25.5",
 		"@vitest/coverage-istanbul": "^4.1",
 		"concurrently": "^9.2",

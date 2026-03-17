@@ -20,7 +20,7 @@ import {
 	ROLE_CELL,
 	ROLE_ROW,
 } from '../models/dom.model';
-import {EVENT_GROUP} from '../models/event.model';
+import {EVENT_GROUP, EVENT_GROUP_UPDATE} from '../models/event.model';
 
 export class GroupComponent {
 	element: HTMLElement | undefined;
@@ -85,7 +85,7 @@ export function renderGroup(state: State, component: GroupComponent): void {
 	);
 }
 
-export function updateGroup(state: State, component: GroupComponent): void {
+export function updateGroup(state: State, component: GroupComponent, emit: boolean): void {
 	if (component.element == null) {
 		return;
 	}
@@ -99,6 +99,10 @@ export function updateGroup(state: State, component: GroupComponent): void {
 
 	if (total != null) {
 		total.textContent = String(component.total);
+	}
+
+	if (emit) {
+		state.managers.event.emit(EVENT_GROUP_UPDATE, [component]);
 	}
 }
 
