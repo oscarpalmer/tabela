@@ -355,13 +355,7 @@ export class DataManager {
 			item => getValue(item, state.key) as Key,
 		);
 
-		if (Object.keys(state.managers.filter.items).length > 0) {
-			state.managers.filter.filter();
-		} else if (state.managers.sort.items.length > 0) {
-			state.managers.sort.sort();
-		} else {
-			state.managers.render.update(true, true);
-		}
+		state.managers.render.render('data');
 	}
 
 	set(data: PlainObject[]): void {

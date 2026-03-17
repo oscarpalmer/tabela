@@ -30,6 +30,10 @@ export class SelectionManager {
 	}
 
 	add(keys: Key[]): void {
+		if (!Array.isArray(keys) || keys.length === 0) {
+			return;
+		}
+
 		const {length} = keys;
 
 		let update = false;
@@ -37,7 +41,7 @@ export class SelectionManager {
 		for (let index = 0; index < length; index += 1) {
 			const key = keys[index];
 
-			if (!this.items.has(key)) {
+			if (isKey(key) && !this.items.has(key)) {
 				this.items.add(key);
 
 				update = true;
@@ -156,6 +160,10 @@ export class SelectionManager {
 	}
 
 	remove(keys: Key[]): void {
+		if (!Array.isArray(keys) || keys.length === 0) {
+			return;
+		}
+
 		const {length} = keys;
 
 		const removed: Key[] = [];
@@ -174,6 +182,10 @@ export class SelectionManager {
 	}
 
 	set(keys: Key[]): void {
+		if (!Array.isArray(keys)) {
+			return;
+		}
+
 		const {items} = this;
 
 		const removed = [...items].filter(key => !keys.includes(key));

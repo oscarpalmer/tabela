@@ -1,9 +1,10 @@
+import type {SortDirection} from '@oscarpalmer/atoms/array';
 import {sort} from '@oscarpalmer/atoms/array';
 import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
 import {compare} from '@oscarpalmer/atoms/value/compare';
 import {getValue} from '@oscarpalmer/atoms/value/handle';
 import {setAttribute, setAttributes} from '@oscarpalmer/toretto/attribute';
-import {isGroupKey} from '../helpers/misc.helpers';
+import {getSorter, getValidSorter, isGroupKey} from '../helpers/misc.helpers';
 import type {DataValue} from '../models/data.model';
 import {
 	ARIA_SORT,
@@ -22,7 +23,6 @@ import {
 	SORT_ASCENDING,
 	SORT_DESCENDING,
 	type TabelaSort,
-	type TabelaSortDirection,
 	type TabelaSortItem,
 } from '../models/sort.model';
 import type {State} from '../models/tabela.model';
@@ -40,19 +40,25 @@ export class SortManager {
 
 	constructor(public state: State) {}
 
-	add(key: string, direction?: TabelaSortDirection): void {
+	add(key: string, direction?: SortDirection): void {
 		const index = this.items.findIndex(item => item.key === key);
 
 		if (index > -1) {
 			return;
 		}
 
-		this.items.push({
+		const sorter = getValidSorter({
+			direction,
 			key,
-			direction: direction ?? SORT_ASCENDING,
 		});
 
-		this.state.managers.event.emit(EVENT_SORT_ADD, [{key, direction: direction ?? SORT_ASCENDING}]);
+		if (sorter == null) {
+			return;
+		}
+
+		this.items.push(sorter);
+
+		this.state.managers.event.emit(EVENT_SORT_ADD, [getSorter(sorter)]);
 
 		this.sort();
 	}
@@ -61,7 +67,7 @@ export class SortManager {
 		if (event.ctrlKey || event.metaKey) {
 			this.add(key);
 		} else {
-			this.set([{key, direction: SORT_ASCENDING}], false);
+			this.set([getValidSorter(key)!], false);
 		}
 	}
 
@@ -92,7 +98,7 @@ export class SortManager {
 
 		item.direction = item.direction === SORT_ASCENDING ? SORT_DESCENDING : SORT_ASCENDING;
 
-		this.state.managers.event.emit(EVENT_SORT_FLIP, [{key, direction: item.direction}]);
+		this.state.managers.event.emit(EVENT_SORT_FLIP, [getSorter(item)]);
 
 		this.sort();
 	}
@@ -116,22 +122,17 @@ export class SortManager {
 	}
 
 	set(items: TabelaSortItem[], set: boolean): void {
-		const removed = this.items.splice(
-			0,
-			this.items.length,
-			...items.map(item => ({key: item.key, direction: item.direction})),
-		);
+		const sorters = items.map(getValidSorter).filter(sorter => sorter != null) as TabelaSortItem[];
+
+		const removed = this.items.splice(0, this.items.length, ...sorters);
 
 		if (set) {
 			this.state.managers.event.emit(EVENT_SORT_SET, {
 				removed,
-				added: items.map(item => ({key: item.key, direction: item.direction})),
+				added: sorters.map(getSorter),
 			});
 		} else {
-			this.state.managers.event.emit(
-				EVENT_SORT_ADD,
-				items.map(item => ({key: item.key, direction: item.direction})),
-			);
+			this.state.managers.event.emit(EVENT_SORT_ADD, sorters.map(getSorter));
 		}
 
 		this.sort();
@@ -166,7 +167,7 @@ export class SortManager {
 
 		state.managers.event.emit(EVENT_DATA_SORTED, state.managers.data.get(true));
 
-		state.managers.render.update(true, true);
+		state.managers.render.render('sort');
 	}
 
 	toggle(event: MouseEvent, key: string, direction?: string | null): void {
@@ -184,6 +185,34 @@ export class SortManager {
 				return;
 		}
 	}
+}
+
+function compareGroups(this: State, first: unknown, second: unknown): number {
+	const firstIsGroup = isGroupKey(first);
+	const secondIsGroup = isGroupKey(second);
+
+	const firstValue = firstIsGroup
+		? this.managers.group.getForKey(first as string)!.value.stringified
+		: getValue(first as PlainObject, this.managers.group.key);
+
+	const secondValue = secondIsGroup
+		? this.managers.group.getForKey(second as string)!.value.stringified
+		: getValue(second as PlainObject, this.managers.group.key);
+
+	const firstOrder = this.managers.group.order[firstValue as never];
+	const secondOrder = this.managers.group.order[secondValue as never];
+
+	const groupComparison = compare(firstOrder, secondOrder);
+
+	if (groupComparison !== 0) {
+		return groupComparison;
+	}
+
+	if (firstIsGroup || secondIsGroup) {
+		return firstIsGroup && secondIsGroup ? 0 : firstIsGroup ? -1 : 1;
+	}
+
+	return compare(firstOrder, secondOrder);
 }
 
 function getSortedItems(state: State, sorters: TabelaSortItem[]): Key[] {
@@ -207,48 +236,7 @@ export function sortWithGroups(
 	data: DataValue[],
 	sorters: TabelaSortItem[],
 ): DataValue[] {
-	const {length} = sorters;
-
-	return data.sort((first, second) => {
-		const firstIsGroup = isGroupKey(first);
-		const secondIsGroup = isGroupKey(second);
-
-		const firstValue = firstIsGroup
-			? state.managers.group.getForKey(first as string)!.value.stringified
-			: getValue(first as PlainObject, state.managers.group.key);
-
-		const secondValue = secondIsGroup
-			? state.managers.group.getForKey(second as string)!.value.stringified
-			: getValue(second as PlainObject, state.managers.group.key);
-
-		const firstOrder = state.managers.group.order[firstValue as never];
-		const secondOrder = state.managers.group.order[secondValue as never];
-
-		const groupComparison = compare(firstOrder, secondOrder);
-
-		if (groupComparison !== 0) {
-			return groupComparison;
-		}
-
-		if (firstIsGroup || secondIsGroup) {
-			return firstIsGroup && secondIsGroup ? 0 : firstIsGroup ? -1 : 1;
-		}
-
-		for (let index = 0; index < length; index += 1) {
-			const sorter = sorters[index];
-
-			const comparison = compare(
-				getValue(first as PlainObject, sorter.key),
-				getValue(second as PlainObject, sorter.key),
-			);
-
-			if (comparison !== 0) {
-				return comparison * (sorter.direction === SORT_ASCENDING ? 1 : -1);
-			}
-		}
-
-		return 0;
-	});
+	return sort(data, [compareGroups.bind(state), ...sorters]);
 }
 
 const SORT_NONE = 'none';

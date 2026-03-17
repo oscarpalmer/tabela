@@ -114,11 +114,7 @@ export class FilterManager {
 
 		state.managers.data.state.keys.active = filtered;
 
-		if (state.managers.sort.items.length > 0) {
-			state.managers.sort.sort();
-		} else {
-			state.managers.render.update(true, true);
-		}
+		state.managers.render.render('filter');
 	}
 
 	remove(value: string | TabelaFilterItem): void {

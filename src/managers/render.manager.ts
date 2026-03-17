@@ -40,7 +40,7 @@ function onScroll(this: RenderManager): void {
 		requestAnimationFrame(() => {
 			const top = state.element.scrollTop;
 
-			this.update(top > state.top);
+			update(this, top > state.top);
 
 			state.active = false;
 			state.top = top;
@@ -146,117 +146,130 @@ export class RenderManager {
 		return this.fragment;
 	}
 
-	update(down: boolean, rerender?: boolean): void {
-		const {state, pool, visible} = this;
-		const {components, managers, options} = state;
+	render(origin: 'data' | 'filter' | 'sort'): void {
+		const {state} = this;
+		const {filter, sort} = state.managers;
 
-		components.body.elements.faker.style.height = `${(managers.data.size - managers.group.collapsed.size) * options.rowHeight}px`;
-
-		const indices = new Set<number>();
-
-		const range = getRange(state, down);
-
-		for (let index = range.start; index <= range.end; index += 1) {
-			indices.add(index);
+		if (origin === 'data' && Object.keys(filter.items).length > 0) {
+			filter.filter();
+		} else if (origin !== 'sort' && sort.items.length > 0) {
+			sort.sort();
+		} else {
+			update(this, true, true);
 		}
+	}
+}
 
-		let remove = rerender ?? false;
+function update(manager: RenderManager, down: boolean, rerender?: boolean): void {
+	const {state, pool, visible} = manager;
+	const {components, managers, options} = state;
 
-		for (const [index, key] of visible.indiced) {
-			if (isGroupKey(key)) {
-				if (remove || !indices.has(index)) {
-					visible.indiced.delete(index);
-					visible.keys.delete(key);
+	components.body.elements.faker.style.height = `${(managers.data.size - managers.group.collapsed.size) * options.rowHeight}px`;
 
-					state.managers.group.getForKey(key as string)?.element?.remove();
-				}
+	const indices = new Set<number>();
 
-				continue;
-			}
+	const range = getRange(state, down);
 
-			const row = managers.row.get(key, false);
+	for (let index = range.start; index <= range.end; index += 1) {
+		indices.add(index);
+	}
 
-			if (remove || row == null || !indices.has(index) || managers.group.collapsed.has(key)) {
+	let remove = rerender ?? false;
+
+	for (const [index, key] of visible.indiced) {
+		if (isGroupKey(key)) {
+			if (remove || !indices.has(index)) {
 				visible.indiced.delete(index);
 				visible.keys.delete(key);
 
-				if (row != null) {
-					removeRow(pool, row);
-				}
+				state.managers.group.getForKey(key as string)?.element?.remove();
 			}
+
+			continue;
 		}
 
-		const fragment = this.getFragment();
+		const row = managers.row.get(key, false);
 
-		const {keys} = managers.data;
+		if (remove || row == null || !indices.has(index) || managers.group.collapsed.has(key)) {
+			visible.indiced.delete(index);
+			visible.keys.delete(key);
 
-		let count = 0;
-		let offset = 0;
-
-		for (let index = range.start; index <= range.end + offset; index += 1) {
-			if (visible.indiced.has(index)) {
-				continue;
+			if (row != null) {
+				removeRow(pool, row);
 			}
+		}
+	}
 
-			const key = keys[index];
+	const fragment = manager.getFragment();
 
-			if (isGroupKey(key)) {
-				const group = managers.group.getForKey(key as string);
+	const {keys} = managers.data;
 
-				if (group == null) {
-					continue;
-				}
+	let count = 0;
+	let offset = 0;
 
-				count += 1;
+	for (let index = range.start; index <= range.end + offset; index += 1) {
+		if (visible.indiced.has(index)) {
+			continue;
+		}
 
-				renderGroup(state, group);
+		const key = keys[index];
 
-				visible.indiced.set(index, group.key);
-				visible.keys.add(group.key);
+		if (isGroupKey(key)) {
+			const group = managers.group.getForKey(key as string);
 
-				if (group.element != null) {
-					group.element.style.transform = `translateY(${(index - offset) * options.rowHeight}px)`;
-
-					fragment.append(group.element);
-				}
-
-				continue;
-			}
-
-			const row = managers.row.get(key, true);
-
-			if (row == null) {
-				continue;
-			}
-
-			if (managers.group.collapsed.has(key)) {
-				offset += 1;
-
+			if (group == null) {
 				continue;
 			}
 
 			count += 1;
 
-			renderRow(state, row);
+			renderGroup(state, group);
 
-			visible.indiced.set(index, key);
-			visible.keys.add(key);
+			visible.indiced.set(index, group.key);
+			visible.keys.add(group.key);
 
-			if (row.element != null) {
-				row.element.style.transform = `translateY(${(index - offset) * options.rowHeight}px)`;
+			if (group.element != null) {
+				group.element.style.transform = `translateY(${(index - offset) * options.rowHeight}px)`;
 
-				fragment.append(row.element);
+				fragment.append(group.element);
 			}
+
+			continue;
 		}
 
-		if (count === 0) {
-			return;
+		const row = managers.row.get(key, true);
+
+		if (row == null) {
+			continue;
 		}
 
-		if (down) {
-			components.body.elements.group.append(fragment);
-		} else {
-			components.body.elements.group.prepend(fragment);
+		if (managers.group.collapsed.has(key)) {
+			offset += 1;
+
+			continue;
 		}
+
+		count += 1;
+
+		renderRow(state, row);
+
+		visible.indiced.set(index, key);
+		visible.keys.add(key);
+
+		if (row.element != null) {
+			row.element.style.transform = `translateY(${(index - offset) * options.rowHeight}px)`;
+
+			fragment.append(row.element);
+		}
+	}
+
+	if (count === 0) {
+		return;
+	}
+
+	if (down) {
+		components.body.elements.group.append(fragment);
+	} else {
+		components.body.elements.group.prepend(fragment);
 	}
 }

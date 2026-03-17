@@ -8,7 +8,7 @@ export type TabelaGroup = {
 };
 
 export type TabelaGroupHandlers = {
-	set(group?: string): void;
+	set(key?: string): void;
 };
 
 export type TabelaGroupToggle = {

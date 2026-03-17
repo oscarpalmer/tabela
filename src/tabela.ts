@@ -3,7 +3,7 @@ import {FooterComponent} from './components/footer.component';
 import {HeaderComponent} from './components/header.component';
 import {createElement} from './helpers/dom.helpers';
 import {ColumnManager} from './managers/column.manager';
-import {DataManager} from './managers/data.manager';
+import {DataManager} from './managers/data/data.manager';
 import {EventManager} from './managers/event.manager';
 import {FilterManager} from './managers/filter.manager';
 import {GroupManager} from './managers/group.manager';

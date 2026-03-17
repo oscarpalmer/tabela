@@ -11,7 +11,7 @@ import {
 	EVENT_GROUP_REMOVE,
 	EVENT_GROUP_TOGGLE,
 } from '../models/event.model';
-import type {TabelaGroupHandlers, TabelaGroupToggle} from '../models/group.model';
+import type {TabelaGroupHandlers} from '../models/group.model';
 import type {State} from '../models/tabela.model';
 import {compare} from '@oscarpalmer/atoms/value/compare';
 import {getGroup} from '../helpers/misc.helpers';
@@ -24,13 +24,13 @@ export class GroupManager {
 	key!: string;
 
 	handlers: TabelaGroupHandlers = {
-		set: (group?: string) => {
-			if (group === this.key) {
+		set: (key?: string) => {
+			if (key === this.key) {
 				return;
 			}
 
-			this.enabled = !isNullableOrWhitespace(group);
-			this.key = group ?? '';
+			this.enabled = !isNullableOrWhitespace(key);
+			this.key = key ?? '';
 
 			this.state.managers.data.set(this.state.managers.data.get());
 		},
@@ -138,13 +138,7 @@ export class GroupManager {
 			expanded: group.expanded ? [getGroup(group)] : [],
 		});
 
-		if (Object.keys(state.managers.filter.items).length > 0) {
-			state.managers.filter.filter();
-		} else if (state.managers.sort.items.length > 0) {
-			state.managers.sort.sort();
-		} else {
-			state.managers.render.update(true, true);
-		}
+		state.managers.render.render('data');
 	}
 
 	remove(group: GroupComponent, update: boolean): void {

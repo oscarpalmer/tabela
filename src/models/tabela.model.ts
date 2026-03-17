@@ -2,7 +2,7 @@ import type {BodyComponent} from '../components/body.component';
 import type {FooterComponent} from '../components/footer.component';
 import type {HeaderComponent} from '../components/header.component';
 import type {ColumnManager} from '../managers/column.manager';
-import type {DataManager} from '../managers/data.manager';
+import type {DataManager} from '../managers/data/data.manager';
 import type {EventManager} from '../managers/event.manager';
 import type {FilterManager} from '../managers/filter.manager';
 import type {GroupManager} from '../managers/group.manager';

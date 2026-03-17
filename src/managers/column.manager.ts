@@ -32,9 +32,7 @@ export class ColumnManager {
 		const {items, state} = this;
 		const {components, managers} = state;
 
-		const keys = (Array.isArray(value) ? value : [value]).filter(
-			item => typeof item === 'string',
-		);
+		const keys = (Array.isArray(value) ? value : [value]).filter(item => typeof item === 'string');
 
 		const {length} = keys;
 
@@ -43,9 +41,7 @@ export class ColumnManager {
 		}
 
 		for (let keyIndex = 0; keyIndex < length; keyIndex += 1) {
-			const itemIndex = items.findIndex(
-				component => component.options.key === keys[keyIndex],
-			);
+			const itemIndex = items.findIndex(component => component.options.key === keys[keyIndex]);
 
 			if (itemIndex > -1) {
 				items[itemIndex].destroy();
