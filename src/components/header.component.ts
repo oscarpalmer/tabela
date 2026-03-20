@@ -12,8 +12,8 @@ export class HeaderComponent {
 
 		this.elements = {group, row};
 
-		group.className += ` ${CSS_ROWGROUP_HEADER}`;
-		row.className += ` ${CSS_ROW_HEADER}`;
+		group.classList.add(CSS_ROWGROUP_HEADER);
+		row.classList.add(CSS_ROW_HEADER);
 	}
 
 	destroy(): void {
@@ -21,7 +21,7 @@ export class HeaderComponent {
 		this.elements.row = undefined as never;
 	}
 
-	update(columns: ColumnComponent[]): void {
+	set(columns: ColumnComponent[]): void {
 		this.elements.row.innerHTML = '';
 
 		this.elements.row.append(...columns.map(column => column.elements.wrapper));

@@ -1,15 +1,30 @@
 import type {SortDirection} from '@oscarpalmer/atoms/array';
 import {SORT_DIRECTION_ASCENDING} from '@oscarpalmer/atoms/array';
+import {isPlainObject} from '@oscarpalmer/atoms/is';
 import type {Key} from '@oscarpalmer/atoms/models';
 import type {GroupComponent} from '../components/group.component';
+import {columnFooters, type TabelaColumn, type TabelaColumnFooter} from '../models/column.model';
 import {EVENTS_NAMES, type EventName} from '../models/event.model';
+import {filterComparisons, type TabelaFilterItem} from '../models/filter.model';
 import {GROUP_KEY_EXPRESSION, type TabelaGroup} from '../models/group.model';
-import {directions, type TabelaSortItem} from '../models/sort.model';
+import {sortDirections, type TabelaSortItem} from '../models/sort.model';
 
 function getDirection(direction: unknown): SortDirection {
-	return directions.has(direction as never)
+	return sortDirections.has(direction as never)
 		? (direction as SortDirection)
 		: SORT_DIRECTION_ASCENDING;
+}
+
+export function getFilter(item: TabelaFilterItem): TabelaFilterItem {
+	return {
+		comparison: item.comparison,
+		key: item.key,
+		value: item.value,
+	};
+}
+
+function getFooter(value: unknown): TabelaColumnFooter | undefined {
+	return columnFooters.has(value as TabelaColumnFooter) ? (value as TabelaColumnFooter) : undefined;
 }
 
 export function getGroup(group: GroupComponent): TabelaGroup {
@@ -37,6 +52,51 @@ export function getSorter(original: TabelaSortItem): TabelaSortItem {
 	};
 }
 
+export function getValidColumn(value: unknown): TabelaColumn | undefined {
+	if (!isPlainObject(value)) {
+		return;
+	}
+
+	const column = value as TabelaColumn;
+
+	if (typeof column.key !== 'string' || column.key.trim().length === 0) {
+		return;
+	}
+
+	return {
+		footer: getFooter(column.footer),
+		label:
+			typeof column.label === 'string' && column.label.trim().length > 0
+				? column.label
+				: column.key,
+		key: column.key,
+		width:
+			typeof column.width === 'number' && !Number.isNaN(column.width) ? column.width : undefined,
+	};
+}
+
+export function getValidFilter(value: unknown): TabelaFilterItem | undefined {
+	if (!isPlainObject(value)) {
+		return;
+	}
+
+	const filter = value as TabelaFilterItem;
+
+	if (typeof filter.key !== 'string' || filter.key.trim().length === 0) {
+		return;
+	}
+
+	if (!filterComparisons.has(filter.comparison)) {
+		return;
+	}
+
+	return {
+		comparison: filter.comparison,
+		key: filter.key,
+		value: filter.value,
+	};
+}
+
 export function getValidSorter(value: unknown): TabelaSortItem | undefined {
 	if (typeof value === 'string') {
 		return {
@@ -45,11 +105,7 @@ export function getValidSorter(value: unknown): TabelaSortItem | undefined {
 		};
 	}
 
-	if (
-		typeof value === 'object' &&
-		value !== null &&
-		typeof (value as TabelaSortItem).key === 'string'
-	) {
+	if (isPlainObject(value) && typeof (value as TabelaSortItem).key === 'string') {
 		return {
 			direction: getDirection((value as TabelaSortItem).direction),
 			key: (value as TabelaSortItem).key,

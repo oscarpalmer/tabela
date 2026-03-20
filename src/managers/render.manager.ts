@@ -3,13 +3,17 @@ import type {RemovableEventListener} from '@oscarpalmer/toretto/models';
 import {renderGroup} from '../components/group.component';
 import {removeRow, renderRow} from '../components/row.component';
 import {isGroupKey} from '../helpers/misc.helpers';
-import type {
-	RenderElementPool,
-	RenderRange,
-	RenderState,
-	RenderVisible,
+import {
+	RENDER_ORIGIN_DATA,
+	RENDER_ORIGIN_SORT,
+	type RenderElements,
+	type RenderOrigin,
+	type RenderRange,
+	type RenderState,
+	type RenderVisible,
 } from '../models/render.model';
 import type {State} from '../models/tabela.model';
+import {EVENT_RENDER_BEGIN, EVENT_RENDER_END} from '../models/event.model';
 
 function getRange(state: State, down: boolean): RenderRange {
 	const {element, managers, options} = state;
@@ -55,7 +59,7 @@ export class RenderManager {
 
 	listener: RemovableEventListener;
 
-	pool: RenderElementPool = {
+	pool: RenderElements = {
 		cells: {},
 		rows: [],
 	};
@@ -146,13 +150,13 @@ export class RenderManager {
 		return this.fragment;
 	}
 
-	render(origin: 'data' | 'filter' | 'sort'): void {
+	render(origin: RenderOrigin): void {
 		const {state} = this;
 		const {filter, sort} = state.managers;
 
-		if (origin === 'data' && Object.keys(filter.items).length > 0) {
+		if (origin === RENDER_ORIGIN_DATA && Object.keys(filter.items).length > 0) {
 			filter.filter();
-		} else if (origin !== 'sort' && sort.items.length > 0) {
+		} else if (origin !== RENDER_ORIGIN_SORT && sort.items.length > 0) {
 			sort.sort();
 		} else {
 			update(this, true, true);
@@ -161,8 +165,10 @@ export class RenderManager {
 }
 
 function update(manager: RenderManager, down: boolean, rerender?: boolean): void {
-	const {state, pool, visible} = manager;
+	const {state, visible} = manager;
 	const {components, managers, options} = state;
+
+	managers.event.emit(EVENT_RENDER_BEGIN);
 
 	components.body.elements.faker.style.height = `${(managers.data.size - managers.group.collapsed.size) * options.rowHeight}px`;
 
@@ -195,7 +201,7 @@ function update(manager: RenderManager, down: boolean, rerender?: boolean): void
 			visible.keys.delete(key);
 
 			if (row != null) {
-				removeRow(pool, row);
+				removeRow(state, row);
 			}
 		}
 	}
@@ -263,6 +269,8 @@ function update(manager: RenderManager, down: boolean, rerender?: boolean): void
 		}
 	}
 
+	components.footer.update();
+
 	if (count === 0) {
 		return;
 	}
@@ -272,4 +280,6 @@ function update(manager: RenderManager, down: boolean, rerender?: boolean): void
 	} else {
 		components.body.elements.group.prepend(fragment);
 	}
+
+	managers.event.emit(EVENT_RENDER_END);
 }

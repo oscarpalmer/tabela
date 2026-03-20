@@ -11,6 +11,11 @@ import {ARIA_SELECTED, ATTRIBUTE_DATA_KEY, ELEMENT_DIV} from '../models/dom.mode
 import type {TabelaSelection} from '../models/selection.model';
 import {CSS_ROW_BODY, CSS_ROW_SELECTED, CSS_SELECTION, CSS_TABLE} from '../models/style.model';
 import type {State} from '../models/tabela.model';
+import {
+	EVENT_SELECTION_ADD,
+	EVENT_SELECTION_CLEAR,
+	EVENT_SELECTION_REMOVE,
+} from '../models/event.model';
 
 export class SelectionManager {
 	handlers: TabelaSelection = {
@@ -36,12 +41,16 @@ export class SelectionManager {
 
 		const {length} = keys;
 
+		const added: Key[] = [];
+
 		let update = false;
 
 		for (let index = 0; index < length; index += 1) {
 			const key = keys[index];
 
 			if (isKey(key) && !this.items.has(key)) {
+				added.push(key);
+
 				this.items.add(key);
 
 				update = true;
@@ -49,7 +58,7 @@ export class SelectionManager {
 		}
 
 		if (update) {
-			this.update([]);
+			this.update(added, []);
 		}
 	}
 
@@ -62,7 +71,9 @@ export class SelectionManager {
 
 		this.items.clear();
 
-		this.update(removed);
+		this.update([], removed);
+
+		this.state.managers.event.emit(EVENT_SELECTION_CLEAR);
 	}
 
 	destroy(): void {
@@ -177,7 +188,7 @@ export class SelectionManager {
 		}
 
 		if (removed.length > 0) {
-			this.update(removed);
+			this.update([], removed);
 		}
 	}
 
@@ -189,15 +200,15 @@ export class SelectionManager {
 		const {items} = this;
 
 		const removed = [...items].filter(key => !keys.includes(key));
-		const added = keys.filter(key => !items.has(key));
+		const added = keys.filter(key => isKey(key) && !items.has(key));
 
 		if (removed.length === 0 && added.length === 0) {
 			return;
 		}
 
-		this.items = new Set(keys);
+		this.items = new Set(added);
 
-		this.update(removed);
+		this.update(added, removed);
 	}
 
 	toggle(): void {
@@ -211,7 +222,7 @@ export class SelectionManager {
 		}
 	}
 
-	update(removed: Key[]): void {
+	update(added: Key[], removed: Key[]): void {
 		const {state} = this;
 
 		const items = [
@@ -237,6 +248,14 @@ export class SelectionManager {
 			} else {
 				element.classList.add(CSS_ROW_SELECTED);
 			}
+		}
+
+		if (removed.length > 0) {
+			this.state.managers.event.emit(EVENT_SELECTION_REMOVE, removed);
+		}
+
+		if (added.length > 0) {
+			this.state.managers.event.emit(EVENT_SELECTION_ADD, added);
 		}
 	}
 }

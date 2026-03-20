@@ -1,4 +1,5 @@
 import {ColumnComponent} from '../components/column.component';
+import {getValidColumn} from '../helpers/misc.helpers';
 import type {TabelaColumn} from '../models/column.model';
 import type {State} from '../models/tabela.model';
 
@@ -50,8 +51,8 @@ export class ColumnManager {
 			}
 		}
 
-		components.header.update(items);
-		components.footer.update(items);
+		components.header.set(items);
+		components.footer.set(items);
 
 		managers.render.removeCells(keys);
 	}
@@ -60,9 +61,17 @@ export class ColumnManager {
 		const {items, state} = this;
 		const {footer, header} = state.components;
 
-		items.splice(0, items.length, ...columns.map(column => new ColumnComponent(column)));
+		const validated = columns
+			.map(getValidColumn)
+			.filter((item): item is TabelaColumn => item != null);
 
-		header.update(items);
-		footer.update(items);
+		if (validated.length === 0) {
+			return;
+		}
+
+		items.splice(0, items.length, ...validated.map(column => new ColumnComponent(column)));
+
+		header.set(items);
+		footer.set(items);
 	}
 }

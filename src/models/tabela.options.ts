@@ -8,4 +8,5 @@ export type TabelaOptions = {
 	key: string;
 	label: string;
 	rowHeight: number;
+	sorting?: string;
 };

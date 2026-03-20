@@ -3,15 +3,13 @@ import {isKey, isPlainObject} from '@oscarpalmer/atoms/is';
 import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
 import {delay} from '@oscarpalmer/atoms/promise/delay';
 import {getValue} from '@oscarpalmer/atoms/value/handle';
-import {updateGroup, type GroupComponent} from '../../components/group.component';
-import {getGroup, isGroupKey} from '../../helpers/misc.helpers';
+import {type GroupComponent} from '../../components/group.component';
+import {isGroupKey} from '../../helpers/misc.helpers';
 import type {DataState} from '../../models/data.model';
 import {
 	EVENT_DATA_CLEAR,
 	EVENT_DATA_REMOVE,
 	EVENT_DATA_SYNCHRONIZE,
-	EVENT_GROUP_REMOVE,
-	EVENT_GROUP_UPDATE,
 } from '../../models/event.model';
 import {renderData} from './data.render';
 
@@ -128,14 +126,18 @@ async function removeItems(
 
 			const group = state.managers.group.getForValue(groupValue);
 
-			if (group == null) {
+			if (group == null || removedGroups.includes(group)) {
 				continue;
 			}
 
 			group.total -= 1;
 
 			if (group.total > 0) {
-				updatedGroups.push(group);
+				const groupIndex = updatedGroups.indexOf(group);
+
+				if (groupIndex === -1) {
+					updatedGroups.push(group);
+				}
 
 				continue;
 			}
@@ -155,29 +157,16 @@ async function removeItems(
 
 			removedGroups.push(group);
 
-			state.managers.group.remove(group, false);
-
 			if (keys.length >= 10_000) {
 				await delay(25);
 			}
 		}
 	}
 
-	let {length} = updatedGroups;
+	console.log(removedGroups, updatedGroups);
 
-	if (length > 0) {
-		for (let index = 0; index < length; index += 1) {
-			updateGroup(state, updatedGroups[index], false);
-		}
-
-		state.managers.event.emit(EVENT_GROUP_UPDATE, updatedGroups.map(getGroup));
-	}
-
-	length = removedGroups.length;
-
-	if (length > 0) {
-		state.managers.event.emit(EVENT_GROUP_REMOVE, removedGroups.map(getGroup));
-	}
+	state.managers.group.remove(removedGroups);
+	state.managers.group.update(updatedGroups);
 
 	state.managers.event.emit(EVENT_DATA_REMOVE, removedData);
 

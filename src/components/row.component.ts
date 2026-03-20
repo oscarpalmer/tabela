@@ -2,7 +2,6 @@ import type {Key} from '@oscarpalmer/atoms/models';
 import {getValue} from '@oscarpalmer/atoms/value/handle';
 import {setAttributes} from '@oscarpalmer/toretto/attribute';
 import {createCell, createRow} from '../helpers/dom.helpers';
-import type {RenderElementPool} from '../models/render.model';
 import {CSS_ROW_BODY, CSS_ROW_SELECTED} from '../models/style.model';
 import type {State} from '../models/tabela.model';
 import {
@@ -13,11 +12,12 @@ import {
 } from '../models/dom.model';
 import {EVENT_ROW} from '../models/event.model';
 
-export function removeRow(pool: RenderElementPool, row: RowComponent): void {
+export function removeRow(state: State, row: RowComponent): void {
 	if (row.element != null) {
 		row.element.innerHTML = '';
 
-		pool.rows.push(row.element);
+		state.managers.render.pool.rows.push(row.element);
+
 		row.element.remove();
 
 		row.element = undefined;

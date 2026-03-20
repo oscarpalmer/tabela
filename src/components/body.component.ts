@@ -22,7 +22,7 @@ export class BodyComponent {
 
 		this.elements.group = group;
 
-		group.className += ` ${CSS_ROWGROUP_BODY}`;
+		group.classList.add(CSS_ROWGROUP_BODY);
 
 		group.tabIndex = 0;
 

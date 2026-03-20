@@ -53,7 +53,7 @@ export class RowManager {
 
 	removeRow(row: RowComponent): void {
 		if (row.element != null) {
-			removeRow(this.state.managers.render.pool, row);
+			removeRow(this.state, row);
 		}
 
 		this.components.delete(row.key);

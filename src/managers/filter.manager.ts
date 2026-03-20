@@ -1,23 +1,32 @@
+import {isNullableOrWhitespace} from '@oscarpalmer/atoms/is';
 import type {Key} from '@oscarpalmer/atoms/models';
 import {getNumber} from '@oscarpalmer/atoms/number';
 import {getString} from '@oscarpalmer/atoms/string';
 import {endsWith, includes, startsWith} from '@oscarpalmer/atoms/string/match';
 import {equal} from '@oscarpalmer/atoms/value/equal';
-import {isGroupKey} from '../helpers/misc.helpers';
+import {getValue} from '@oscarpalmer/atoms/value/handle';
+import {getFilter, getValidFilter, isGroupKey} from '../helpers/misc.helpers';
 import {
-	FILTER_CONTAINS,
+	EVENT_FILTER_ADD,
+	EVENT_FILTER_CLEAR,
+	EVENT_FILTER_REMOVE,
+	EVENT_FILTER_SET,
+} from '../models/event.model';
+import {
 	FILTER_ENDS_WITH,
 	FILTER_EQUALS,
 	FILTER_GREATER_THAN,
 	FILTER_GREATER_THAN_OR_EQUAL,
+	FILTER_INCLUDES,
 	FILTER_LESS_THAN,
 	FILTER_LESS_THAN_OR_EQUAL,
-	FILTER_NOT_CONTAINS,
 	FILTER_NOT_EQUALS,
+	FILTER_NOT_INCLUDES,
 	FILTER_STARTS_WITH,
 	type TabelaFilter,
 	type TabelaFilterItem,
 } from '../models/filter.model';
+import {RENDER_ORIGIN_FILTER} from '../models/render.model';
 import type {State} from '../models/tabela.model';
 
 export class FilterManager {
@@ -35,19 +44,25 @@ export class FilterManager {
 	add(item: TabelaFilterItem): void {
 		const {items, state} = this;
 
-		if (items[item.key] == null) {
-			items[item.key] = [];
+		const filter = getValidFilter(item);
+
+		if (filter == null) {
+			return;
+		}
+
+		if (items[filter.key] == null) {
+			items[filter.key] = [];
 		} else {
-			const index = items[item.key].findIndex(existing => equal(existing, item));
+			const index = items[filter.key].findIndex(existing => equal(existing, filter));
 
 			if (index > -1) {
 				return;
 			}
 		}
 
-		items[item.key].push(item);
+		items[filter.key].push(filter);
 
-		state.managers.event.emit('filter:add', [item]);
+		state.managers.event.emit(EVENT_FILTER_ADD, [getFilter(filter)]);
 
 		this.filter();
 	}
@@ -59,7 +74,7 @@ export class FilterManager {
 
 		this.items = {};
 
-		this.state.managers.event.emit('filter:clear');
+		this.state.managers.event.emit(EVENT_FILTER_CLEAR);
 
 		this.filter();
 	}
@@ -73,48 +88,59 @@ export class FilterManager {
 	filter(): void {
 		const {state} = this;
 
-		const filtered: Key[] = [];
 		const filters = Object.entries(this.items);
 
-		const itemsLength = state.managers.data.state.keys.original.length;
+		if (filters.length === 0) {
+			state.managers.data.state.keys.active = undefined;
 
-		rowLoop: for (let itemIndex = 0; itemIndex < itemsLength; itemIndex += 1) {
-			const item = state.managers.data.state.keys.original[itemIndex];
+			state.managers.render.render(RENDER_ORIGIN_FILTER);
 
-			if (isGroupKey(item)) {
-				filtered.push(item);
+			return;
+		}
+
+		const {keys} = state.managers.data;
+		const keysLength = keys.length;
+
+		const filtered: Key[] = [];
+
+		outer: for (let itemIndex = 0; itemIndex < keysLength; itemIndex += 1) {
+			const key = keys[itemIndex];
+
+			if (isGroupKey(key)) {
+				filtered.push(key);
 
 				continue;
 			}
 
-			const row = state.managers.data.state.values.mapped.get(item);
+			const row = state.managers.data.state.values.mapped.get(key);
 
 			if (row == null) {
 				continue;
 			}
 
-			filterLoop: for (let filterIndex = 0; filterIndex < filters.length; filterIndex += 1) {
-				const [key, items] = filters[filterIndex];
+			for (let filterIndex = 0; filterIndex < filters.length; filterIndex += 1) {
+				const [, items] = filters[filterIndex];
 
-				const value = row[key];
+				const value = getValue(row, items[0].key, true);
 
 				for (let itemIndex = 0; itemIndex < items.length; itemIndex += 1) {
 					const filter = items[itemIndex];
 
-					if (comparators[filter.comparison](value, filter.value)) {
-						continue filterLoop;
+					if (
+						isNullableOrWhitespace(filter.value) ||
+						comparators[filter.comparison](value, filter.value)
+					) {
+						filtered.push(key);
+
+						continue outer;
 					}
 				}
-
-				continue rowLoop;
 			}
-
-			filtered.push(item);
 		}
 
 		state.managers.data.state.keys.active = filtered;
 
-		state.managers.render.render('filter');
+		state.managers.render.render(RENDER_ORIGIN_FILTER);
 	}
 
 	remove(value: string | TabelaFilterItem): void {
@@ -142,13 +168,19 @@ export class FilterManager {
 
 			this.items = keyed;
 		} else {
-			const {key} = value;
+			const filter = getValidFilter(value);
+
+			if (filter == null) {
+				return;
+			}
+
+			const {key} = filter;
 
 			if (this.items[key] == null) {
 				return;
 			}
 
-			const index = this.items[key].findIndex(item => equal(item, value));
+			const index = this.items[key].findIndex(item => equal(item, filter));
 
 			if (index === -1) {
 				return;
@@ -157,7 +189,7 @@ export class FilterManager {
 			removed.push(this.items[key][index]);
 		}
 
-		this.state.managers.event.emit('filter:remove', removed);
+		this.state.managers.event.emit(EVENT_FILTER_REMOVE, removed.map(getFilter));
 
 		this.filter();
 	}
@@ -165,10 +197,14 @@ export class FilterManager {
 	set(items: TabelaFilterItem[]): void {
 		const keyed: Record<string, TabelaFilterItem[]> = {};
 
-		const {length} = items;
+		const removed = Object.values(this.items).flatMap(filters => filters.map(getFilter));
+
+		const filters = items.map(getValidFilter).filter(item => item != null) as TabelaFilterItem[];
+
+		const {length} = filters;
 
 		for (let index = 0; index < length; index += 1) {
-			const item = items[index];
+			const item = filters[index];
 
 			keyed[item.key] ??= [];
 
@@ -177,20 +213,27 @@ export class FilterManager {
 
 		this.items = keyed;
 
+		this.state.managers.event.emit(EVENT_FILTER_SET, {
+			removed,
+			added: filters.map(getFilter),
+		});
+
 		this.filter();
 	}
+
+	update(): void {}
 }
 
 const comparators: Record<string, (row: unknown, filter: unknown) => boolean> = {
-	[FILTER_CONTAINS]: (row, filter) => includes(getString(row), getString(filter), true),
 	[FILTER_ENDS_WITH]: (row, filter) => endsWith(getString(row), getString(filter), true),
 	[FILTER_EQUALS]: (row, filter) => equalizer(row, filter),
 	[FILTER_GREATER_THAN]: (row, filter) => getNumber(row) > getNumber(filter),
 	[FILTER_GREATER_THAN_OR_EQUAL]: (row, filter) => getNumber(row) >= getNumber(filter),
+	[FILTER_INCLUDES]: (row, filter) => includes(getString(row), getString(filter), true),
 	[FILTER_LESS_THAN]: (row, filter) => getNumber(row) < getNumber(filter),
 	[FILTER_LESS_THAN_OR_EQUAL]: (row, filter) => getNumber(row) <= getNumber(filter),
-	[FILTER_NOT_CONTAINS]: (row, filter) => !includes(getString(row), getString(filter), true),
 	[FILTER_NOT_EQUALS]: (row, filter) => !equalizer(row, filter),
+	[FILTER_NOT_INCLUDES]: (row, filter) => !includes(getString(row), getString(filter), true),
 	[FILTER_STARTS_WITH]: (row, filter) => startsWith(getString(row), getString(filter), true),
 };
 

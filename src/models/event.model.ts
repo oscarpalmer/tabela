@@ -27,6 +27,11 @@ export type EventFilterClear = () => void;
 
 export type EventFilterRemove = (filters: TabelaFilterItem[]) => void;
 
+export type EventFilterSet = (filters: {
+	added: TabelaFilterItem[];
+	removed: TabelaFilterItem[];
+}) => void;
+
 export type EventGroupAdd = (groups: TabelaGroup[]) => void;
 
 export type EventGroupClear = () => void;
@@ -36,36 +41,6 @@ export type EventGroupRemove = (groups: TabelaGroup[]) => void;
 export type EventGroupToggle = (event: TabelaGroupToggle) => void;
 
 export type EventGroupUpdate = (groups: TabelaGroup[]) => void;
-
-export type EventMap = {
-	'data:add': EventDataAdd;
-	'data:clear': EventDataClear;
-	'data:filtered': EventDataFiltered;
-	'data:remove': EventDataRemove;
-	'data:sorted': EventDataSorted;
-	'data:synchronize': EventDataSynchronize;
-	'data:update': EventDataUpdate;
-	'filter:add': EventFilterAdd;
-	'filter:clear': EventFilterClear;
-	'filter:remove': EventFilterRemove;
-	'group:add': EventGroupAdd;
-	'group:clear': EventGroupClear;
-	'group:remove': EventGroupRemove;
-	'group:toggle': EventGroupToggle;
-	'group:update': EventGroupUpdate;
-	'navigation:active': EventNavigationActive;
-	'render:begin': EventRenderBegin;
-	'render:end': EventRenderEnd;
-	'selection:add': EventSelectionAdd;
-	'selection:clear': EventSelectionClear;
-	'selection:remove': EventSelectionRemove;
-	'selection:toggle': EventSelectionToggle;
-	'sort:add': EventSortAdd;
-	'sort:clear': EventSortClear;
-	'sort:flip': EventSortFlip;
-	'sort:remove': EventSortRemove;
-	'sort:set': EventSortSet;
-};
 
 export type EventName = keyof EventMap;
 
@@ -130,9 +105,31 @@ export const EVENT_GROUP_TOGGLE = 'group:toggle';
 
 export const EVENT_GROUP_UPDATE = 'group:update';
 
+export const EVENT_FILTER_ADD = 'filter:add';
+
+export const EVENT_FILTER_CLEAR = 'filter:clear';
+
+export const EVENT_FILTER_REMOVE = 'filter:remove';
+
+export const EVENT_FILTER_SET = 'filter:set';
+
 export const EVENT_HEADING = 'heading';
 
+export const EVENT_NAVIGATION_ACTIVE = 'navigation:active';
+
+export const EVENT_RENDER_BEGIN = 'render:begin';
+
+export const EVENT_RENDER_END = 'render:end';
+
 export const EVENT_ROW = 'row';
+
+export const EVENT_SELECTION_ADD = 'selection:add';
+
+export const EVENT_SELECTION_CLEAR = 'selection:clear';
+
+export const EVENT_SELECTION_REMOVE = 'selection:remove';
+
+export const EVENT_SELECTION_TOGGLE = 'selection:toggle';
 
 export const EVENT_SORT_ADD = 'sort:add';
 
@@ -152,24 +149,56 @@ export const EVENTS_NAMES = new Set<EventName>([
 	EVENT_DATA_SORTED,
 	EVENT_DATA_SYNCHRONIZE,
 	EVENT_DATA_UPDATE,
-	'filter:add',
-	'filter:clear',
-	'filter:remove',
+	EVENT_FILTER_ADD,
+	EVENT_FILTER_CLEAR,
+	EVENT_FILTER_REMOVE,
+	EVENT_FILTER_SET,
 	EVENT_GROUP_ADD,
 	EVENT_GROUP_CLEAR,
 	EVENT_GROUP_REMOVE,
 	EVENT_GROUP_TOGGLE,
 	EVENT_GROUP_UPDATE,
-	'navigation:active',
-	'render:begin',
-	'render:end',
-	'selection:add',
-	'selection:clear',
-	'selection:remove',
-	'selection:toggle',
+	EVENT_NAVIGATION_ACTIVE,
+	EVENT_RENDER_BEGIN,
+	EVENT_RENDER_END,
+	EVENT_SELECTION_ADD,
+	EVENT_SELECTION_CLEAR,
+	EVENT_SELECTION_REMOVE,
+	EVENT_SELECTION_TOGGLE,
 	EVENT_SORT_ADD,
 	EVENT_SORT_CLEAR,
 	EVENT_SORT_FLIP,
 	EVENT_SORT_REMOVE,
 	EVENT_SORT_SET,
 ] as const) satisfies ReadonlySet<EventName>;
+
+export type EventMap = {
+	[EVENT_DATA_ADD]: EventDataAdd;
+	[EVENT_DATA_CLEAR]: EventDataClear;
+	[EVENT_DATA_FILTERED]: EventDataFiltered;
+	[EVENT_DATA_REMOVE]: EventDataRemove;
+	[EVENT_DATA_SORTED]: EventDataSorted;
+	[EVENT_DATA_SYNCHRONIZE]: EventDataSynchronize;
+	[EVENT_DATA_UPDATE]: EventDataUpdate;
+	[EVENT_FILTER_ADD]: EventFilterAdd;
+	[EVENT_FILTER_CLEAR]: EventFilterClear;
+	[EVENT_FILTER_REMOVE]: EventFilterRemove;
+	[EVENT_FILTER_SET]: EventFilterSet;
+	[EVENT_GROUP_ADD]: EventGroupAdd;
+	[EVENT_GROUP_CLEAR]: EventGroupClear;
+	[EVENT_GROUP_REMOVE]: EventGroupRemove;
+	[EVENT_GROUP_TOGGLE]: EventGroupToggle;
+	[EVENT_GROUP_UPDATE]: EventGroupUpdate;
+	[EVENT_NAVIGATION_ACTIVE]: EventNavigationActive;
+	[EVENT_RENDER_BEGIN]: EventRenderBegin;
+	[EVENT_RENDER_END]: EventRenderEnd;
+	[EVENT_SELECTION_ADD]: EventSelectionAdd;
+	[EVENT_SELECTION_CLEAR]: EventSelectionClear;
+	[EVENT_SELECTION_REMOVE]: EventSelectionRemove;
+	[EVENT_SELECTION_TOGGLE]: EventSelectionToggle;
+	[EVENT_SORT_ADD]: EventSortAdd;
+	[EVENT_SORT_CLEAR]: EventSortClear;
+	[EVENT_SORT_FLIP]: EventSortFlip;
+	[EVENT_SORT_REMOVE]: EventSortRemove;
+	[EVENT_SORT_SET]: EventSortSet;
+};

@@ -4,17 +4,19 @@ import {toRecord} from '@oscarpalmer/atoms/array/to-record';
 import {isNullableOrWhitespace} from '@oscarpalmer/atoms/is';
 import type {Key, Simplify} from '@oscarpalmer/atoms/models';
 import {getString} from '@oscarpalmer/atoms/string';
-import {removeGroup, type GroupComponent} from '../components/group.component';
+import {compare} from '@oscarpalmer/atoms/value/compare';
+import {removeGroup, updateGroup, type GroupComponent} from '../components/group.component';
+import {getGroup} from '../helpers/misc.helpers';
 import {
 	EVENT_GROUP_ADD,
 	EVENT_GROUP_CLEAR,
 	EVENT_GROUP_REMOVE,
 	EVENT_GROUP_TOGGLE,
+	EVENT_GROUP_UPDATE,
 } from '../models/event.model';
 import type {TabelaGroupHandlers} from '../models/group.model';
+import {RENDER_ORIGIN_DATA} from '../models/render.model';
 import type {State} from '../models/tabela.model';
-import {compare} from '@oscarpalmer/atoms/value/compare';
-import {getGroup} from '../helpers/misc.helpers';
 
 export class GroupManager {
 	collapsed = new Set<Key>();
@@ -51,12 +53,16 @@ export class GroupManager {
 		this.key = state.options.grouping;
 	}
 
-	add(group: GroupComponent, emit: boolean): void {
-		this.set([...this.items, group]);
+	add(value: GroupComponent | GroupComponent[]): void {
+		const groups = Array.isArray(value) ? value : [value];
 
-		if (emit) {
-			this.state.managers.event.emit(EVENT_GROUP_ADD, [getGroup(group)]);
+		if (groups.length === 0) {
+			return;
 		}
+
+		this.set([...this.items, ...groups]);
+
+		this.state.managers.event.emit(EVENT_GROUP_ADD, groups.map(getGroup));
 	}
 
 	clear(): void {
@@ -64,16 +70,9 @@ export class GroupManager {
 			return;
 		}
 
-		const groups = this.items.splice(0);
-		const {length} = groups;
-
-		for (let index = 0; index < length; index += 1) {
-			this.remove(groups[index], false);
-		}
+		this.remove(this.items.splice(0));
 
 		this.collapsed.clear();
-
-		this.set([]);
 
 		this.state.managers.event.emit(EVENT_GROUP_CLEAR);
 	}
@@ -138,19 +137,25 @@ export class GroupManager {
 			expanded: group.expanded ? [getGroup(group)] : [],
 		});
 
-		state.managers.render.render('data');
+		state.managers.render.render(RENDER_ORIGIN_DATA);
 	}
 
-	remove(group: GroupComponent, update: boolean): void {
-		removeGroup(group);
+	remove(value: GroupComponent | GroupComponent[]): void {
+		const groups = Array.isArray(value) ? value : [value];
 
-		if (!update) {
+		const {length} = groups;
+
+		if (length === 0) {
 			return;
 		}
 
-		this.set(this.items.filter(item => item !== group));
+		for (let index = 0; index < length; index += 1) {
+			removeGroup(groups[index]);
+		}
 
-		this.state.managers.event.emit(EVENT_GROUP_REMOVE, [getGroup(group)]);
+		this.set(this.items.filter(item => !groups.includes(item)));
+
+		this.state.managers.event.emit(EVENT_GROUP_REMOVE, groups.map(getGroup));
 	}
 
 	set(items: GroupComponent[]) {
@@ -163,5 +168,21 @@ export class GroupManager {
 			group => group.value.stringified,
 			(_, index) => index,
 		);
+	}
+
+	update(value: GroupComponent | GroupComponent[]): void {
+		const groups = Array.isArray(value) ? value : [value];
+
+		const {length} = groups;
+
+		if (length === 0) {
+			return;
+		}
+
+		for (let index = 0; index < length; index += 1) {
+			updateGroup(this.state, groups[index], false);
+		}
+
+		this.state.managers.event.emit(EVENT_GROUP_UPDATE, groups.map(getGroup));
 	}
 }

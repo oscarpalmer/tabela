@@ -7,15 +7,15 @@ export type TabelaFilter = {
 };
 
 export type TabelaFilterComparison =
-	| 'contains'
 	| 'ends-with'
 	| 'equals'
-	| 'greater-than'
 	| 'greater-than-or-equal'
-	| 'less-than'
+	| 'greater-than'
+	| 'includes'
 	| 'less-than-or-equal'
-	| 'not-contains'
+	| 'less-than'
 	| 'not-equals'
+	| 'not-includes'
 	| 'starts-with';
 
 export type TabelaFilterItem = {
@@ -23,8 +23,6 @@ export type TabelaFilterItem = {
 	key: string;
 	value: unknown;
 };
-
-export const FILTER_CONTAINS: TabelaFilterComparison = 'contains';
 
 export const FILTER_ENDS_WITH: TabelaFilterComparison = 'ends-with';
 
@@ -34,12 +32,27 @@ export const FILTER_GREATER_THAN: TabelaFilterComparison = 'greater-than';
 
 export const FILTER_GREATER_THAN_OR_EQUAL: TabelaFilterComparison = 'greater-than-or-equal';
 
+export const FILTER_INCLUDES: TabelaFilterComparison = 'includes';
+
 export const FILTER_LESS_THAN: TabelaFilterComparison = 'less-than';
 
 export const FILTER_LESS_THAN_OR_EQUAL: TabelaFilterComparison = 'less-than-or-equal';
 
-export const FILTER_NOT_CONTAINS: TabelaFilterComparison = 'not-contains';
-
 export const FILTER_NOT_EQUALS: TabelaFilterComparison = 'not-equals';
 
+export const FILTER_NOT_INCLUDES: TabelaFilterComparison = 'not-includes';
+
 export const FILTER_STARTS_WITH: TabelaFilterComparison = 'starts-with';
+
+export const filterComparisons = new Set<TabelaFilterComparison>([
+	FILTER_ENDS_WITH,
+	FILTER_EQUALS,
+	FILTER_GREATER_THAN,
+	FILTER_GREATER_THAN_OR_EQUAL,
+	FILTER_INCLUDES,
+	FILTER_LESS_THAN,
+	FILTER_LESS_THAN_OR_EQUAL,
+	FILTER_NOT_INCLUDES,
+	FILTER_NOT_EQUALS,
+	FILTER_STARTS_WITH,
+]);

@@ -17,11 +17,13 @@ export class ColumnComponent {
 	constructor(column: TabelaColumn) {
 		const width =
 			Number.parseInt(getComputedStyle(document.body).fontSize, 10) *
-			(column.width ?? column.label.length * 1.5);
+			(column.width ?? (column.label?.length ?? column.key?.length) * 1.5);
 
 		this.options = {
-			...column,
 			width,
+			footer: column.footer,
+			key: column.key,
+			label: column.label ?? column.key,
 		};
 
 		this.elements = createHeading(this.options.key, this.options.label, width);

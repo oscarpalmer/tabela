@@ -17,4 +17,4 @@ export const SORT_ASCENDING: SortDirection = 'ascending';
 
 export const SORT_DESCENDING: SortDirection = 'descending';
 
-export const directions = new Set<SortDirection>([SORT_ASCENDING, SORT_DESCENDING]);
+export const sortDirections = new Set<SortDirection>([SORT_ASCENDING, SORT_DESCENDING]);

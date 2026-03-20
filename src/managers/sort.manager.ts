@@ -26,8 +26,11 @@ import {
 	type TabelaSortItem,
 } from '../models/sort.model';
 import type {State} from '../models/tabela.model';
+import {RENDER_ORIGIN_SORT} from '../models/render.model';
 
 export class SortManager {
+	default: TabelaSortItem[];
+
 	handlers: TabelaSort = {
 		add: (field, direction) => this.add(field, direction),
 		flip: field => this.flip(field),
@@ -38,7 +41,13 @@ export class SortManager {
 
 	items: TabelaSortItem[] = [];
 
-	constructor(public state: State) {}
+	get size(): number {
+		return this.items.length === 0 ? (this.default == null ? 0 : 1) : this.items.length;
+	}
+
+	constructor(public state: State) {
+		this.default = [getValidSorter(state.options.sorting ?? state.key)!];
+	}
 
 	add(key: string, direction?: SortDirection): void {
 		const index = this.items.findIndex(item => item.key === key);
@@ -139,7 +148,7 @@ export class SortManager {
 	}
 
 	sort(): void {
-		const {items, state} = this;
+		const {items, size, state} = this;
 
 		const {length} = state.managers.column.items;
 
@@ -163,11 +172,11 @@ export class SortManager {
 		}
 
 		state.managers.data.state.keys.active =
-			items.length === 0 ? undefined : getSortedItems(state, items);
+			size === 0 ? undefined : getSortedItems(state, items.length === 0 ? this.default! : items);
 
 		state.managers.event.emit(EVENT_DATA_SORTED, state.managers.data.get(true));
 
-		state.managers.render.render('sort');
+		state.managers.render.render(RENDER_ORIGIN_SORT);
 	}
 
 	toggle(event: MouseEvent, key: string, direction?: string | null): void {
@@ -212,7 +221,9 @@ function compareGroups(this: State, first: unknown, second: unknown): number {
 		return firstIsGroup && secondIsGroup ? 0 : firstIsGroup ? -1 : 1;
 	}
 
-	return compare(firstOrder, secondOrder);
+	console.log(first, second);
+
+	return 0;
 }
 
 function getSortedItems(state: State, sorters: TabelaSortItem[]): Key[] {
