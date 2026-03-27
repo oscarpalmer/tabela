@@ -8,10 +8,10 @@
 		"watch:js": "npx vp pack --tsconfig ./tsconfig.local.json --watch"
 	},
 	"dependencies": {
-		"@oscarpalmer/abydon": "^0.19",
-		"@oscarpalmer/atoms": "^0.165",
+		"@oscarpalmer/abydon": "^0.20",
+		"@oscarpalmer/atoms": "^0.170",
 		"@oscarpalmer/oui": "^0.19",
-		"@oscarpalmer/tabela": "^0.13",
+		"@oscarpalmer/tabela": "^0.15",
 		"@oscarpalmer/toretto": "^0.41"
 	},
 	"devDependencies": {

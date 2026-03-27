@@ -1,25 +1,29 @@
 import {tabela, type Tabela, type TabelaOptions} from '@oscarpalmer/tabela';
+import { setupLoggers } from './loggers';
+
+declare global {
+	interface Window {
+		tabela?: Tabela;
+	}
+}
 
 const columns: TabelaOptions['columns'] = [
 	{
-		field: 'id',
-		title: 'ID',
-		type: 'number',
+		key: 'id',
+		label: 'ID',
 	},
 	{
-		field: 'name.first',
-		title: 'Name',
-		type: 'string',
+		key: 'name.first',
+		label: 'Name',
 	},
 	{
-		field: 'age',
-		title: 'Age',
-		type: 'number',
+		footer: 'sum',
+		key: 'age',
+		label: 'Age',
 	},
 	{
-		field: 'active',
-		title: 'Active',
-		type: 'boolean',
+		key: 'active',
+		label: 'Active',
 	},
 ];
 
@@ -32,7 +36,7 @@ const options: TabelaOptions = {
 	rowHeight: 32,
 };
 
-let table: Tabela;
+let table: Tabela | undefined;
 
 export function createTable(element: HTMLElement): Tabela {
 	if (table != null) {
@@ -40,6 +44,10 @@ export function createTable(element: HTMLElement): Tabela {
 	}
 
 	table = tabela(element, options);
+
+	window.tabela = table;
+
+	setupLoggers(table);
 
 	return table;
 }
