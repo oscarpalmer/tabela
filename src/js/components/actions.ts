@@ -1,5 +1,5 @@
 import {computed, html, signal} from '@oscarpalmer/abydon';
-import {getRandomBoolean} from '@oscarpalmer/atoms';
+import {getRandomBoolean} from '@oscarpalmer/atoms/random';
 import {getRandomItems} from '@oscarpalmer/atoms/random';
 import {getData} from '../misc/data';
 import {tableData, tableFilter} from '../misc/table';
