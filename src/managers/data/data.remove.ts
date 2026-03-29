@@ -163,8 +163,6 @@ async function removeItems(
 		}
 	}
 
-	console.log(removedGroups, updatedGroups);
-
 	state.managers.group.remove(removedGroups);
 	state.managers.group.update(updatedGroups);
 

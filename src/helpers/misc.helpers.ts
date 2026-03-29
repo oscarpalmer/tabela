@@ -1,5 +1,4 @@
-import type {SortDirection} from '@oscarpalmer/atoms/array';
-import {SORT_DIRECTION_ASCENDING} from '@oscarpalmer/atoms/array';
+import {SORT_DIRECTION_ASCENDING, type SortDirection} from '@oscarpalmer/atoms/array/sort';
 import {isPlainObject} from '@oscarpalmer/atoms/is';
 import type {Key} from '@oscarpalmer/atoms/models';
 import type {GroupComponent} from '../components/group.component';

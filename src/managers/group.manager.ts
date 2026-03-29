@@ -1,4 +1,4 @@
-import {sort} from '@oscarpalmer/atoms/array';
+import {sort} from '@oscarpalmer/atoms/array/sort';
 import {toMap} from '@oscarpalmer/atoms/array/to-map';
 import {toRecord} from '@oscarpalmer/atoms/array/to-record';
 import {isNullableOrWhitespace} from '@oscarpalmer/atoms/is';

@@ -37,7 +37,7 @@
 		"www:js": "vpx tsdown -c ./www/.app/js/tsdown.config.ts --watch"
 	},
 	"dependencies": {
-		"@oscarpalmer/atoms": "^0.167",
+		"@oscarpalmer/atoms": "^0.170",
 		"@oscarpalmer/toretto": "^0.41"
 	},
 	"devDependencies": {

@@ -1,4 +1,8 @@
-import type {SortDirection} from '@oscarpalmer/atoms/array';
+import {
+	type SortDirection,
+	SORT_DIRECTION_ASCENDING,
+	SORT_DIRECTION_DESCENDING,
+} from '@oscarpalmer/atoms/array/sort';
 
 export type TabelaSort = {
 	add(key: string, direction?: SortDirection): void;
@@ -13,8 +17,7 @@ export type TabelaSortItem = {
 	key: string;
 };
 
-export const SORT_ASCENDING: SortDirection = 'ascending';
-
-export const SORT_DESCENDING: SortDirection = 'descending';
-
-export const sortDirections = new Set<SortDirection>([SORT_ASCENDING, SORT_DESCENDING]);
+export const sortDirections = new Set<SortDirection>([
+	SORT_DIRECTION_ASCENDING,
+	SORT_DIRECTION_DESCENDING,
+]);

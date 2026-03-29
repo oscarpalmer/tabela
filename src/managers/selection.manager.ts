@@ -8,14 +8,20 @@ import {createElement} from '../helpers/dom.helpers';
 import {getKey, isGroupKey} from '../helpers/misc.helpers';
 import {preventSelection} from '../helpers/style.helper';
 import {ARIA_SELECTED, ATTRIBUTE_DATA_KEY, ELEMENT_DIV} from '../models/dom.model';
-import type {TabelaSelection} from '../models/selection.model';
-import {CSS_ROW_BODY, CSS_ROW_SELECTED, CSS_SELECTION, CSS_TABLE} from '../models/style.model';
-import type {State} from '../models/tabela.model';
 import {
 	EVENT_SELECTION_ADD,
 	EVENT_SELECTION_CLEAR,
 	EVENT_SELECTION_REMOVE,
 } from '../models/event.model';
+import type {TabelaSelection} from '../models/selection.model';
+import {
+	CSS_ROW,
+	CSS_ROW_BODY,
+	CSS_ROW_SELECTED,
+	CSS_SELECTION,
+	CSS_TABLE,
+} from '../models/style.model';
+import type {State} from '../models/tabela.model';
 
 export class SelectionManager {
 	handlers: TabelaSelection = {
@@ -270,7 +276,7 @@ function getPlaceholder(): HTMLElement {
 
 function onMouseDown(event: MouseEvent): void {
 	if (shifted) {
-		const row = findAncestor(event.target as HTMLElement, `.${CSS_ROW_BODY}`);
+		const row = findAncestor(event, rowSelector);
 
 		if (!(row instanceof HTMLElement)) {
 			return;
@@ -325,7 +331,7 @@ function onMouseUp(event: MouseEvent): void {
 
 	getPlaceholder().remove();
 
-	const row = findAncestor(event.target as HTMLElement, bodyRowSelector);
+	const row = findAncestor(event, rowSelector);
 
 	if (row instanceof HTMLElement) {
 		endElement = row;
@@ -361,7 +367,7 @@ const KEY_SHIFT = 'Shift';
 
 const mapped = new WeakMap<Element, SelectionManager>();
 
-const bodyRowSelector = `.${CSS_ROW_BODY}`;
+const rowSelector = `.${CSS_ROW}`;
 
 const tableSelector = `.${CSS_TABLE}`;
 

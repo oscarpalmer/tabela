@@ -1,5 +1,9 @@
-import type {SortDirection} from '@oscarpalmer/atoms/array';
-import {sort} from '@oscarpalmer/atoms/array';
+import {
+	type SortDirection,
+	sort,
+	SORT_DIRECTION_ASCENDING,
+	SORT_DIRECTION_DESCENDING,
+} from '@oscarpalmer/atoms/array/sort';
 import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
 import {compare} from '@oscarpalmer/atoms/value/compare';
 import {getValue} from '@oscarpalmer/atoms/value/handle';
@@ -19,14 +23,9 @@ import {
 	EVENT_SORT_REMOVE,
 	EVENT_SORT_SET,
 } from '../models/event.model';
-import {
-	SORT_ASCENDING,
-	SORT_DESCENDING,
-	type TabelaSort,
-	type TabelaSortItem,
-} from '../models/sort.model';
-import type {State} from '../models/tabela.model';
 import {RENDER_ORIGIN_SORT} from '../models/render.model';
+import {type TabelaSort, type TabelaSortItem} from '../models/sort.model';
+import type {State} from '../models/tabela.model';
 
 export class SortManager {
 	default: TabelaSortItem[];
@@ -105,7 +104,10 @@ export class SortManager {
 			return;
 		}
 
-		item.direction = item.direction === SORT_ASCENDING ? SORT_DESCENDING : SORT_ASCENDING;
+		item.direction =
+			item.direction === SORT_DIRECTION_ASCENDING
+				? SORT_DIRECTION_DESCENDING
+				: SORT_DIRECTION_ASCENDING;
 
 		this.state.managers.event.emit(EVENT_SORT_FLIP, [getSorter(item)]);
 
@@ -181,11 +183,11 @@ export class SortManager {
 
 	toggle(event: MouseEvent, key: string, direction?: string | null): void {
 		switch (direction) {
-			case SORT_ASCENDING:
+			case SORT_DIRECTION_ASCENDING:
 				this.flip(key);
 				return;
 
-			case SORT_DESCENDING:
+			case SORT_DIRECTION_DESCENDING:
 				this.remove(key);
 				return;
 
@@ -220,8 +222,6 @@ function compareGroups(this: State, first: unknown, second: unknown): number {
 	if (firstIsGroup || secondIsGroup) {
 		return firstIsGroup && secondIsGroup ? 0 : firstIsGroup ? -1 : 1;
 	}
-
-	console.log(first, second);
 
 	return 0;
 }

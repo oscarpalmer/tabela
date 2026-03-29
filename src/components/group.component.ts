@@ -78,7 +78,9 @@ export function renderGroup(state: State, component: GroupComponent): void {
 </div>`,
 			[ATTRIBUTE_ROLE]: ROLE_ROW,
 		},
-		{},
+		{
+			[ATTRIBUTE_DATA_KEY]: component.key,
+		},
 		{
 			height: `${state.options.rowHeight}px`,
 		},

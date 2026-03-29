@@ -1,4 +1,4 @@
-import {sort} from '@oscarpalmer/atoms/array';
+import {sort} from '@oscarpalmer/atoms/array/sort';
 import {toMap} from '@oscarpalmer/atoms/array/to-map';
 import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
 import {getValue} from '@oscarpalmer/atoms/value/handle';
