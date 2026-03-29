@@ -1,0 +1,53 @@
+.logs {
+	max-height: max(48rem, 50vh);
+	overflow: auto;
+	font-size: 0.875rem;
+
+	&__empty {
+		color: light-dark(var(--oui-stone-8), var(--oui-slate-7));
+		font-style: italic;
+		align-content: center;
+		justify-self: center;
+		position: absolute;
+		inset: 0;
+	}
+
+	&__popover {
+		--spacing: clamp(0.5rem, 2vw, 1rem);
+
+		padding: var(--spacing);
+	}
+
+	&__wrapper {
+		min-height: 6rem;
+		min-width: max(32rem, 33vw);
+		margin: var(--spacing) calc(-1 * var(--spacing));
+		border-top: 1px solid light-dark(var(--oui-stone-3), var(--oui-slate-3));
+		border-bottom: 1px solid light-dark(var(--oui-stone-3), var(--oui-slate-3));
+		position: relative;
+	}
+
+	&__item {
+		padding: var(--spacing);
+		border-bottom: 1px solid light-dark(var(--oui-stone-2), var(--oui-slate-2));
+
+		&:nth-child(odd) {
+			background-color: color-mix(in oklch, var(--oui-blue-0), 75% transparent);
+			border-color: color-mix(in oklch, var(--oui-blue-3), 75% transparent);
+		}
+
+		&:last-child {
+			border-bottom: none;
+		}
+
+		&__button {
+		}
+
+		&__message {
+		}
+
+		&__title {
+			font-weight: normal;
+		}
+	}
+}

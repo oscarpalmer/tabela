@@ -1,94 +1,164 @@
+import {array} from '@oscarpalmer/abydon';
 import type {Tabela} from '@oscarpalmer/tabela';
 
+export type Log = {
+	color: string;
+	id: number;
+	name: keyof typeof events;
+	message: string;
+	timestamp: Date;
+	type: string;
+};
+
+function addLog(name: keyof typeof events, message: string): void {
+	const log: Log = {
+		name,
+		message,
+		color: getColor(name),
+		id: getId(),
+		timestamp: new Date(),
+		type: name.split(':')[0],
+	};
+
+	if (logs.peek('length') < 100) {
+		logs.push(log);
+
+		return;
+	}
+
+	logs.update(items => {
+		items.shift();
+
+		items.push(log);
+
+		return items;
+	});
+}
+
+function getColor(name: string): string {
+	const event = name.split(':')[1];
+
+	switch (true) {
+		case /add/.test(event):
+			return 'green';
+
+		case /clear|remove/.test(event):
+			return 'red';
+
+		case /sync/.test(event):
+			return 'purple';
+
+		case /update/.test(event):
+			return 'blue';
+
+		default:
+			return 'neutral';
+	}
+}
+
+function getId(): number {
+	id += 1;
+
+	return id;
+}
+
 function onAddData(data: unknown[]): void {
-	console.log('data:add', `Adding ${data.length} items`, data);
+	addLog('data:add', `Adding ${data.length} items`);
 }
 
 function onAddFilter(filters: unknown[]): void {
-	console.log('filter:add', `Adding ${filters.length} filters`, filters);
+	addLog('filter:add', `Adding ${filters.length} filters`);
 }
 
 function onAddGroups(groups: unknown[]): void {
-	console.log('group:add', `Adding ${groups.length} groups`, groups);
+	addLog('group:add', `Adding ${groups.length} groups`);
 }
 
 function onAddSorters(sorters: unknown[]): void {
-	console.log('sort:add', `Adding ${sorters.length} sorters`, sorters);
+	addLog('sort:add', `Adding ${sorters.length} sorters`);
 }
 
 function onClearData(): void {
-	console.log('data:clear', 'Clearing data');
+	addLog('data:clear', 'Clearing data');
 }
 
 function onClearFilters(): void {
-	console.log('filter:clear', 'Clearing filters');
+	addLog('filter:clear', 'Clearing filters');
 }
 
 function onClearGroups(): void {
-	console.log('group:clear', 'Clearing groups');
+	addLog('group:clear', 'Clearing groups');
+}
+
+export function onClearLogs(): void {
+	logs.clear();
 }
 
 function onClearSorters(): void {
-	console.log('sort:clear', 'Clearing sorters');
+	addLog('sort:clear', 'Clearing sorters');
 }
 
 function onFlipSorters(sorters: unknown[]): void {
-	console.log('sort:flip', `Flipping ${sorters.length} sorters`, sorters);
+	addLog('sort:flip', `Flipping ${sorters.length} sorters`);
 }
 
 function onRemoveData(data: unknown[]): void {
-	console.log('data:remove', `Removing ${data.length} items`, data);
+	addLog('data:remove', `Removing ${data.length} items`);
 }
 
 function onRemoveFilter(filters: unknown[]): void {
-	console.log('filter:remove', `Removing ${filters.length} filters`, filters);
+	addLog('filter:remove', `Removing ${filters.length} filters`);
 }
 
 function onRemoveGroups(groups: unknown[]): void {
-	console.log('group:remove', `Removing ${groups.length} groups`, groups);
+	addLog('group:remove', `Removing ${groups.length} groups`);
+}
+
+export function onRemoveLog(event: Event, id: number): void {
+	event.stopPropagation();
+
+	logs.update(items => items.filter(item => item.id !== id));
 }
 
 function onRemoveSorters(sorters: unknown[]): void {
-	console.log('sort:remove', `Removing ${sorters.length} sorters`, sorters);
+	addLog('sort:remove', `Removing ${sorters.length} sorters`);
 }
 
 function onSetFilters(filters: unknown[]): void {
-	console.log('filter:set', `Setting ${filters.length} filters`, filters);
+	addLog('filter:set', `Setting ${filters.length} filters`);
 }
 
 function onSetSorters(sorters: unknown[]): void {
-	console.log('sort:set', `Setting ${sorters.length} sorters`, sorters);
+	addLog('sort:set', `Setting ${sorters.length} sorters`);
 }
 
 function onSortedData(data: unknown[]): void {
-	console.log('data:sorted', `Sorted ${data.length} items`, data);
+	addLog('data:sorted', `Sorted ${data.length} items`);
 }
 
 function onSynchronizeData(data: {added: unknown[]; removed: unknown[]; updated: unknown[]}): void {
-	console.log(
+	addLog(
 		'data:synchronize',
 		`Synchronizing ${data.added.length + data.removed.length + data.updated.length} items`,
-		data,
 	);
 }
 
 function onToggleGroups(event: {collapsed: unknown[]; expanded: unknown[]}): void {
-	console.log(
+	addLog(
 		'group:toggle',
 		`Collapsing ${event.collapsed.length} groups; expanding ${event.expanded.length} groups`,
-		event,
 	);
 }
 
 function onUpdateData(data: unknown[]): void {
-	console.log('data:update', `Updating ${data.length} items`, data);
+	addLog('data:update', `Updating ${data.length} items`);
 }
 
 function onUpdateGroups(groups: unknown[]): void {
-	console.log('group:update', `Updating ${groups.length} groups`, groups);
+	addLog('group:update', `Updating ${groups.length} groups`);
 }
 
-export function setupLoggers(tabel: Tabela): void {
+export function setupLogger(tabel: Tabela): void {
 	for (const name of names) {
 		const calllback = events[name];
 
@@ -97,6 +167,8 @@ export function setupLoggers(tabel: Tabela): void {
 		}
 	}
 }
+
+export const logs = array<Log>([]);
 
 const names = [
 	'data:add',
@@ -151,3 +223,5 @@ const events: Partial<Record<(typeof names)[number], (...args: any[]) => void>> 
 	'sort:remove': onRemoveSorters,
 	'sort:set': onSetSorters,
 };
+
+let id = 0;

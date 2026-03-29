@@ -4,6 +4,7 @@
 		"paths": {
 			"@oscarpalmer/abydon": ["../abydon/src/index.ts"],
 			"@oscarpalmer/atoms/*": ["../atoms/src/*"],
+			"@oscarpalmer/oui/*": ["../../other/oui/src/js/*"],
 			"@oscarpalmer/tabela": ["../tabela/src/index.ts"],
 			"@oscarpalmer/toretto/*": ["../toretto/src/*"]
 		}

@@ -1,5 +1,5 @@
 import {tabela, type Tabela, type TabelaOptions} from '@oscarpalmer/tabela';
-import { setupLoggers } from './loggers';
+import {setupLogger} from './logger';
 
 declare global {
 	interface Window {
@@ -47,7 +47,7 @@ export function createTable(element: HTMLElement): Tabela {
 
 	window.tabela = table;
 
-	setupLoggers(table);
+	setupLogger(table);
 
 	return table;
 }

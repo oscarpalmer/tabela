@@ -1,8 +1,8 @@
 import {computed, html, signal} from '@oscarpalmer/abydon';
+import {getRandomBoolean} from '@oscarpalmer/atoms';
+import {getRandomItems} from '@oscarpalmer/atoms/random';
 import {getData} from '../misc/data';
 import {tableData, tableFilter} from '../misc/table';
-import {getRandomItems} from '@oscarpalmer/atoms/random';
-import {getRandomBoolean} from '@oscarpalmer/atoms';
 
 function onAdd(): void {
 	const value = amount.peek();
@@ -17,11 +17,13 @@ function onClear(): void {
 }
 
 function onName(): void {
-	tableFilter()?.set([{
-		comparison: 'includes',
-		key: 'name.first',
-		value: name.peek(),
-	}]);
+	tableFilter()?.set([
+		{
+			comparison: 'includes',
+			key: 'name.first',
+			value: name.peek(),
+		},
+	]);
 }
 
 function onRemove(): void {
@@ -90,66 +92,117 @@ const name = signal('');
 const disabledAmount = computed(() => amount.get() <= 0);
 
 export default html`
-<div class="flow">
-	<details class="oui-details actions" open>
-		<summary class="oui-details__summary">Data</summary>
-		<div class="flow flex-ai--fe flex-jc--sb">
-			<div class="stack stack--small">
-				<label class="oui-vh" for="amount">Amount</label>
+	<div class="flow actions">
+		<details class="oui-details" open>
+			<summary class="oui-details__summary">Data</summary>
+			<div class="flow flex-ai--fe flex-jc--sb">
+				<div class="stack stack--small">
+					<label class="oui-vh" for="amount">Amount</label>
 
-				<div class="flow flow-small">
-					<input class="oui-input" id="amount" type="number" value="${amount}" />
+					<div class="flow flow-small">
+						<div class="flow flow-small">
+							<input
+								class="oui-input"
+								id="amount"
+								type="number"
+								value="${amount}"
+							/>
 
-					<span role="separator"></span>
+							<div class="stack stack--small">
+								<button
+									class="flex-as--fs oui-button oui-button--green oui-button--tiny"
+									type="button"
+									aria-disabled="${disabledAmount}"
+									@on="${onAdd}"
+								>
+									<span aria-hidden="true">&plus;</span>
+									<span class="flow flow--small" style="gap: 0.375em"
+										>Add <small><i>(${amount})</i></small></span
+									>
+								</button>
 
-					<button class="oui-button oui-button--green oui-button--tiny" type="button" aria-disabled="${disabledAmount}" @on="${onAdd}">
-						<span aria-hidden="true">&plus;</span>
-						<span>Add</span>
-					</button>
+								<button
+									class="flex-as--fs oui-button oui-button--red oui-button--tiny"
+									type="button"
+									aria-disabled="${disabledAmount}"
+									@on="${onRemove}"
+								>
+									<span aria-hidden="true">&minus;</span>
+									<span class="flow flow--small" style="gap: 0.375em"
+										>Remove <small><i>(${amount})</i></small></span
+									>
+								</button>
+							</div>
+						</div>
 
-					<button class="oui-button oui-button--red oui-button--tiny" type="button" aria-disabled="${disabledAmount}" @on="${onRemove}">
-						<span aria-hidden="true">&minus;</span>
-						<span>Remove</span>
-					</button>
+						<span role="separator"></span>
 
-					<span role="separator"></span>
+						<div class="stack stack--small">
+							<button
+								class="flex-as--fs oui-button oui-button--purple oui-button--tiny"
+								type="button"
+								aria-disabled="${disabledAmount}"
+								@on="${() => onUpdate(false)}"
+							>
+								<span aria-hidden="true">&#x21bb;</span>
+								<span class="flow flow--small" style="gap: 0.375em"
+									>Update <small><i>(${amount})</i></small></span
+								>
+							</button>
 
-					<button class="oui-button oui-button--blue oui-button--tiny" type="button" aria-disabled="${disabledAmount}" @on="${onSynchronize}">
-						<span aria-hidden="true">&#x21bb;</span>
-						<span>Synchronize <i>(${amount})</i></span>
-					</button>
+							<button
+								class="flex-as--fs oui-button oui-button--purple oui-button--tiny"
+								type="button"
+								@on="${() => onUpdate(true)}"
+							>
+								<span aria-hidden="true">&#x21bb;</span>
+								<span>Update all</span>
+							</button>
+						</div>
 
-					<span role="separator"></span>
+						<span role="separator"></span>
 
-					<button class="oui-button oui-button--purple oui-button--tiny" type="button" aria-disabled="${disabledAmount}" @on="${() => onUpdate(false)}">
-						<span aria-hidden="true">&#x21bb;</span>
-						<span>Update <i>(${amount})</i></span>
-					</button>
+						<button
+							class="oui-button oui-button--blue oui-button--tiny"
+							type="button"
+							aria-disabled="${disabledAmount}"
+							@on="${onSynchronize}"
+						>
+							<span aria-hidden="true">&#x21bb;</span>
+							<span class="flow flow--small" style="gap: 0.375em"
+								>Synchronize <small><i>(${amount})</i></small></span
+							>
+						</button>
 
-					<button class="oui-button oui-button--purple oui-button--tiny" type="button" @on="${() => onUpdate(true)}">
-						<span aria-hidden="true">&#x21bb;</span>
-						<span>Update all</span>
-					</button>
+						<span role="separator"></span>
 
-					<span role="separator"></span>
-
-					<button class="oui-button oui-button--red oui-button--tiny" type="button" @on="${onClear}">
-						<span aria-hidden="true">&times;</span>
-						<span>Clear</span>
-					</button>
+						<button
+							class="oui-button oui-button--red oui-button--tiny"
+							type="button"
+							@on="${onClear}"
+						>
+							<span aria-hidden="true">&times;</span>
+							<span>Clear</span>
+						</button>
+					</div>
 				</div>
 			</div>
-		</div>
-	</details>
-	<span role="separator"></span>
-	<details class="oui-details actions" open>
-		<summary class="oui-details__summary">Filter</summary>
-		<div class="flow flex-ai--fe flex-jc--sb">
-			<div class="stack stack--small">
-				<label class="oui-vh" for="name">Name</label>
-				<input class="oui-input" id="name" type="text" value="${name}" @on="${onName}" />
+		</details>
+		<details class="oui-details" open hidden>
+			<summary class="oui-details__summary">Filter</summary>
+			<div class="flow flex-ai--fe flex-jc--sb">
+				<div class="stack stack--small">
+					<label class="oui-vh" for="name">Name</label>
+					<input
+						class="oui-input"
+						id="name"
+						type="text"
+						value="${name}"
+						@on="${onName}"
+					/>
+				</div>
 			</div>
-		</div>
-	</details>
-<div>
+		</details>
+		<div></div>
+	</div>
 `;

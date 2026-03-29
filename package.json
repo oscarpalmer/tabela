@@ -4,21 +4,21 @@
 		"build:css": "sass --no-source-map src/css:dist/css",
 		"build:js": "npx vp pack",
 		"watch": "concurrently \"npm run watch:css\" \"npm run watch:js\"",
-		"watch:css": "sass --watch --no-source-map src/css:dist/css",
+		"watch:css": "sass --watch --no-source-map src/css/styles.local.scss:dist/css/styles.css",
 		"watch:js": "npx vp pack --tsconfig ./tsconfig.local.json --watch"
 	},
 	"dependencies": {
-		"@oscarpalmer/abydon": "^0.20",
-		"@oscarpalmer/atoms": "^0.170",
-		"@oscarpalmer/oui": "^0.19",
-		"@oscarpalmer/tabela": "^0.15",
-		"@oscarpalmer/toretto": "^0.41"
+		"@oscarpalmer/abydon": "git+https://github.com/oscarpalmer/abydon.git",
+		"@oscarpalmer/atoms": "git+https://github.com/oscarpalmer/atoms.git",
+		"@oscarpalmer/oui": "git+https://github.com/oscarpalmer/oui.git",
+		"@oscarpalmer/tabela": "git+https://github.com/oscarpalmer/tabela.git",
+		"@oscarpalmer/toretto": "git+https://github.com/oscarpalmer/toretto.git"
 	},
 	"devDependencies": {
 		"@types/node": "^25.5",
 		"@vitest/coverage-istanbul": "^4.1",
 		"concurrently": "^9.2",
-		"jsdom": "^28.1",
+		"jsdom": "^29",
 		"sass": "^1.98",
 		"tsdown": "^0.21",
 		"typescript": "^5.9",

@@ -18,6 +18,13 @@
 		"noImplicitOverride": true,
 		// "noUncheckedIndexedAccess": true,
 		"outDir": "./dist",
+		"paths": {
+			"@oscarpalmer/abydon": ["./node_modules/@oscarpalmer/abydon/src/index.ts"],
+			"@oscarpalmer/atoms/*": ["./node_modules/@oscarpalmer/atoms/src/*"],
+			"@oscarpalmer/oui/*": ["./node_modules/@oscarpalmer/oui/src/js/*"],
+			"@oscarpalmer/tabela": ["./node_modules/@oscarpalmer/tabela/src/index.ts"],
+			"@oscarpalmer/toretto/*": ["./node_modules/@oscarpalmer/toretto/src/*"]
+		},
 		"resolveJsonModule": true,
 		"rootDir": "./src",
 		"skipLibCheck": true,
