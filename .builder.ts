@@ -56,7 +56,7 @@ async function createJavaScript(): Promise<void> {
 		},
 		dts: false,
 		entry: ['./src/assets/javascript/index.ts'],
-		logLevel: 'silent',
+		// logLevel: 'silent',
 		minify: true,
 		outDir: './build/assets/javascript',
 		unbundle: false,
