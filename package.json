@@ -1,4 +1,5 @@
 {
+	"type": "module",
 	"scripts": {
 		"build": "tsx ./.builder.ts",
 		"watch": "tsx ./.builder.ts --watch"

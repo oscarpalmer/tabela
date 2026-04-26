@@ -1,9 +1,9 @@
-import {exec} from 'node:child_process';
-import {copyFile, mkdir, readFile, rm, unlink, writeFile} from 'node:fs/promises';
 import {concurrently} from 'concurrently';
 import {minify} from 'html-minifier';
-import {build} from 'tsdown';
+import {exec} from 'node:child_process';
+import {copyFile, mkdir, readFile, rm, unlink, writeFile} from 'node:fs/promises';
 import {compileStringAsync} from 'sass';
+import {build} from 'tsdown';
 
 const timestamp = Date.now();
 
