@@ -1,8 +1,8 @@
 {
 	"type": "module",
 	"scripts": {
-		"build": "tsx ./.builder.ts",
-		"watch": "tsx ./.builder.ts --watch"
+		"build": "npx tsx ./.builder.ts",
+		"watch": "npx tsx ./.builder.ts --watch"
 	},
 	"dependencies": {
 		"@oscarpalmer/abydon": "git+https://github.com/oscarpalmer/abydon.git",
