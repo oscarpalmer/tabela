@@ -26,7 +26,7 @@
 			"@oscarpalmer/toretto/*": ["./node_modules/@oscarpalmer/toretto/src/*"]
 		},
 		"resolveJsonModule": true,
-		"rootDir": "./src",
+		"rootDir": "./",
 		"skipLibCheck": true,
 		"strict": true,
 		"target": "esnext",
@@ -34,5 +34,5 @@
 		"verbatimModuleSyntax": true
 	},
 	"exclude": ["dist", "node_modules", "test", "types", "www"],
-	"include": ["src/**/*.ts"]
+	"include": ["**/*.ts"],
 }

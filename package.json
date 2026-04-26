@@ -1,12 +1,7 @@
 {
 	"scripts": {
-		"build": "npm run build:install && npm run build:css && npm run build:js",
-		"build:css": "sass --no-source-map src/css/styles.scss:dist/css/styles.css",
-		"build:install": "cd node_modules/@oscarpalmer/abydon && npm i && cd ../atoms && npm i && cd ../oui && npm i && cd ../tabela && npm i && cd ../toretto && npm i",
-		"build:js": "npx vp pack",
-		"watch": "concurrently \"npm run watch:css\" \"npm run watch:js\"",
-		"watch:css": "sass --watch --no-source-map src/css/styles.local.scss:dist/css/styles.css",
-		"watch:js": "npx vp pack --tsconfig ./tsconfig.local.json --watch"
+		"build": "tsx ./.builder.ts",
+		"watch": "tsx ./.builder.ts --watch"
 	},
 	"dependencies": {
 		"@oscarpalmer/abydon": "git+https://github.com/oscarpalmer/abydon.git",
@@ -16,12 +11,14 @@
 		"@oscarpalmer/toretto": "git+https://github.com/oscarpalmer/toretto.git"
 	},
 	"devDependencies": {
-		"@types/node": "^25.5",
+		"@types/node": "^25.6",
 		"@vitest/coverage-istanbul": "^4.1",
 		"concurrently": "^9.2",
+		"html-minifier": "^4.0",
 		"jsdom": "^29",
-		"sass": "^1.98",
+		"sass": "^1.99",
 		"tsdown": "^0.21",
+		"tsx": "^4.21",
 		"typescript": "^5.9",
 		"vite": "npm:@voidzero-dev/vite-plus-core@latest",
 		"vite-plus": "latest",

@@ -1,11 +1,8 @@
 .vscode/
 coverage/
-dist/**/*
+build/
 node_modules/
 types/
 www/
 
 *.tsbuildinfo
-
-!dist/index.html
-!dist/robots.txt

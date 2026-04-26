@@ -7,6 +7,6 @@
 			"@oscarpalmer/oui/*": ["../../other/oui/src/js/*"],
 			"@oscarpalmer/tabela": ["../tabela/src/index.ts"],
 			"@oscarpalmer/toretto/*": ["../toretto/src/*"]
-		}
+		},
 	}
 }
