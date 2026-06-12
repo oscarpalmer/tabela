@@ -6,7 +6,7 @@ import type {Key, Simplify} from '@oscarpalmer/atoms/models';
 import {getString} from '@oscarpalmer/atoms/string';
 import {compare} from '@oscarpalmer/atoms/value/compare';
 import {removeGroup, updateGroup, type GroupComponent} from '../components/group.component';
-import {getGroup} from '../helpers/misc.helpers';
+import {getTabelaGroup} from '../helpers/misc.helpers';
 import {
 	EVENT_GROUP_ADD,
 	EVENT_GROUP_CLEAR,
@@ -17,6 +17,10 @@ import {
 import type {TabelaGroupHandlers} from '../models/group.model';
 import {RENDER_ORIGIN_DATA} from '../models/render.model';
 import type {State} from '../models/tabela.model';
+import {focusNavigation} from './navigation.manager';
+import {render} from './render.manager';
+
+// #region Types
 
 export class GroupManager {
 	collapsed = new Set<Key>();
@@ -53,30 +57,6 @@ export class GroupManager {
 		this.key = state.options.grouping;
 	}
 
-	add(value: GroupComponent | GroupComponent[]): void {
-		const groups = Array.isArray(value) ? value : [value];
-
-		if (groups.length === 0) {
-			return;
-		}
-
-		this.set([...this.items, ...groups]);
-
-		this.state.managers.event.emit(EVENT_GROUP_ADD, groups.map(getGroup));
-	}
-
-	clear(): void {
-		if (this.items.length === 0) {
-			return;
-		}
-
-		this.remove(this.items.splice(0));
-
-		this.collapsed.clear();
-
-		this.state.managers.event.emit(EVENT_GROUP_CLEAR);
-	}
-
 	destroy(): void {
 		const groups = this.items.splice(0);
 		const {length} = groups;
@@ -90,99 +70,144 @@ export class GroupManager {
 		this.handlers = undefined as never;
 		this.state = undefined as never;
 	}
+}
 
-	getForKey(key: string): GroupComponent | undefined {
-		return this.mapped.get(key);
+// #endregion
+
+// #region Functions
+
+export function addGroups(state: State, groups: GroupComponent[]): void {
+	if (groups.length === 0) {
+		return;
 	}
 
-	getForValue(value: unknown): GroupComponent | undefined {
-		const asString = getString(value);
+	setGroups(state, [...state.managers.group.items, ...groups]);
 
-		return this.items.find(item => item.value.stringified === asString);
+	state.managers.event.herald.emit(EVENT_GROUP_ADD, groups.map(getTabelaGroup));
+}
+
+export function clearGroups(state: State): void {
+	if (state.managers.group.items.length === 0) {
+		return;
 	}
 
-	handle(button: HTMLElement): void {
-		const key = button.dataset.key?.replace(`${this.state.prefix}_`, '');
-		const group = this.getForKey(key ?? '');
+	removeGroups(state, state.managers.group.items.splice(0));
 
-		if (group == null) {
-			return;
-		}
+	state.managers.group.collapsed.clear();
 
-		const {collapsed, items, state} = this;
+	state.managers.event.herald.emit(EVENT_GROUP_CLEAR);
+}
 
-		group.expanded = !group.expanded;
+export function getGroup(state: State, value: unknown, forValue: true): GroupComponent | undefined;
 
-		const index = items.indexOf(group);
+export function getGroup(state: State, key: unknown): GroupComponent | undefined;
 
-		let first = state.managers.data.state.keys.original.indexOf(group.key) + 1;
+export function getGroup(
+	state: State,
+	keyOrValue: unknown,
+	forValue?: unknown,
+): GroupComponent | undefined {
+	return forValue === true
+		? getGroupForValue(state, keyOrValue)
+		: getGroupForKey(state, keyOrValue);
+}
 
-		const last =
-			items[index + 1] == null
-				? state.managers.data.state.keys.original.length - 1
-				: state.managers.data.state.keys.original.indexOf(items[index + 1].key) - 1;
+function getGroupForKey(state: State, key: unknown): GroupComponent | undefined {
+	return typeof key === 'string' ? state.managers.group.mapped.get(key) : undefined;
+}
 
-		for (; first <= last; first += 1) {
-			const key = state.managers.data.state.keys.original[first] as Key;
+function getGroupForValue(state: State, value: unknown): GroupComponent | undefined {
+	const asString = getString(value);
 
-			if (group.expanded) {
-				collapsed.delete(key);
-			} else {
-				collapsed.add(key);
-			}
-		}
+	return state.managers.group.items.find(item => item.value.stringified === asString);
+}
 
-		state.managers.event.emit(EVENT_GROUP_TOGGLE, {
-			collapsed: group.expanded ? [] : [getGroup(group)],
-			expanded: group.expanded ? [getGroup(group)] : [],
-		});
+export function onGroup(state: State, button: HTMLElement): void {
+	const key = button.dataset.key?.replace(`${state.prefix}_`, '');
+	const group = getGroupForKey(state, key ?? '');
 
-		state.managers.render.render(RENDER_ORIGIN_DATA);
-	}
-
-	remove(value: GroupComponent | GroupComponent[]): void {
-		const groups = Array.isArray(value) ? value : [value];
-
-		const {length} = groups;
-
-		if (length === 0) {
-			return;
-		}
-
-		for (let index = 0; index < length; index += 1) {
-			removeGroup(groups[index]);
-		}
-
-		this.set(this.items.filter(item => !groups.includes(item)));
-
-		this.state.managers.event.emit(EVENT_GROUP_REMOVE, groups.map(getGroup));
-	}
-
-	set(items: GroupComponent[]) {
-		this.items = sort(items, (first, second) => compare(first.label, second.label));
-
-		this.mapped = toMap(items, group => group.key);
-
-		this.order = toRecord(
-			items as Simplify<GroupComponent>[],
-			group => group.value.stringified,
-			(_, index) => index,
-		);
-	}
-
-	update(value: GroupComponent | GroupComponent[]): void {
-		const groups = Array.isArray(value) ? value : [value];
-
-		const {length} = groups;
-
-		if (length === 0) {
-			return;
-		}
-
-		for (let index = 0; index < length; index += 1) {
-			updateGroup(this.state, groups[index], false);
-		}
-
-		this.state.managers.event.emit(EVENT_GROUP_UPDATE, groups.map(getGroup));
+	if (group != null) {
+		toggleGroup(state, group);
 	}
 }
+
+export function removeGroups(state: State, groups: GroupComponent[]): void {
+	const {length} = groups;
+
+	if (length === 0) {
+		return;
+	}
+
+	for (let index = 0; index < length; index += 1) {
+		removeGroup(groups[index]);
+	}
+
+	setGroups(
+		state,
+		state.managers.group.items.filter(item => !groups.includes(item)),
+	);
+
+	state.managers.event.herald.emit(EVENT_GROUP_REMOVE, groups.map(getTabelaGroup));
+}
+
+export function setGroups(state: State, groups: GroupComponent[]) {
+	state.managers.group.items = sort(groups, (first, second) => compare(first.label, second.label));
+
+	state.managers.group.mapped = toMap(groups, group => group.key.full);
+
+	state.managers.group.order = toRecord(
+		groups as Simplify<GroupComponent>[],
+		group => group.value.stringified,
+		(_, index) => index,
+	);
+}
+
+export function toggleGroup(state: State, group: GroupComponent): void {
+	const {collapsed, items} = state.managers.group;
+
+	group.expanded = !group.expanded;
+
+	const index = items.indexOf(group);
+
+	let first = state.managers.data.state.keys.original.indexOf(group.key.full) + 1;
+
+	const last =
+		items[index + 1] == null
+			? state.managers.data.state.keys.original.length - 1
+			: state.managers.data.state.keys.original.indexOf(items[index + 1].key.full) - 1;
+
+	for (; first <= last; first += 1) {
+		const key = state.managers.data.state.keys.original[first] as Key;
+
+		if (group.expanded) {
+			collapsed.delete(key);
+		} else {
+			collapsed.add(key);
+		}
+	}
+
+	state.managers.event.herald.emit(EVENT_GROUP_TOGGLE, {
+		collapsed: group.expanded ? [] : [getTabelaGroup(group)],
+		expanded: group.expanded ? [getTabelaGroup(group)] : [],
+	});
+
+	render(state, RENDER_ORIGIN_DATA);
+
+	focusNavigation(state);
+}
+
+export function updateGroups(state: State, groups: GroupComponent[]): void {
+	const {length} = groups;
+
+	if (length === 0) {
+		return;
+	}
+
+	for (let index = 0; index < length; index += 1) {
+		updateGroup(state, groups[index], false);
+	}
+
+	state.managers.event.herald.emit(EVENT_GROUP_UPDATE, groups.map(getTabelaGroup));
+}
+
+// #endregion

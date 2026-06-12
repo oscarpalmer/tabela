@@ -5,11 +5,15 @@ import {GroupComponent} from '../../components/group.component';
 import {isGroupKey} from '../../helpers/misc.helpers';
 import type {DataState, DataValue, TabelaData} from '../../models/data.model';
 import type {State} from '../../models/tabela.model';
+import {getColumn} from '../column.manager';
+import {setGroups} from '../group.manager';
 import {addData} from './data.add';
 import {clearData, removeData} from './data.remove';
 import {renderData} from './data.render';
 import {synchronizeData} from './data.synchronize';
 import {updateData} from './data.update';
+
+// #region Types
 
 export class DataManager {
 	handlers: TabelaData = {
@@ -85,7 +89,7 @@ export class DataManager {
 		const array: DataValue[] = data.slice();
 
 		if (state.managers.group.enabled) {
-			const column = state.managers.column.get(state.managers.group.key);
+			const column = getColumn(state, state.managers.group.key);
 
 			const grouped = toRecord.arrays(data, state.managers.group.key) as Record<
 				string,
@@ -109,10 +113,10 @@ export class DataManager {
 
 				groups.push(group);
 
-				array.push(group.key);
+				array.push(group.key.full);
 			}
 
-			state.managers.group.set(groups);
+			setGroups(state, groups);
 		}
 
 		state.values.array = array;
@@ -120,3 +124,5 @@ export class DataManager {
 		renderData(state);
 	}
 }
+
+// #endregion

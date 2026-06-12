@@ -37,17 +37,17 @@
 		"www:js": "vpx tsdown -c ./www/.app/js/tsdown.config.ts --watch"
 	},
 	"dependencies": {
-		"@oscarpalmer/atoms": "^0.170",
-		"@oscarpalmer/toretto": "^0.41"
+		"@oscarpalmer/atoms": "^0.188.1",
+		"@oscarpalmer/toretto": "^0.46"
 	},
 	"devDependencies": {
-		"@types/node": "^25.5",
+		"@types/node": "^25.9",
 		"@vitest/coverage-istanbul": "^4.1",
-		"concurrently": "^9.2",
-		"jsdom": "^29",
-		"sass": "^1.98",
-		"tsdown": "^0.21",
-		"typescript": "^5.9",
+		"concurrently": "^10",
+		"jsdom": "^29.1",
+		"sass": "^1.100",
+		"tsdown": "^0.22",
+		"typescript": "^6",
 		"vite": "npm:@voidzero-dev/vite-plus-core@latest",
 		"vite-plus": "latest",
 		"vitest": "npm:@voidzero-dev/vite-plus-test@latest"

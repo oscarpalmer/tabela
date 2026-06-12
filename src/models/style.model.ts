@@ -1,3 +1,5 @@
+// #region Variables
+
 export const CSS_BUTTON = 'tabela__button';
 
 export const CSS_BUTTON_GROUP = 'tabela__button--group';
@@ -49,3 +51,5 @@ export const CSS_SELECTION = 'tabela__selection';
 export const CSS_TABLE = 'tabela__table';
 
 export const CSS_WRAPPER = 'tabela';
+
+// #endregion

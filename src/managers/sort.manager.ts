@@ -1,4 +1,5 @@
 import {
+	type ArrayValueSorter,
 	type SortDirection,
 	sort,
 	SORT_DIRECTION_ASCENDING,
@@ -12,6 +13,7 @@ import {getSorter, getValidSorter, isGroupKey} from '../helpers/misc.helpers';
 import type {DataValue} from '../models/data.model';
 import {
 	ARIA_SORT,
+	ATTRIBUTE_DATA_KEY,
 	ATTRIBUTE_DATA_SORT_DIRECTION,
 	ATTRIBUTE_DATA_SORT_POSITION,
 } from '../models/dom.model';
@@ -24,21 +26,30 @@ import {
 	EVENT_SORT_SET,
 } from '../models/event.model';
 import {RENDER_ORIGIN_SORT} from '../models/render.model';
-import {type TabelaSort, type TabelaSortItem} from '../models/sort.model';
+import {
+	type ExtendedArrayValueSorter,
+	type TabelaSort,
+	type TabelaSorter,
+} from '../models/sort.model';
 import type {State} from '../models/tabela.model';
+import {getGroup} from './group.manager';
+import {updateNavigation} from './navigation.manager';
+import {render} from './render.manager';
+
+// #region Types
 
 export class SortManager {
-	default: TabelaSortItem[];
+	default: ExtendedArrayValueSorter[];
 
 	handlers: TabelaSort = {
-		add: (field, direction) => this.add(field, direction),
-		flip: field => this.flip(field),
-		clear: () => this.clear(),
-		remove: field => this.remove(field),
-		set: items => this.set(items, true),
+		add: (key, direction) => addSorter(this.state, key, direction),
+		flip: key => flipSorter(this.state, key),
+		clear: () => clearSorters(this.state),
+		remove: key => removeSorter(this.state, key),
+		set: items => setSorters(this.state, items, true),
 	};
 
-	items: TabelaSortItem[] = [];
+	items: ExtendedArrayValueSorter[] = [];
 
 	get size(): number {
 		return this.items.length === 0 ? (this.default == null ? 0 : 1) : this.items.length;
@@ -48,170 +59,89 @@ export class SortManager {
 		this.default = [getValidSorter(state.options.sorting ?? state.key)!];
 	}
 
-	add(key: string, direction?: SortDirection): void {
-		const index = this.items.findIndex(item => item.key === key);
-
-		if (index > -1) {
-			return;
-		}
-
-		const sorter = getValidSorter({
-			direction,
-			key,
-		});
-
-		if (sorter == null) {
-			return;
-		}
-
-		this.items.push(sorter);
-
-		this.state.managers.event.emit(EVENT_SORT_ADD, [getSorter(sorter)]);
-
-		this.sort();
-	}
-
-	addOrSet(event: MouseEvent, key: string): void {
-		if (event.ctrlKey || event.metaKey) {
-			this.add(key);
-		} else {
-			this.set([getValidSorter(key)!], false);
-		}
-	}
-
-	clear(): void {
-		if (this.items.length === 0) {
-			return;
-		}
-
-		this.items.length = 0;
-
-		this.state.managers.event.emit(EVENT_SORT_CLEAR);
-
-		this.sort();
-	}
-
 	destroy(): void {
 		this.handlers = undefined as never;
 		this.items = undefined as never;
 		this.state = undefined as never;
 	}
+}
 
-	flip(key: string): void {
-		const item = this.items.find(item => item.key === key);
+// #endregion
 
-		if (item == null) {
-			return;
-		}
+// #region Functions
 
-		item.direction =
-			item.direction === SORT_DIRECTION_ASCENDING
-				? SORT_DIRECTION_DESCENDING
-				: SORT_DIRECTION_ASCENDING;
+function addSorter(state: State, key: string, direction?: SortDirection): void {
+	const {event, sort} = state.managers;
 
-		this.state.managers.event.emit(EVENT_SORT_FLIP, [getSorter(item)]);
+	const index = sort.items.findIndex(item => item.field === key);
 
-		this.sort();
+	if (index > -1) {
+		return;
 	}
 
-	remove(key: string): void {
-		const index = this.items.findIndex(item => item.key === key);
+	const sorter = getValidSorter({
+		direction,
+		key,
+	});
 
-		if (index === -1) {
-			return;
-		}
-
-		const spliced = this.items.splice(index, 1);
-
-		this.state.managers.event.emit(EVENT_SORT_REMOVE, spliced);
-
-		if (this.items.length === 0) {
-			this.state.managers.event.emit(EVENT_SORT_CLEAR);
-		}
-
-		this.sort();
+	if (sorter == null) {
+		return;
 	}
 
-	set(items: TabelaSortItem[], set: boolean): void {
-		const sorters = items.map(getValidSorter).filter(sorter => sorter != null) as TabelaSortItem[];
+	sort.items.push(sorter);
 
-		const removed = this.items.splice(0, this.items.length, ...sorters);
+	event.herald.emit(EVENT_SORT_ADD, [getSorter(sorter)]);
 
-		if (set) {
-			this.state.managers.event.emit(EVENT_SORT_SET, {
-				removed,
-				added: sorters.map(getSorter),
-			});
-		} else {
-			this.state.managers.event.emit(EVENT_SORT_ADD, sorters.map(getSorter));
-		}
+	sortData(state);
+}
 
-		this.sort();
-	}
-
-	sort(): void {
-		const {items, size, state} = this;
-
-		const {length} = state.managers.column.items;
-
-		for (let index = 0; index < length; index += 1) {
-			const column = state.managers.column.items[index];
-
-			const sorterIndex = items.findIndex(item => item.key === column.options.key);
-			const sorterItem = items[sorterIndex];
-
-			setAttributes(column.elements.wrapper, {
-				[ARIA_SORT]:
-					sorterItem == null ? SORT_NONE : items.length > 1 ? SORT_OTHER : sorterItem.direction,
-				[ATTRIBUTE_DATA_SORT_DIRECTION]: sorterItem == null ? undefined : sorterItem.direction,
-			});
-
-			setAttribute(
-				column.elements.sorter,
-				ATTRIBUTE_DATA_SORT_POSITION,
-				sorterIndex > -1 && items.length > 1 ? sorterIndex + 1 : undefined,
-			);
-		}
-
-		state.managers.data.state.keys.active =
-			size === 0 ? undefined : getSortedItems(state, items.length === 0 ? this.default! : items);
-
-		state.managers.event.emit(EVENT_DATA_SORTED, state.managers.data.get(true));
-
-		state.managers.render.render(RENDER_ORIGIN_SORT);
-	}
-
-	toggle(event: MouseEvent, key: string, direction?: string | null): void {
-		switch (direction) {
-			case SORT_DIRECTION_ASCENDING:
-				this.flip(key);
-				return;
-
-			case SORT_DIRECTION_DESCENDING:
-				this.remove(key);
-				return;
-
-			default:
-				this.addOrSet(event, key);
-				return;
-		}
+function addOrSetSorter(event: KeyboardEvent | MouseEvent, state: State, key: string): void {
+	if (event.ctrlKey || event.metaKey) {
+		addSorter(state, key);
+	} else {
+		setSorters(
+			state,
+			[
+				{
+					key,
+					direction: SORT_DIRECTION_ASCENDING,
+				},
+			],
+			false,
+		);
 	}
 }
 
+function clearSorters(state: State): void {
+	const {event, sort} = state.managers;
+
+	if (sort.items.length === 0) {
+		return;
+	}
+
+	sort.items.length = 0;
+
+	event.herald.emit(EVENT_SORT_CLEAR);
+
+	sortData(state);
+}
+
 function compareGroups(this: State, first: unknown, second: unknown): number {
+	const {managers} = this;
+
 	const firstIsGroup = isGroupKey(first);
 	const secondIsGroup = isGroupKey(second);
 
 	const firstValue = firstIsGroup
-		? this.managers.group.getForKey(first as string)!.value.stringified
-		: getValue(first as PlainObject, this.managers.group.key);
+		? getGroup(this, first)!.value.stringified
+		: getValue(first as PlainObject, managers.group.key);
 
 	const secondValue = secondIsGroup
-		? this.managers.group.getForKey(second as string)!.value.stringified
-		: getValue(second as PlainObject, this.managers.group.key);
+		? getGroup(this, second)!.value.stringified
+		: getValue(second as PlainObject, managers.group.key);
 
-	const firstOrder = this.managers.group.order[firstValue as never];
-	const secondOrder = this.managers.group.order[secondValue as never];
+	const firstOrder = managers.group.order[firstValue as never];
+	const secondOrder = managers.group.order[secondValue as never];
 
 	const groupComparison = compare(firstOrder, secondOrder);
 
@@ -226,30 +156,171 @@ function compareGroups(this: State, first: unknown, second: unknown): number {
 	return 0;
 }
 
-function getSortedItems(state: State, sorters: TabelaSortItem[]): Key[] {
+function flipSorter(state: State, key: string): void {
+	const {event, sort} = state.managers;
+
+	const item = sort.items.find(item => item.field === key);
+
+	if (item == null) {
+		return;
+	}
+
+	item.direction =
+		item.direction === SORT_DIRECTION_ASCENDING
+			? SORT_DIRECTION_DESCENDING
+			: SORT_DIRECTION_ASCENDING;
+
+	event.herald.emit(EVENT_SORT_FLIP, [getSorter(item)]);
+
+	sortData(state);
+}
+
+function getSortedItems(state: State, sorters: ExtendedArrayValueSorter[]): Key[] {
 	const data = (state.managers.data.state.keys.active?.map(key =>
 		isGroupKey(key) ? key : state.managers.data.state.values.mapped.get(key)!,
 	) ?? state.managers.data.state.values.array) as DataValue[];
 
 	if (!state.managers.group.enabled) {
-		return sort(data as PlainObject[], sorters as never).map(
+		return sort(data as PlainObject[], sorters).map(
 			item => getValue(item, state.key) as Key,
 		);
 	}
 
-	return sortWithGroups(state, data, sorters).map(item =>
+	return sortDataGrouped(state, data, sorters).map(item =>
 		isGroupKey(item) ? item : (getValue(item as PlainObject, state.key) as Key),
 	) as Key[];
 }
 
-export function sortWithGroups(
+export function onSort(event: KeyboardEvent | MouseEvent, state: State, target: HTMLElement): void {
+	const direction = target.getAttribute(ATTRIBUTE_DATA_SORT_DIRECTION);
+	const key = target.getAttribute(ATTRIBUTE_DATA_KEY);
+
+	if (key == null) {
+		return;
+	}
+
+	toggleSorter(event, state, key, direction);
+
+	const {active} = state.managers.navigation;
+
+	active.column = key;
+	active.index = -1;
+	active.row = 'header';
+	active.type = 'header';
+
+	updateNavigation(state, !(event instanceof KeyboardEvent));
+}
+
+function removeSorter(state: State, key: string): void {
+	const {event, sort} = state.managers;
+
+	const index = sort.items.findIndex(item => item.field === key);
+
+	if (index === -1) {
+		return;
+	}
+
+	const spliced = sort.items.splice(index, 1);
+
+	event.herald.emit(EVENT_SORT_REMOVE, spliced.map(getSorter));
+
+	if (sort.items.length === 0) {
+		event.herald.emit(EVENT_SORT_CLEAR);
+	}
+
+	sortData(state);
+}
+
+function setSorters(state: State, items: TabelaSorter[], set: boolean): void {
+	const {event, sort} = state.managers;
+
+	const sorters = items.map(getValidSorter).filter(sorter => sorter != null);
+
+	const removed = sort.items.splice(0, sort.items.length, ...sorters);
+
+	if (set) {
+		event.herald.emit(EVENT_SORT_SET, {
+			added: sorters.map(getSorter),
+			removed: removed.map(getSorter),
+		});
+	} else {
+		event.herald.emit(EVENT_SORT_ADD, sorters.map(getSorter));
+	}
+
+	sortData(state);
+}
+
+export function sortData(state: State): void {
+	const {event, sort} = state.managers;
+	const {items, size} = sort;
+
+	const {length} = state.managers.column.items;
+
+	for (let index = 0; index < length; index += 1) {
+		const column = state.managers.column.items[index];
+
+		const sorterIndex = items.findIndex(item => item.field === column.options.key);
+		const sorterItem = items[sorterIndex];
+
+		setAttributes(column.elements.wrapper, {
+			[ARIA_SORT]:
+				sorterItem == null ? SORT_NONE : items.length > 1 ? SORT_OTHER : sorterItem.direction,
+			[ATTRIBUTE_DATA_SORT_DIRECTION]: sorterItem == null ? undefined : sorterItem.direction,
+		});
+
+		setAttribute(
+			column.elements.sorter,
+			ATTRIBUTE_DATA_SORT_POSITION,
+			sorterIndex > -1 && items.length > 1 ? sorterIndex + 1 : undefined,
+		);
+	}
+
+	state.managers.data.state.keys.active =
+		size === 0 ? undefined : getSortedItems(state, items.length === 0 ? sort.default! : items);
+
+	event.herald.emit(EVENT_DATA_SORTED, state.managers.data.get(true));
+
+	render(state, RENDER_ORIGIN_SORT);
+}
+
+export function sortDataGrouped(
 	state: State,
 	data: DataValue[],
-	sorters: TabelaSortItem[],
+	sorters: ExtendedArrayValueSorter[],
 ): DataValue[] {
-	return sort(data, [compareGroups.bind(state), ...sorters]);
+	return sort(data, [
+		compareGroups.bind(state),
+		...(sorters as Array<ArrayValueSorter<DataValue>>),
+	]);
 }
+
+function toggleSorter(
+	event: KeyboardEvent | MouseEvent,
+	state: State,
+	key: string,
+	direction?: string | null,
+): void {
+	switch (direction) {
+		case SORT_DIRECTION_ASCENDING:
+			flipSorter(state, key);
+			return;
+
+		case SORT_DIRECTION_DESCENDING:
+			removeSorter(state, key);
+			return;
+
+		default:
+			addOrSetSorter(event, state, key);
+			return;
+	}
+}
+
+// #endregion
+
+// #region Variables
 
 const SORT_NONE = 'none';
 
 const SORT_OTHER = 'other';
+
+// #endregion

@@ -14,6 +14,8 @@ import type {SortManager} from '../managers/sort.manager';
 import type {StyleManager} from '../managers/style.manager';
 import type {TabelaOptions} from './tabela.options';
 
+// #region Types
+
 export type Components = {
 	body: BodyComponent;
 	footer: FooterComponent;
@@ -43,3 +45,5 @@ export type State = {
 	prefix: string;
 	options: TabelaOptions;
 };
+
+// #endregion

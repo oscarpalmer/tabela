@@ -17,6 +17,8 @@ import {
 } from '../models/style.model';
 import type {State} from '../models/tabela.model';
 
+// #region Types
+
 export class StyleManager {
 	constructor(readonly state: State) {
 		if (appended) {
@@ -32,6 +34,10 @@ export class StyleManager {
 		document.head.appendChild(style);
 	}
 }
+
+// #endregion
+
+// #region Variables
 
 const styling = //css
 	`/** Table */
@@ -81,7 +87,7 @@ const styling = //css
 	outline: none;
 }
 
-:where(.${CSS_WRAPPER}:has(.${CSS_ROWGROUP_BODY}:focus-visible)) {
+:where(.${CSS_WRAPPER}:has([data-active]:focus-visible)) {
 	outline: 2px solid var(--oui-blue-6);
 	outline-offset: 2px;
 }
@@ -107,11 +113,6 @@ const styling = //css
 :where(.${CSS_ROW_SELECTED}) {
 	background-color: var(--oui-blue-1);
 	color: var(--oui-blue-9);
-}
-
-:where(.${CSS_WRAPPER}:has(.${CSS_ROWGROUP_BODY}:focus-visible) .${CSS_ROW}[data-active="true"]) {
-	outline: 2px solid var(--oui-blue-6);
-	outline-offset: 2px;
 }
 
 /** Cells */
@@ -185,6 +186,13 @@ const styling = //css
 	margin: 0 0 0 .25rem;
 }
 
+:where(.${CSS_HEADING}[data-active]:focus-visible),
+:where(.${CSS_CELL}[data-active]:focus-visible),
+:where(.${CSS_CELL_FOOTER}[data-active]:focus-visible) {
+	outline: 2px dashed red;
+	outline-offset: -2px;
+}
+
 /** Misc. */
 
 :where(.${CSS_BUTTON}) {
@@ -202,3 +210,5 @@ const styling = //css
 `.replace(/^\s+|\s+|\s+$/g, ' ');
 
 let appended = false;
+
+// #endregion

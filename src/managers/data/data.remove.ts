@@ -4,6 +4,7 @@ import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
 import {delay} from '@oscarpalmer/atoms/promise/delay';
 import {getValue} from '@oscarpalmer/atoms/value/handle';
 import {type GroupComponent} from '../../components/group.component';
+import {removeRow} from '../../components/row.component';
 import {isGroupKey} from '../../helpers/misc.helpers';
 import type {DataState} from '../../models/data.model';
 import {
@@ -11,7 +12,11 @@ import {
 	EVENT_DATA_REMOVE,
 	EVENT_DATA_SYNCHRONIZE,
 } from '../../models/event.model';
+import {clearGroups, getGroup, removeGroups, updateGroups} from '../group.manager';
+import {clearRows} from '../row.manager';
 import {renderData} from './data.render';
+
+// #region Functions
 
 export async function clearData(state: DataState, synchronize: boolean): Promise<void> {
 	return removeItems(state, [], true, synchronize, true).then(() => undefined);
@@ -77,13 +82,13 @@ async function removeItems(
 
 		state.values.mapped.clear();
 
-		state.managers.row.clear();
+		clearRows(state);
 
 		if (state.managers.group.enabled) {
-			state.managers.group.clear();
+			clearGroups(state);
 		}
 
-		state.managers.event.emit(EVENT_DATA_CLEAR);
+		state.managers.event.herald.emit(EVENT_DATA_CLEAR);
 
 		renderData(state);
 
@@ -113,18 +118,24 @@ async function removeItems(
 			removedData.push(dataValue);
 
 			state.keys.original.splice(dataIndex, 1);
-			state.managers.row.remove(key as never);
-			state.values.mapped.delete(key as Key);
+
+			const row = state.managers.row.components.get(key);
+
+			if (row != null) {
+				removeRow(state, row, true);
+			}
+
+			state.values.mapped.delete(key);
 
 			if (!state.managers.group.enabled || isGroupKey(key)) {
 				continue;
 			}
 
-			state.managers.group.collapsed.delete(key as never);
+			state.managers.group.collapsed.delete(key);
 
 			const groupValue = getValue(dataValue, state.managers.group.key) as unknown;
 
-			const group = state.managers.group.getForValue(groupValue);
+			const group = getGroup(state, groupValue, true);
 
 			if (group == null || removedGroups.includes(group)) {
 				continue;
@@ -148,7 +159,7 @@ async function removeItems(
 				updatedGroups.splice(groupIndex, 1);
 			}
 
-			groupIndex = state.values.array.indexOf(group.key);
+			groupIndex = state.values.array.indexOf(group.key.full);
 
 			if (groupIndex > -1) {
 				state.keys.original.splice(groupIndex, 1);
@@ -163,13 +174,13 @@ async function removeItems(
 		}
 	}
 
-	state.managers.group.remove(removedGroups);
-	state.managers.group.update(updatedGroups);
+	removeGroups(state, removedGroups);
+	updateGroups(state, updatedGroups);
 
-	state.managers.event.emit(EVENT_DATA_REMOVE, removedData);
+	state.managers.event.herald.emit(EVENT_DATA_REMOVE, removedData);
 
 	if (synchronize) {
-		state.managers.event.emit(EVENT_DATA_SYNCHRONIZE, {
+		state.managers.event.herald.emit(EVENT_DATA_SYNCHRONIZE, {
 			added: [],
 			removed: removedData,
 			updated: [],
@@ -182,3 +193,5 @@ async function removeItems(
 
 	return render ? undefined : removedData;
 }
+
+// #endregion

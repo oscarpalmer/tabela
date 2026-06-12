@@ -1,15 +1,10 @@
 import {createElement, createRowGroup} from '../helpers/dom.helpers';
 import type {BodyElements} from '../models/body.model';
-import {ATTRIBUTE_DATA_EVENT, ELEMENT_DIV} from '../models/dom.model';
-import {EVENT_BODY} from '../models/event.model';
+import {ELEMENT_DIV} from '../models/dom.model';
 import {CSS_FAKER, CSS_ROWGROUP_BODY} from '../models/style.model';
 import type {State} from '../models/tabela.model';
 
-function createFaker(): HTMLDivElement {
-	return createElement(ELEMENT_DIV, {
-		className: CSS_FAKER,
-	});
-}
+// #region Types
 
 export class BodyComponent {
 	readonly elements: BodyElements = {
@@ -18,15 +13,11 @@ export class BodyComponent {
 	};
 
 	constructor(state: State) {
-		const group = createRowGroup(state.options.rowHeight, false);
+		const group = createRowGroup(state, false);
 
 		this.elements.group = group;
 
 		group.classList.add(CSS_ROWGROUP_BODY);
-
-		group.tabIndex = 0;
-
-		group.setAttribute(ATTRIBUTE_DATA_EVENT, EVENT_BODY);
 
 		group.append(this.elements.faker);
 	}
@@ -36,3 +27,15 @@ export class BodyComponent {
 		this.elements.group = undefined as never;
 	}
 }
+
+// #endregion
+
+// #region Functions
+
+function createFaker(): HTMLDivElement {
+	return createElement(ELEMENT_DIV, {
+		className: CSS_FAKER,
+	});
+}
+
+// #endregion

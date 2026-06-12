@@ -1,21 +1,29 @@
+import type {Events} from '@oscarpalmer/atoms/herald';
 import {BodyComponent} from './components/body.component';
 import {FooterComponent} from './components/footer.component';
 import {HeaderComponent} from './components/header.component';
 import {createElement} from './helpers/dom.helpers';
-import {ColumnManager} from './managers/column.manager';
+import {ColumnManager, setColumns} from './managers/column.manager';
 import {DataManager} from './managers/data/data.manager';
 import {EventManager} from './managers/event.manager';
 import {FilterManager} from './managers/filter.manager';
 import {GroupManager} from './managers/group.manager';
-import {NavigationManager} from './managers/navigation.manager';
+import {initializeNavigation, NavigationManager} from './managers/navigation.manager';
 import {RenderManager} from './managers/render.manager';
 import {RowManager} from './managers/row.manager';
 import {SelectionManager} from './managers/selection.manager';
 import {SortManager} from './managers/sort.manager';
 import {StyleManager} from './managers/style.manager';
 import type {TabelaData} from './models/data.model';
-import {ARIA_LABEL, ATTRIBUTE_ROLE, ELEMENT_DIV, ROLE_TABLE} from './models/dom.model';
-import type {TabelaEvents} from './models/event.model';
+import {
+	ARIA_LABEL,
+	ARIA_ROWCOUNT,
+	ATTRIBUTE_DATA_EVENT,
+	ATTRIBUTE_ROLE,
+	ELEMENT_DIV,
+	ROLE_GRID,
+} from './models/dom.model';
+import type {EventMap} from './models/event.model';
 import type {TabelaFilter} from './models/filter.model';
 import type {TabelaGroupHandlers} from './models/group.model';
 import type {TabelaSelection} from './models/selection.model';
@@ -23,6 +31,8 @@ import type {TabelaSort} from './models/sort.model';
 import {CSS_TABLE, CSS_WRAPPER} from './models/style.model';
 import type {Components, Managers, State} from './models/tabela.model';
 import type {TabelaOptions} from './models/tabela.options';
+
+// #region Types
 
 export class Tabela {
 	#components: Components;
@@ -47,7 +57,7 @@ export class Tabela {
 		style: undefined as never,
 	};
 
-	#prefix = `tabela_${this.#id}_`;
+	#prefix = `tabela_${this.#id}`;
 
 	#state: State;
 
@@ -55,7 +65,7 @@ export class Tabela {
 
 	readonly data: TabelaData;
 
-	readonly events: TabelaEvents;
+	readonly events: Events<EventMap>;
 
 	readonly filter: TabelaFilter;
 
@@ -76,10 +86,12 @@ export class Tabela {
 			ELEMENT_DIV,
 			{
 				className: CSS_TABLE,
-				role: ROLE_TABLE,
+				role: ROLE_GRID,
 			},
 			{
 				[ARIA_LABEL]: options.label,
+				[ARIA_ROWCOUNT]: '0',
+				[ATTRIBUTE_DATA_EVENT]: 'table',
 			},
 		);
 
@@ -124,11 +136,15 @@ export class Tabela {
 		this.#managers.data.set(options.data);
 
 		this.data = this.#managers.data.handlers;
-		this.events = this.#managers.event.handlers;
+		this.events = this.#managers.event.events;
 		this.filter = this.#managers.filter.handlers;
 		this.group = this.#managers.group.handlers;
 		this.selection = this.#managers.selection.handlers;
 		this.sort = this.#managers.sort.handlers;
+
+		setColumns(this.#state, options.columns);
+
+		initializeNavigation(this.#state);
 	}
 
 	destroy(): void {
@@ -170,10 +186,20 @@ export class Tabela {
 	}
 }
 
+// #endregion
+
+// #region Functions
+
 function getId(): number {
 	id += 1;
 
 	return id;
 }
 
+// #endregion
+
+// #region Variables
+
 let id = 0;
+
+// #endregion

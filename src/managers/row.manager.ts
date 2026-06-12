@@ -1,69 +1,74 @@
 import type {Key} from '@oscarpalmer/atoms/models';
 import {removeRow, renderRow, RowComponent} from '../components/row.component';
 import type {State} from '../models/tabela.model';
+import {isKey} from '@oscarpalmer/atoms/is';
+
+// #region Types
 
 export class RowManager {
 	components = new Map<Key, RowComponent>();
 
 	constructor(public state: State) {}
 
-	clear(): void {
-		const {components} = this;
-
-		const rows = [...components.values()];
-		const {length} = rows;
-
-		for (let index = 0; index < length; index += 1) {
-			this.removeRow(rows[index]);
-		}
-
-		components.clear();
-	}
-
 	destroy(): void {
-		this.clear();
+		clearRows(this.state);
 
 		this.components = undefined as never;
 		this.state = undefined as never;
 	}
+}
 
-	get(key: Key, create: boolean): RowComponent | undefined {
-		let row = this.components.get(key);
+// #endregion
 
-		if (row == null && create) {
-			row = new RowComponent(key);
+// #region Functions
 
-			this.components.set(key, row);
-		}
+export function clearRows(state: State): void {
+	const {components} = state.managers.row;
 
-		return row;
+	const rows = [...components.values()];
+	const {length} = rows;
+
+	for (let index = 0; index < length; index += 1) {
+		removeRow(state, rows[index], true);
 	}
 
-	has(key: Key): boolean {
-		return this.components.has(key);
+	components.clear();
+}
+
+export function getRow(state: State, key: unknown, create: boolean): RowComponent | undefined {
+	if (!isKey(key)) {
+		return;
 	}
 
-	remove(key: Key): void {
-		const row = this.components.get(key);
+	let row = state.managers.row.components.get(key);
 
-		if (row != null) {
-			this.removeRow(row);
-		}
+	if (row == null && create) {
+		row = new RowComponent(key);
+
+		state.managers.row.components.set(key, row);
 	}
 
-	removeRow(row: RowComponent): void {
-		if (row.element != null) {
-			removeRow(this.state, row);
-		}
+	return row;
+}
 
-		this.components.delete(row.key);
-	}
+export function hasRow(state: State, key: unknown): boolean {
+	return isKey(key) && state.managers.row.components.has(key);
+}
 
-	update(key: Key): void {
-		const row = this.components.get(key);
+export function removeRowByKey(state: State, key: unknown): void {
+	const row = isKey(key) && state.managers.row.components.get(key);
 
-		if (row?.element != null) {
-			renderRow(this.state, row);
-		}
+	if (row) {
+		removeRow(state, row, true);
 	}
 }
+
+export function updateRow(state: State, key: Key): void {
+	const row = state.managers.row.components.get(key);
+
+	if (row?.element != null) {
+		renderRow(state, row);
+	}
+}
+
+// #endregion

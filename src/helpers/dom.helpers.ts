@@ -2,11 +2,18 @@ import {setAttributes} from '@oscarpalmer/toretto/attribute';
 import {setStyles} from '@oscarpalmer/toretto/style';
 import {ELEMENT_DIV, ROLE_CELL, ROLE_ROW, ROLE_ROWGROUP} from '../models/dom.model';
 import {CSS_CELL, CSS_CELL_BODY, CSS_ROW, CSS_ROWGROUP} from '../models/style.model';
+import type {State} from '../models/tabela.model';
+
+// #region Types
 
 type RowGroupWithRow = {
 	group: HTMLDivElement;
 	row: HTMLDivElement;
 };
+
+// #endregion
+
+// #region Functions
 
 export function createCell(width: number, body?: boolean): HTMLDivElement {
 	const cell = createElement(
@@ -14,10 +21,11 @@ export function createCell(width: number, body?: boolean): HTMLDivElement {
 		{
 			className: CSS_CELL,
 			role: ROLE_CELL,
+			tabIndex: -1,
 		},
 		{},
 		{
-			width: `${width}px`,
+			flex: `0 0 ${width}px`,
 		},
 	);
 
@@ -49,11 +57,11 @@ export function createElement<TagName extends keyof HTMLElementTagNameMap>(
 	return element;
 }
 
-export function createRowGroup(height: number): RowGroupWithRow;
+export function createRowGroup(state: State): RowGroupWithRow;
 
-export function createRowGroup(height: number, withRow: boolean): HTMLDivElement;
+export function createRowGroup(state: State, withRow: boolean): HTMLDivElement;
 
-export function createRowGroup(height: number, withRow?: boolean) {
+export function createRowGroup(state: State, withRow?: boolean) {
 	const group = createElement(ELEMENT_DIV, {
 		className: CSS_ROWGROUP,
 		role: ROLE_ROWGROUP,
@@ -63,7 +71,7 @@ export function createRowGroup(height: number, withRow?: boolean) {
 		return group;
 	}
 
-	const row = createRow(height);
+	const row = createRow(state.options.rowHeight);
 
 	group.append(row);
 
@@ -85,3 +93,5 @@ export function createRow(height: number): HTMLDivElement {
 
 	return row;
 }
+
+// #endregion

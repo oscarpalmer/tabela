@@ -1,5 +1,16 @@
 import {getString} from '@oscarpalmer/atoms/string';
+import {setAttributes} from '@oscarpalmer/toretto/attribute';
 import {createElement} from '../helpers/dom.helpers';
+import {
+	ARIA_ROWINDEX,
+	ATTRIBUTE_DATA_EVENT,
+	ATTRIBUTE_DATA_KEY,
+	ATTRIBUTE_ROLE,
+	ELEMENT_DIV,
+	ROLE_CELL,
+	ROLE_ROW,
+} from '../models/dom.model';
+import {EVENT_GROUP, EVENT_GROUP_UPDATE} from '../models/event.model';
 import {GROUP_KEY_PREFIX, type GroupValue} from '../models/group.model';
 import {
 	CSS_BUTTON,
@@ -12,15 +23,9 @@ import {
 	CSS_ROW_GROUP,
 } from '../models/style.model';
 import type {State} from '../models/tabela.model';
-import {
-	ATTRIBUTE_DATA_EVENT,
-	ATTRIBUTE_DATA_KEY,
-	ATTRIBUTE_ROLE,
-	ELEMENT_DIV,
-	ROLE_CELL,
-	ROLE_ROW,
-} from '../models/dom.model';
-import {EVENT_GROUP, EVENT_GROUP_UPDATE} from '../models/event.model';
+import type {Key} from '@oscarpalmer/atoms/models';
+
+// #region Types
 
 export class GroupComponent {
 	element: HTMLElement | undefined;
@@ -29,7 +34,7 @@ export class GroupComponent {
 
 	filtered = 0;
 
-	readonly key: string;
+	readonly key: GroupComponentKey;
 
 	selected = 0;
 
@@ -43,7 +48,10 @@ export class GroupComponent {
 	) {
 		const stringified = getString(value);
 
-		this.key = `${GROUP_KEY_PREFIX}${stringified}`;
+		this.key = {
+			full: `${GROUP_KEY_PREFIX}${stringified}`,
+			short: stringified,
+		};
 
 		this.value = {
 			stringified,
@@ -51,6 +59,15 @@ export class GroupComponent {
 		};
 	}
 }
+
+type GroupComponentKey = {
+	full: string;
+	short: Key;
+};
+
+// #endregion
+
+// #region Functions
 
 export function removeGroup(group: GroupComponent): void {
 	if (group.element == null) {
@@ -67,8 +84,9 @@ export function renderGroup(state: State, component: GroupComponent): void {
 		ELEMENT_DIV,
 		{
 			className: `${CSS_ROW} ${CSS_ROW_GROUP}`,
-			innerHTML: `<div class="${CSS_CELL} ${CSS_CELL_GROUP}" role="${ROLE_CELL}">
-	<button class="${CSS_BUTTON} ${CSS_BUTTON_GROUP}" ${ATTRIBUTE_DATA_EVENT}="${EVENT_GROUP}" ${ATTRIBUTE_DATA_KEY}="${state.prefix}_${component.key}" type="button">
+			id: `${state.prefix}_group_${component.key.short}`,
+			innerHTML: `<div class="${CSS_CELL} ${CSS_CELL_GROUP}" id="${state.prefix}_group_${component.key.short}_column" role="${ROLE_CELL}" tabindex="-1">
+	<button class="${CSS_BUTTON} ${CSS_BUTTON_GROUP}" ${ATTRIBUTE_DATA_EVENT}="${EVENT_GROUP}" ${ATTRIBUTE_DATA_KEY}="${state.prefix}_${component.key.full}" tabindex="-1" type="button">
 		<span aria-hidden="true"></span>
 		<span>Open/close</span>
 	</button>
@@ -76,10 +94,11 @@ export function renderGroup(state: State, component: GroupComponent): void {
 	<span class="${CSS_GROUP_TOTAL}">${component.total}</span>
 	<span class="${CSS_GROUP_SELECTED}">${component.selected === 0 ? '' : component.selected}</span>
 </div>`,
-			[ATTRIBUTE_ROLE]: ROLE_ROW,
 		},
 		{
-			[ATTRIBUTE_DATA_KEY]: component.key,
+			[ARIA_ROWINDEX]: String(state.managers.data.getIndex(component.key.full) + 1),
+			[ATTRIBUTE_DATA_KEY]: component.key.full,
+			[ATTRIBUTE_ROLE]: ROLE_ROW,
 		},
 		{
 			height: `${state.options.rowHeight}px`,
@@ -103,11 +122,21 @@ export function updateGroup(state: State, component: GroupComponent, emit: boole
 		total.textContent = String(component.total);
 	}
 
+	setAttributes(component.element, {
+		[ARIA_ROWINDEX]: String(state.managers.data.getIndex(component.key.full) + 1),
+	});
+
 	if (emit) {
-		state.managers.event.emit(EVENT_GROUP_UPDATE, [component]);
+		state.managers.event.herald.emit(EVENT_GROUP_UPDATE, [component]);
 	}
 }
+
+// #endregion
+
+// #region Variables
 
 const selectedSelector = `.${CSS_GROUP_SELECTED}`;
 
 const totalSelector = `.${CSS_GROUP_TOTAL}`;
+
+// #endregion

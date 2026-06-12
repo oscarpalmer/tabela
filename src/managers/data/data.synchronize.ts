@@ -9,6 +9,8 @@ import {clearData, removeData} from './data.remove';
 import {renderData} from './data.render';
 import {updateData} from './data.update';
 
+// #region Functions
+
 export async function synchronizeData(
 	state: DataState,
 	data: PlainObject[],
@@ -69,7 +71,7 @@ export async function synchronizeData(
 
 	await addData(state, added, false);
 
-	state.managers.event.emit(EVENT_DATA_SYNCHRONIZE, {
+	state.managers.event.herald.emit(EVENT_DATA_SYNCHRONIZE, {
 		added,
 		removed,
 		updated,
@@ -79,3 +81,5 @@ export async function synchronizeData(
 		renderData(state);
 	}
 }
+
+// #endregion

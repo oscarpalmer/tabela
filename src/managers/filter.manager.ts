@@ -5,7 +5,7 @@ import {getString} from '@oscarpalmer/atoms/string';
 import {endsWith, includes, startsWith} from '@oscarpalmer/atoms/string/match';
 import {equal} from '@oscarpalmer/atoms/value/equal';
 import {getValue} from '@oscarpalmer/atoms/value/handle';
-import {getFilter, getValidFilter, isGroupKey} from '../helpers/misc.helpers';
+import {getTabelaFilter, getValidFilter, isGroupKey} from '../helpers/misc.helpers';
 import {
 	EVENT_FILTER_ADD,
 	EVENT_FILTER_CLEAR,
@@ -28,201 +28,219 @@ import {
 } from '../models/filter.model';
 import {RENDER_ORIGIN_FILTER} from '../models/render.model';
 import type {State} from '../models/tabela.model';
+import {render} from './render.manager';
+
+// #region Types
 
 export class FilterManager {
 	handlers: TabelaFilter = {
-		add: item => this.add(item),
-		clear: () => this.clear(),
-		remove: value => this.remove(value),
-		set: items => this.set(items),
+		add: item => addFilter(this.state, item),
+		clear: () => clearFilters(this.state),
+		remove: value => removeFilter(this.state, value),
+		set: items => setFilters(this.state, items),
 	};
 
 	items: Record<string, TabelaFilterItem[]> = {};
 
 	constructor(public state: State) {}
 
-	add(item: TabelaFilterItem): void {
-		const {items, state} = this;
-
-		const filter = getValidFilter(item);
-
-		if (filter == null) {
-			return;
-		}
-
-		if (items[filter.key] == null) {
-			items[filter.key] = [];
-		} else {
-			const index = items[filter.key].findIndex(existing => equal(existing, filter));
-
-			if (index > -1) {
-				return;
-			}
-		}
-
-		items[filter.key].push(filter);
-
-		state.managers.event.emit(EVENT_FILTER_ADD, [getFilter(filter)]);
-
-		this.filter();
-	}
-
-	clear(): void {
-		if (Object.keys(this.items).length === 0) {
-			return;
-		}
-
-		this.items = {};
-
-		this.state.managers.event.emit(EVENT_FILTER_CLEAR);
-
-		this.filter();
-	}
-
 	destroy(): void {
 		this.handlers = undefined as never;
 		this.items = undefined as never;
 		this.state = undefined as never;
 	}
+}
 
-	filter(): void {
-		const {state} = this;
+// #endregion
 
-		const filters = Object.entries(this.items);
+// #region Functions
 
-		if (filters.length === 0) {
-			state.managers.data.state.keys.active = undefined;
+function addFilter(state: State, item: TabelaFilterItem): void {
+	const {event, filter} = state.managers;
+	const {items} = filter;
 
-			state.managers.render.render(RENDER_ORIGIN_FILTER);
+	const valid = getValidFilter(item);
 
+	if (valid == null) {
+		return;
+	}
+
+	if (items[valid.key] == null) {
+		items[valid.key] = [];
+	} else {
+		const index = items[valid.key].findIndex(existing => equal(existing, valid));
+
+		if (index > -1) {
+			return;
+		}
+	}
+
+	items[valid.key].push(valid);
+
+	event.herald.emit(EVENT_FILTER_ADD, [getTabelaFilter(valid)]);
+
+	filterData(state);
+}
+
+function clearFilters(state: State): void {
+	const {event, filter} = state.managers;
+
+	if (Object.keys(filter.items).length === 0) {
+		return;
+	}
+
+	filter.items = {};
+
+	event.herald.emit(EVENT_FILTER_CLEAR);
+
+	filterData(state);
+}
+
+export function filterData(state: State): void {
+	const {filter} = state.managers;
+
+	const filters = Object.entries(filter.items);
+
+	if (filters.length === 0) {
+		state.managers.data.state.keys.active = undefined;
+
+		render(state, RENDER_ORIGIN_FILTER);
+
+		return;
+	}
+
+	const {keys} = state.managers.data;
+	const keysLength = keys.length;
+
+	const filtered: Key[] = [];
+
+	outer: for (let itemIndex = 0; itemIndex < keysLength; itemIndex += 1) {
+		const key = keys[itemIndex];
+
+		if (isGroupKey(key)) {
+			filtered.push(key);
+
+			continue;
+		}
+
+		const row = state.managers.data.state.values.mapped.get(key);
+
+		if (row == null) {
+			continue;
+		}
+
+		for (let filterIndex = 0; filterIndex < filters.length; filterIndex += 1) {
+			const [, items] = filters[filterIndex];
+
+			const value = getValue(row, items[0].key, true);
+
+			for (let itemIndex = 0; itemIndex < items.length; itemIndex += 1) {
+				const filter = items[itemIndex];
+
+				if (
+					isNullableOrWhitespace(filter.value) ||
+					comparators[filter.comparison](value, filter.value)
+				) {
+					filtered.push(key);
+
+					continue outer;
+				}
+			}
+		}
+	}
+
+	state.managers.data.state.keys.active = filtered;
+
+	render(state, RENDER_ORIGIN_FILTER);
+}
+
+function removeFilter(state: State, value: string | TabelaFilterItem): void {
+	const {event, filter} = state.managers;
+
+	const removed: TabelaFilterItem[] = [];
+
+	if (typeof value === 'string') {
+		if (filter.items[value] == null) {
 			return;
 		}
 
-		const {keys} = state.managers.data;
-		const keysLength = keys.length;
-
-		const filtered: Key[] = [];
-
-		outer: for (let itemIndex = 0; itemIndex < keysLength; itemIndex += 1) {
-			const key = keys[itemIndex];
-
-			if (isGroupKey(key)) {
-				filtered.push(key);
-
-				continue;
-			}
-
-			const row = state.managers.data.state.values.mapped.get(key);
-
-			if (row == null) {
-				continue;
-			}
-
-			for (let filterIndex = 0; filterIndex < filters.length; filterIndex += 1) {
-				const [, items] = filters[filterIndex];
-
-				const value = getValue(row, items[0].key, true);
-
-				for (let itemIndex = 0; itemIndex < items.length; itemIndex += 1) {
-					const filter = items[itemIndex];
-
-					if (
-						isNullableOrWhitespace(filter.value) ||
-						comparators[filter.comparison](value, filter.value)
-					) {
-						filtered.push(key);
-
-						continue outer;
-					}
-				}
-			}
-		}
-
-		state.managers.data.state.keys.active = filtered;
-
-		state.managers.render.render(RENDER_ORIGIN_FILTER);
-	}
-
-	remove(value: string | TabelaFilterItem): void {
-		const removed: TabelaFilterItem[] = [];
-
-		if (typeof value === 'string') {
-			if (this.items[value] == null) {
-				return;
-			}
-
-			const keyed: Record<string, TabelaFilterItem[]> = {};
-
-			const keys = Object.keys(this.items);
-			const {length} = keys;
-
-			for (let index = 0; index < length; index += 1) {
-				const key = keys[index];
-
-				if (key === value) {
-					removed.push(...this.items[key]);
-				} else {
-					keyed[key] = this.items[key];
-				}
-			}
-
-			this.items = keyed;
-		} else {
-			const filter = getValidFilter(value);
-
-			if (filter == null) {
-				return;
-			}
-
-			const {key} = filter;
-
-			if (this.items[key] == null) {
-				return;
-			}
-
-			const index = this.items[key].findIndex(item => equal(item, filter));
-
-			if (index === -1) {
-				return;
-			}
-
-			removed.push(this.items[key][index]);
-		}
-
-		this.state.managers.event.emit(EVENT_FILTER_REMOVE, removed.map(getFilter));
-
-		this.filter();
-	}
-
-	set(items: TabelaFilterItem[]): void {
 		const keyed: Record<string, TabelaFilterItem[]> = {};
 
-		const removed = Object.values(this.items).flatMap(filters => filters.map(getFilter));
-
-		const filters = items.map(getValidFilter).filter(item => item != null) as TabelaFilterItem[];
-
-		const {length} = filters;
+		const keys = Object.keys(filter.items);
+		const {length} = keys;
 
 		for (let index = 0; index < length; index += 1) {
-			const item = filters[index];
+			const key = keys[index];
 
-			keyed[item.key] ??= [];
-
-			keyed[item.key].push(item);
+			if (key === value) {
+				removed.push(...filter.items[key]);
+			} else {
+				keyed[key] = filter.items[key];
+			}
 		}
 
-		this.items = keyed;
+		filter.items = keyed;
+	} else {
+		const valid = getValidFilter(value);
 
-		this.state.managers.event.emit(EVENT_FILTER_SET, {
-			removed,
-			added: filters.map(getFilter),
-		});
+		if (valid == null) {
+			return;
+		}
 
-		this.filter();
+		const {key} = valid;
+
+		if (filter.items[key] == null) {
+			return;
+		}
+
+		const index = filter.items[key].findIndex(item => equal(item, valid));
+
+		if (index === -1) {
+			return;
+		}
+
+		removed.push(filter.items[key][index]);
 	}
 
-	update(): void {}
+	event.herald.emit(EVENT_FILTER_REMOVE, removed.map(getTabelaFilter));
+
+	filterData(state);
 }
+
+function setFilters(state: State, items: TabelaFilterItem[]): void {
+	const {event, filter} = state.managers;
+
+	const keyed: Record<string, TabelaFilterItem[]> = {};
+
+	const removed = Object.values(filter.items).flatMap(filters => filters.map(getTabelaFilter));
+
+	const filters = items.map(getValidFilter).filter(item => item != null) as TabelaFilterItem[];
+
+	const {length} = filters;
+
+	for (let index = 0; index < length; index += 1) {
+		const item = filters[index];
+
+		keyed[item.key] ??= [];
+
+		keyed[item.key].push(item);
+	}
+
+	filter.items = keyed;
+
+	event.herald.emit(EVENT_FILTER_SET, {
+		removed,
+		added: filters.map(getTabelaFilter),
+	});
+
+	filterData(state);
+}
+
+function updateFilters(state: State): void {}
+
+// #endregion
+
+// #region Variables
 
 const comparators: Record<string, (row: unknown, filter: unknown) => boolean> = {
 	[FILTER_ENDS_WITH]: (row, filter) => endsWith(getString(row), getString(filter), true),
@@ -237,6 +255,12 @@ const comparators: Record<string, (row: unknown, filter: unknown) => boolean> = 
 	[FILTER_STARTS_WITH]: (row, filter) => startsWith(getString(row), getString(filter), true),
 };
 
+// #endregion
+
+// #region Variables
+
 const equalizer = equal.initialize({
 	ignoreCase: true,
 });
+
+// #endregion

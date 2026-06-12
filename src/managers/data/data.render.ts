@@ -5,11 +5,14 @@ import {getValue} from '@oscarpalmer/atoms/value/handle';
 import {isGroupKey} from '../../helpers/misc.helpers';
 import type {DataState} from '../../models/data.model';
 import {RENDER_ORIGIN_DATA} from '../../models/render.model';
-import {sortWithGroups} from '../sort.manager';
+import {render} from '../render.manager';
+import {sortDataGrouped} from '../sort.manager';
+
+// #region Functions
 
 export function renderData(state: DataState): void {
 	if (state.managers.group.enabled) {
-		sortWithGroups(state, state.values.array, state.managers.sort.default!);
+		sortDataGrouped(state, state.values.array, state.managers.sort.default!);
 	} else {
 		sort(state.values.array as PlainObject[], state.managers.sort.default!);
 	}
@@ -25,5 +28,7 @@ export function renderData(state: DataState): void {
 		item => getValue(item, state.key) as Key,
 	);
 
-	state.managers.render.render(RENDER_ORIGIN_DATA);
+	render(state, RENDER_ORIGIN_DATA);
 }
+
+// #endregion

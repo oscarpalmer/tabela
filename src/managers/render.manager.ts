@@ -1,8 +1,11 @@
 import {on} from '@oscarpalmer/toretto/event';
 import type {RemovableEventListener} from '@oscarpalmer/toretto/models';
+import {updateFooter} from '../components/footer.component';
 import {renderGroup} from '../components/group.component';
 import {removeRow, renderRow} from '../components/row.component';
 import {isGroupKey} from '../helpers/misc.helpers';
+import {ARIA_ROWCOUNT} from '../models/dom.model';
+import {EVENT_RENDER_BEGIN, EVENT_RENDER_END} from '../models/event.model';
 import {
 	RENDER_ORIGIN_DATA,
 	RENDER_ORIGIN_SORT,
@@ -13,46 +16,12 @@ import {
 	type RenderVisible,
 } from '../models/render.model';
 import type {State} from '../models/tabela.model';
-import {EVENT_RENDER_BEGIN, EVENT_RENDER_END} from '../models/event.model';
+import {filterData} from './filter.manager';
+import {getGroup} from './group.manager';
+import {getRow} from './row.manager';
+import {sortData} from './sort.manager';
 
-function getRange(state: State, down: boolean): RenderRange {
-	const {element, managers, options} = state;
-	const {clientHeight, scrollTop} = element;
-
-	const {keys} = managers.data;
-
-	const firstIndex = Math.floor(scrollTop / options.rowHeight);
-	const lastIndex = keys.length - managers.group.collapsed.size - 1;
-
-	const last = Math.min(lastIndex, Math.ceil((scrollTop + clientHeight) / options.rowHeight) - 1);
-
-	const visible = clientHeight / options.rowHeight;
-
-	const before = Math.ceil(visible) * (down ? 1 : 2);
-	const after = Math.ceil(visible) * (down ? 2 : 1);
-
-	const start = Math.max(0, firstIndex - before);
-	const end = Math.min(lastIndex, last + after);
-
-	return {end, start};
-}
-
-function onScroll(this: RenderManager): void {
-	const {state} = this;
-
-	if (!state.active) {
-		requestAnimationFrame(() => {
-			const top = state.element.scrollTop;
-
-			update(this, top > state.top);
-
-			state.active = false;
-			state.top = top;
-		});
-
-		state.active = true;
-	}
-}
+// #region Types
 
 export class RenderManager {
 	fragment!: DocumentFragment;
@@ -76,7 +45,6 @@ export class RenderManager {
 
 		this.state = {
 			...state,
-			active: false,
 			top: 0,
 		};
 	}
@@ -112,63 +80,98 @@ export class RenderManager {
 		this.state = undefined as never;
 		this.visible = undefined as never;
 	}
+}
 
-	removeCells(keys: string[]): void {
-		const {pool, state, visible} = this;
-		const {length} = keys;
+// #endregion
+
+// #region Functions
+
+function getFragment(state: State): DocumentFragment {
+	state.managers.render.fragment ??= document.createDocumentFragment();
+
+	state.managers.render.fragment.replaceChildren();
+
+	return state.managers.render.fragment;
+}
+
+function getRange(state: State, down: boolean): RenderRange {
+	const {element, managers, options} = state;
+	const {clientHeight, scrollTop} = element;
+
+	const {keys} = managers.data;
+
+	const firstIndex = Math.floor(scrollTop / options.rowHeight);
+	const lastIndex = keys.length - managers.group.collapsed.size - 1;
+
+	const last = Math.min(lastIndex, Math.ceil((scrollTop + clientHeight) / options.rowHeight) - 1);
+
+	const visible = clientHeight / options.rowHeight;
+
+	const before = Math.ceil(visible) * (down ? 1 : 2);
+	const after = Math.ceil(visible) * (down ? 2 : 1);
+
+	const start = Math.max(0, firstIndex - before);
+	const end = Math.min(lastIndex, last + after);
+
+	return {end, start};
+}
+
+function onScroll(this: RenderManager): void {
+	const {state} = this;
+
+	const top = state.element.scrollTop;
+
+	update(state, top > state.top);
+
+	state.top = top;
+}
+
+export function removeCells(state: State, keys: string[]): void {
+	const {pool, visible} = state.managers.render;
+	const {length} = keys;
+
+	for (let index = 0; index < length; index += 1) {
+		delete pool.cells[keys[index]];
+	}
+
+	for (const [, key] of visible.indiced) {
+		if (isGroupKey(key)) {
+			continue;
+		}
+
+		const row = getRow(state, key, false);
+
+		if (row == null || row.element == null) {
+			continue;
+		}
 
 		for (let index = 0; index < length; index += 1) {
-			delete pool.cells[keys[index]];
-		}
+			row.cells[keys[index]].innerHTML = '';
 
-		for (const [, key] of visible.indiced) {
-			if (isGroupKey(key)) {
-				continue;
-			}
+			row.cells[keys[index]].remove();
 
-			const row = state.managers.row.get(key, false);
-
-			if (row == null || row.element == null) {
-				continue;
-			}
-
-			for (let index = 0; index < length; index += 1) {
-				row.cells[keys[index]].innerHTML = '';
-
-				row.cells[keys[index]].remove();
-
-				delete row.cells[keys[index]];
-			}
-		}
-	}
-
-	getFragment(): DocumentFragment {
-		this.fragment ??= document.createDocumentFragment();
-
-		this.fragment.replaceChildren();
-
-		return this.fragment;
-	}
-
-	render(origin: RenderOrigin): void {
-		const {state} = this;
-		const {filter, sort} = state.managers;
-
-		if (origin === RENDER_ORIGIN_DATA && Object.keys(filter.items).length > 0) {
-			filter.filter();
-		} else if (origin !== RENDER_ORIGIN_SORT && sort.items.length > 0) {
-			sort.sort();
-		} else {
-			update(this, true, true);
+			delete row.cells[keys[index]];
 		}
 	}
 }
 
-function update(manager: RenderManager, down: boolean, rerender?: boolean): void {
-	const {state, visible} = manager;
+export function render(state: State, origin: RenderOrigin): void {
+	const {filter, sort} = state.managers;
+
+	if (origin === RENDER_ORIGIN_DATA && Object.keys(filter.items).length > 0) {
+		filterData(state);
+	} else if (origin !== RENDER_ORIGIN_SORT && sort.items.length > 0) {
+		sortData(state);
+	} else {
+		update(state, true, true);
+	}
+}
+
+function update(state: State, down: boolean, rerender?: boolean): void {
+	const {visible} = state.managers.render;
 	const {components, managers, options} = state;
 
-	managers.event.emit(EVENT_RENDER_BEGIN);
+	managers.event.herald.emit(EVENT_RENDER_BEGIN);
 
 	components.body.elements.faker.style.height = `${(managers.data.size - managers.group.collapsed.size) * options.rowHeight}px`;
 
@@ -188,13 +191,13 @@ function update(manager: RenderManager, down: boolean, rerender?: boolean): void
 				visible.indiced.delete(index);
 				visible.keys.delete(key);
 
-				state.managers.group.getForKey(key as string)?.element?.remove();
+				getGroup(state, key)?.element?.remove();
 			}
 
 			continue;
 		}
 
-		const row = managers.row.get(key, false);
+		const row = getRow(state, key, false);
 
 		if (remove || row == null || !indices.has(index) || managers.group.collapsed.has(key)) {
 			visible.indiced.delete(index);
@@ -206,7 +209,7 @@ function update(manager: RenderManager, down: boolean, rerender?: boolean): void
 		}
 	}
 
-	const fragment = manager.getFragment();
+	const fragment = getFragment(state);
 
 	const {keys} = managers.data;
 
@@ -221,7 +224,7 @@ function update(manager: RenderManager, down: boolean, rerender?: boolean): void
 		const key = keys[index];
 
 		if (isGroupKey(key)) {
-			const group = managers.group.getForKey(key as string);
+			const group = getGroup(state, key);
 
 			if (group == null) {
 				continue;
@@ -231,8 +234,8 @@ function update(manager: RenderManager, down: boolean, rerender?: boolean): void
 
 			renderGroup(state, group);
 
-			visible.indiced.set(index, group.key);
-			visible.keys.add(group.key);
+			visible.indiced.set(index, group.key.full);
+			visible.keys.add(group.key.full);
 
 			if (group.element != null) {
 				group.element.style.transform = `translateY(${(index - offset) * options.rowHeight}px)`;
@@ -243,7 +246,7 @@ function update(manager: RenderManager, down: boolean, rerender?: boolean): void
 			continue;
 		}
 
-		const row = managers.row.get(key, true);
+		const row = getRow(state, key, true);
 
 		if (row == null) {
 			continue;
@@ -269,7 +272,7 @@ function update(manager: RenderManager, down: boolean, rerender?: boolean): void
 		}
 	}
 
-	components.footer.update();
+	updateFooter(state);
 
 	if (count === 0) {
 		return;
@@ -281,5 +284,9 @@ function update(manager: RenderManager, down: boolean, rerender?: boolean): void
 		components.body.elements.group.prepend(fragment);
 	}
 
-	managers.event.emit(EVENT_RENDER_END);
+	state.element.setAttribute(ARIA_ROWCOUNT, String(state.managers.data.keys.length));
+
+	managers.event.herald.emit(EVENT_RENDER_END);
 }
+
+// #endregion

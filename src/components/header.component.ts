@@ -4,11 +4,15 @@ import {CSS_ROW_HEADER, CSS_ROWGROUP_HEADER} from '../models/style.model';
 import type {State} from '../models/tabela.model';
 import type {ColumnComponent} from './column.component';
 
+// #region Types
+
 export class HeaderComponent {
 	readonly elements: HeaderElements;
 
 	constructor(state: State) {
-		const {group, row} = createRowGroup(state.options.rowHeight);
+		const {group, row} = createRowGroup(state);
+
+		row.id = `${state.prefix}_header`;
 
 		this.elements = {group, row};
 
@@ -20,10 +24,18 @@ export class HeaderComponent {
 		this.elements.group = undefined as never;
 		this.elements.row = undefined as never;
 	}
-
-	set(columns: ColumnComponent[]): void {
-		this.elements.row.innerHTML = '';
-
-		this.elements.row.append(...columns.map(column => column.elements.wrapper));
-	}
 }
+
+// #endregion
+
+// #region Functions
+
+export function setHeader(state: State, columns: ColumnComponent[]): void {
+	const {header} = state.components;
+
+	header.elements.row.innerHTML = '';
+
+	header.elements.row.append(...columns.map(column => column.elements.wrapper));
+}
+
+// #endregion

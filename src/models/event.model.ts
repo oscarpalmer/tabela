@@ -1,7 +1,9 @@
 import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
 import type {TabelaFilterItem} from './filter.model';
 import type {TabelaGroup, TabelaGroupToggle} from './group.model';
-import type {TabelaSortItem} from './sort.model';
+import type {TabelaSorter} from './sort.model';
+
+// #region Types
 
 export type EventDataAdd = (data: PlainObject[]) => void;
 
@@ -58,26 +60,19 @@ export type EventSelectionRemove = (keys: Key[]) => void;
 
 export type EventSelectionToggle = (keys: Key[]) => void;
 
-export type EventSortAdd = (sorters: TabelaSortItem[]) => void;
+export type EventSortAdd = (sorters: TabelaSorter[]) => void;
 
 export type EventSortClear = () => void;
 
-export type EventSortFlip = (sorters: TabelaSortItem[]) => void;
+export type EventSortFlip = (sorters: TabelaSorter[]) => void;
 
-export type EventSortRemove = (sorters: TabelaSortItem[]) => void;
+export type EventSortRemove = (sorters: TabelaSorter[]) => void;
 
-export type EventSortSet = (sorters: {added: TabelaSortItem[]; removed: TabelaSortItem[]}) => void;
+export type EventSortSet = (sorters: {added: TabelaSorter[]; removed: TabelaSorter[]}) => void;
 
-export type Events = Partial<{
-	[Name in EventName]: Set<EventMap[Name]>;
-}>;
+// #endregion
 
-export type TabelaEvents = {
-	subscribe<Name extends EventName>(name: Name, callback: EventMap[Name]): void;
-	unsubscribe<Name extends EventName>(name: Name, callback: EventMap[Name]): void;
-};
-
-export const EVENT_BODY = 'body';
+// #region Variables
 
 export const EVENT_DATA_ADD = 'data:add';
 
@@ -113,7 +108,7 @@ export const EVENT_FILTER_REMOVE = 'filter:remove';
 
 export const EVENT_FILTER_SET = 'filter:set';
 
-export const EVENT_HEADING = 'heading';
+export const EVENT_HEADER = 'header';
 
 export const EVENT_NAVIGATION_ACTIVE = 'navigation:active';
 
@@ -141,7 +136,9 @@ export const EVENT_SORT_REMOVE = 'sort:remove';
 
 export const EVENT_SORT_SET = 'sort:set';
 
-export const EVENTS_NAMES = new Set<EventName>([
+export const EVENT_TABLE = 'body';
+
+export const EVENT_NAMES = [
 	EVENT_DATA_ADD,
 	EVENT_DATA_CLEAR,
 	EVENT_DATA_FILTERED,
@@ -170,7 +167,11 @@ export const EVENTS_NAMES = new Set<EventName>([
 	EVENT_SORT_FLIP,
 	EVENT_SORT_REMOVE,
 	EVENT_SORT_SET,
-] as const) satisfies ReadonlySet<EventName>;
+] as Array<EventName>;
+
+// #endregion
+
+// #region Exports
 
 export type EventMap = {
 	[EVENT_DATA_ADD]: EventDataAdd;
@@ -202,3 +203,5 @@ export type EventMap = {
 	[EVENT_SORT_REMOVE]: EventSortRemove;
 	[EVENT_SORT_SET]: EventSortSet;
 };
+
+// #endregion

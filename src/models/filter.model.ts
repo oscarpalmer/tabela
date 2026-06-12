@@ -1,3 +1,5 @@
+// #region Types
+
 export type TabelaFilter = {
 	add(item: TabelaFilterItem): void;
 	clear(): void;
@@ -23,6 +25,10 @@ export type TabelaFilterItem = {
 	key: string;
 	value: unknown;
 };
+
+// #endregion
+
+// #region Variables
 
 export const FILTER_ENDS_WITH: TabelaFilterComparison = 'ends-with';
 
@@ -56,3 +62,5 @@ export const filterComparisons = new Set<TabelaFilterComparison>([
 	FILTER_NOT_EQUALS,
 	FILTER_STARTS_WITH,
 ]);
+
+// #endregion

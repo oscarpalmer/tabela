@@ -1,5 +1,7 @@
 import type {Key} from '@oscarpalmer/atoms/models';
 
+// #region Types
+
 export type TabelaSelection = {
 	add(keys: Key[]): void;
 	clear(): void;
@@ -7,3 +9,5 @@ export type TabelaSelection = {
 	set(keys: Key[]): void;
 	toggle(): void;
 };
+
+// #endregion

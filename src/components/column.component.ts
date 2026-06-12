@@ -7,14 +7,17 @@ import {
 	ELEMENT_DIV,
 	ROLE_COLUMNHEADER,
 } from '../models/dom.model';
-import {EVENT_HEADING} from '../models/event.model';
+import {EVENT_HEADER} from '../models/event.model';
 import {CSS_HEADING, CSS_HEADING_CONTENT, CSS_HEADING_SORTER} from '../models/style.model';
+import type {State} from '../models/tabela.model';
+
+// #region Types
 
 export class ColumnComponent {
 	elements: ColumnElements;
 	options: Column;
 
-	constructor(column: TabelaColumn) {
+	constructor(state: State, column: TabelaColumn) {
 		const width =
 			Number.parseInt(getComputedStyle(document.body).fontSize, 10) *
 			(column.width ?? (column.label?.length ?? column.key?.length) * 1.5);
@@ -26,7 +29,7 @@ export class ColumnComponent {
 			label: column.label ?? column.key,
 		};
 
-		this.elements = createHeading(this.options.key, this.options.label, width);
+		this.elements = createHeading(state, this, width);
 	}
 
 	destroy(): void {
@@ -45,25 +48,31 @@ type ColumnElements = {
 	wrapper: HTMLDivElement;
 };
 
-function createHeading(key: string, title: string, width: number): ColumnElements {
+// #endregion
+
+// #region Functions
+
+function createHeading(state: State, column: ColumnComponent, width: number): ColumnElements {
 	const wrapper = createElement(
 		ELEMENT_DIV,
 		{
-			className: CSS_HEADING,
 			[ATTRIBUTE_ROLE]: ROLE_COLUMNHEADER,
+			className: CSS_HEADING,
+			id: `${state.prefix}_header_column_${column.options.key}`,
+			tabIndex: -1,
 		},
 		{
-			[ATTRIBUTE_DATA_EVENT]: EVENT_HEADING,
-			[ATTRIBUTE_DATA_KEY]: key,
+			[ATTRIBUTE_DATA_EVENT]: EVENT_HEADER,
+			[ATTRIBUTE_DATA_KEY]: column.options.key,
 		},
 		{
-			width: `${width}px`,
+			flex: `0 0 ${width}px`,
 		},
 	);
 
 	const content = createElement(ELEMENT_DIV, {
 		className: CSS_HEADING_CONTENT,
-		textContent: title,
+		textContent: column.options.label,
 	});
 
 	const sorter = createElement(ELEMENT_DIV, {
@@ -74,3 +83,5 @@ function createHeading(key: string, title: string, width: number): ColumnElement
 
 	return {content, sorter, wrapper};
 }
+
+// #endregion

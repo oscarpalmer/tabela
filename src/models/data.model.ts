@@ -1,6 +1,8 @@
 import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
 import type {State} from './tabela.model';
 
+// #region Types
+
 type DataKeys = {
 	active?: Key[];
 	original: Key[];
@@ -27,3 +29,5 @@ export type TabelaData = {
 	synchronize(data: PlainObject[], remove?: boolean): Promise<void>;
 	update(data: PlainObject[]): Promise<void>;
 };
+
+// #endregion

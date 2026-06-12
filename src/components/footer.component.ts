@@ -8,11 +8,17 @@ import {CSS_CELL_FOOTER, CSS_ROW_FOOTER, CSS_ROWGROUP_FOOTER} from '../models/st
 import type {State} from '../models/tabela.model';
 import type {ColumnComponent} from './column.component';
 
+// #region Types
+
 export class FooterComponent {
 	elements: FooterElements;
 
+	readonly hidden: boolean;
+
 	constructor(public state: State) {
-		const {group, row} = createRowGroup(state.options.rowHeight);
+		const {group, row} = createRowGroup(state);
+
+		row.id = `${state.prefix}_footer`;
 
 		this.elements = {
 			group,
@@ -20,8 +26,14 @@ export class FooterComponent {
 			cells: [],
 		};
 
+		this.hidden = state.options.footer === false;
+
 		group.classList.add(CSS_ROWGROUP_FOOTER);
 		row.classList.add(CSS_ROW_FOOTER);
+
+		if (this.hidden) {
+			group.hidden = true;
+		}
 	}
 
 	destroy(): void {
@@ -30,54 +42,23 @@ export class FooterComponent {
 		this.elements.group = undefined as never;
 		this.elements.row = undefined as never;
 	}
-
-	render(columns: ColumnComponent[], set: boolean): void {
-		const {elements, state} = this;
-		const {length} = columns;
-
-		if (set) {
-			elements.cells.length = 0;
-			elements.row.innerHTML = '';
-		}
-
-		const data = state?.managers?.data?.get?.(true) ?? [];
-
-		for (let index = 0; index < length; index += 1) {
-			const column = columns[index];
-
-			const cell = elements.cells[index] ?? getCell(column);
-
-			if (!set && column.options.footer == null) {
-				continue;
-			}
-
-			cell.innerHTML = renderColumnFooter(state, column, data);
-
-			if (set) {
-				elements.cells.push(cell);
-				elements.row.append(cell);
-			}
-		}
-	}
-
-	set(columns: ColumnComponent[]): void {
-		this.render(columns, true);
-	}
-
-	update(): void {
-		this.render(this.state.managers.column.items, false);
-	}
 }
 
-function getCell(column: ColumnComponent): HTMLDivElement {
+// #endregion
+
+// #region Functions
+
+function getCell(footer: FooterComponent, column: ColumnComponent): HTMLDivElement {
 	const cell = createCell(column.options.width, false);
+
+	cell.id = `${footer.elements.row.id}_column_${column.options.key}`;
 
 	cell.classList.add(CSS_CELL_FOOTER);
 
 	return cell;
 }
 
-function renderColumnFooter(state: State, column: ColumnComponent, data: PlainObject[]): string {
+function getContent(column: ColumnComponent, data: PlainObject[]): string {
 	if (data.length === 0 || column.options.footer == null) {
 		return empty;
 	}
@@ -93,6 +74,53 @@ function renderColumnFooter(state: State, column: ColumnComponent, data: PlainOb
 	return Number.isNaN(Number(value)) ? empty : String(value);
 }
 
+export function renderFooter(state: State, columns: ColumnComponent[], set: boolean): void {
+	const {footer} = state.components;
+
+	if (footer.hidden) {
+		return;
+	}
+
+	const {elements} = footer;
+	const {length} = columns;
+
+	if (set) {
+		elements.cells.length = 0;
+		elements.row.innerHTML = '';
+	}
+
+	const data = state?.managers?.data?.get?.(true) ?? [];
+
+	for (let index = 0; index < length; index += 1) {
+		const column = columns[index];
+
+		const cell = elements.cells[index] ?? getCell(footer, column);
+
+		if (!set && column.options.footer == null) {
+			continue;
+		}
+
+		cell.innerHTML = getContent(column, data);
+
+		if (set) {
+			elements.cells.push(cell);
+			elements.row.append(cell);
+		}
+	}
+}
+
+export function setFooter(state: State, columns: ColumnComponent[]): void {
+	renderFooter(state, columns, true);
+}
+
+export function updateFooter(state: State): void {
+	renderFooter(state, state.managers.column.items, false);
+}
+
+// #endregion
+
+// #region Variables
+
 const empty = '&nbsp;';
 
 const handlers: Record<
@@ -107,3 +135,5 @@ const handlers: Record<
 	sum: (column, data) => sum(data, item => item[column.key] as number),
 	unique: (column, data) => unique(data.map(item => item[column.key])).length,
 };
+
+// #endregion

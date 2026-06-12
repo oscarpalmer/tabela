@@ -5,8 +5,12 @@ import type {ColumnComponent} from '../../components/column.component';
 import {GroupComponent} from '../../components/group.component';
 import type {DataState} from '../../models/data.model';
 import {EVENT_DATA_ADD} from '../../models/event.model';
+import {getColumn} from '../column.manager';
+import {addGroups, getGroup, updateGroups} from '../group.manager';
 import {renderData} from './data.render';
 import {updateData} from './data.update';
+
+// #region Functions
 
 export async function addData(
 	state: DataState,
@@ -57,18 +61,18 @@ export async function addData(
 		const groupValue = getValue(item, state.managers.group.key);
 
 		let group =
-			state.managers.group.getForValue(groupValue) ??
+			getGroup(state, groupValue, true) ??
 			addedGroups.find(added => added.value.original === groupValue);
 
 		if (group == null) {
-			groupColumn ??= state.managers.column.get(state.managers.group.key);
+			groupColumn ??= getColumn(state, state.managers.group.key);
 
 			group = new GroupComponent(
 				`${groupColumn?.options.label ?? state.managers.group.key}: ${String(groupValue)}`,
 				groupValue,
 			);
 
-			state.values.array.push(group.key);
+			state.values.array.push(group.key.full);
 
 			addedGroups.push(group);
 		} else if (!addedGroups.includes(group) && !updatedGroups.includes(group)) {
@@ -82,8 +86,8 @@ export async function addData(
 		group.total += 1;
 	}
 
-	state.managers.group.add(addedGroups);
-	state.managers.group.update(updatedGroups);
+	addGroups(state, addedGroups);
+	updateGroups(state, updatedGroups);
 
 	await updateData(state, updatedData, addedData.length === 0);
 
@@ -91,9 +95,11 @@ export async function addData(
 		return;
 	}
 
-	state.managers.event.emit(EVENT_DATA_ADD, addedData);
+	state.managers.event.herald.emit(EVENT_DATA_ADD, addedData);
 
 	if (render) {
 		renderData(state);
 	}
 }
+
+// #endregion

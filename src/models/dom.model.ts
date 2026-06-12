@@ -1,6 +1,16 @@
+// #region Variables
+
 export const ARIA_ACTIVEDESCENDANT = 'aria-activedescendant';
 
+export const ARIA_COLCOUNT = 'aria-colcount';
+
+export const ARIA_COLINDEX = 'aria-colindex';
+
 export const ARIA_LABEL = 'aria-label';
+
+export const ARIA_ROWCOUNT = 'aria-rowcount';
+
+export const ARIA_ROWINDEX = 'aria-rowindex';
 
 export const ARIA_SELECTED = 'aria-selected';
 
@@ -20,12 +30,14 @@ export const ATTRIBUTE_ROLE = 'role';
 
 export const ELEMENT_DIV = 'div';
 
-export const ROLE_CELL = 'cell';
+export const ROLE_CELL = 'gridcell';
 
 export const ROLE_COLUMNHEADER = 'columnheader';
+
+export const ROLE_GRID = 'grid';
 
 export const ROLE_ROW = 'row';
 
 export const ROLE_ROWGROUP = 'rowgroup';
 
-export const ROLE_TABLE = 'table';
+// #endregion

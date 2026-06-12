@@ -1,3 +1,5 @@
+// #region Types
+
 export type Column = {
 	footer?: TabelaColumnFooter;
 	key: string;
@@ -14,6 +16,10 @@ export type TabelaColumn = {
 
 export type TabelaColumnFooter = 'average' | 'count' | 'max' | 'median' | 'min' | 'sum' | 'unique';
 
+// #endregion
+
+// #region Variables
+
 export const columnFooters = new Set<TabelaColumnFooter>([
 	'average',
 	'count',
@@ -23,3 +29,5 @@ export const columnFooters = new Set<TabelaColumnFooter>([
 	'sum',
 	'unique',
 ]);
+
+// #endregion

@@ -1,8 +1,11 @@
+import {isKey, isPlainObject} from '@oscarpalmer/atoms/is';
 import type {PlainObject} from '@oscarpalmer/atoms/models';
 import {getValue} from '@oscarpalmer/atoms/value/handle';
 import type {DataState} from '../../models/data.model';
 import {EVENT_DATA_UPDATE} from '../../models/event.model';
-import {isKey, isPlainObject} from '@oscarpalmer/atoms/is';
+import {updateRow} from '../row.manager';
+
+// #region Functions
 
 export async function updateData(
 	state: DataState,
@@ -41,11 +44,13 @@ export async function updateData(
 		updated.push(state.values.array[existing] as PlainObject);
 
 		if (render && state.managers.render.visible.keys.has(key)) {
-			state.managers.row.update(key);
+			updateRow(state, key);
 		}
 	}
 
 	if (updated.length > 0) {
-		state.managers.event.emit(EVENT_DATA_UPDATE, updated);
+		state.managers.event.herald.emit(EVENT_DATA_UPDATE, updated);
 	}
 }
+
+// #endregion
