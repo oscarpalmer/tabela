@@ -16,6 +16,7 @@ export default defineConfig({
 	},
 	dts: false,
 	entry: ['./src/assets/javascript/index.ts'],
+	ignoreWatch: ['build/**', 'node_modules/**'],
 	minify: 'dce-only',
 	outDir: './build/assets/javascript',
 	tsconfig: './tsconfig.local.json',

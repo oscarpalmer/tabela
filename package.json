@@ -12,15 +12,15 @@
 		"@oscarpalmer/toretto": "git+https://github.com/oscarpalmer/toretto.git"
 	},
 	"devDependencies": {
-		"@types/node": "^25.6",
+		"@types/node": "^25.9",
 		"@vitest/coverage-istanbul": "^4.1",
-		"concurrently": "^9.2",
+		"concurrently": "^10",
 		"html-minifier": "^4.0",
-		"jsdom": "^29",
-		"sass": "^1.99",
-		"tsdown": "^0.21",
-		"tsx": "^4.21",
-		"typescript": "^5.9",
+		"jsdom": "^29.1",
+		"sass": "^1.100",
+		"tsdown": "^0.22",
+		"tsx": "^4.22",
+		"typescript": "^6",
 		"vite": "npm:@voidzero-dev/vite-plus-core@latest",
 		"vite-plus": "latest",
 		"vitest": "npm:@voidzero-dev/vite-plus-test@latest"

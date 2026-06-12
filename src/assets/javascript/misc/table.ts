@@ -28,8 +28,9 @@ const columns: TabelaOptions['columns'] = [
 ];
 
 const options: TabelaOptions = {
-	columns,
+	columns: [...columns, ...columns, ...columns, ...columns, ...columns, ...columns, ...columns, ...columns, ...columns],
 	data: [],
+	// footer: false,
 	grouping: 'age',
 	key: 'id',
 	label: 'Tabela',

@@ -12,7 +12,7 @@ function renderLog(log: Log): Fragment {
 			</div>
 		</div>
 		<button
-				oui-tooltip="oui-tooltip"
+				oui-tooltip
 				class="flex-js--fe oui-button oui-button--red oui-button--tiny logs__item__button"
 				aria-label="Remove &lsquo;${log.name}&rsquo;"
 				@on="${(event: Event) => onRemoveLog(event, log.id)}"
@@ -27,22 +27,20 @@ const empty = computed(() => logs.length === 0);
 
 const items = fragments(logs, log => log.id, renderLog);
 
-export default html`<oui-popover>
-	<button oui-popover-toggle="oui-popover-toggle" class="oui-button" position="above-end">
-		<span>Toggle logs</span>
-		<i hidden="${empty}">(${() => logs.get('length')})</i>
-	</button>
-	<div oui-popover-content="oui-popover-content" class="logs__popover">
-		<h2>Logs</h2>
+export default html`<button class="oui-button" popovertarget="logs" position="above-end">
+	<span>Toggle logs</span>
+	<i hidden="${empty}">(${() => logs.get('length')})</i>
+</button>
+<div popover class="stack logs__popover" id="logs">
+	<h2>Logs</h2>
 
-		<div class="logs__wrapper">
-			<p class="logs__empty" hidden="${() => logs.length > 0}">There are no logs&hellip;</p>
-			<ul class="logs" hidden="${empty}">${items}</ul>
-		</div>
-
-		<button class="oui-button oui-button--small" @on="${onClearLogs}">
-			<span aria-hidden="true">&times;</span>
-			<span>Clear logs</span>
-		</button>
+	<div class="logs__wrapper">
+		<p class="logs__empty" hidden="${() => logs.length > 0}">There are no logs&hellip;</p>
+		<ul class="logs" hidden="${empty}">${items}</ul>
 	</div>
-</oui-popover>`;
+
+	<button class="flex-as--fs oui-button oui-button--small" @on="${onClearLogs}">
+		<span aria-hidden="true">&times;</span>
+		<span>Clear logs</span>
+	</button>
+</div>`;

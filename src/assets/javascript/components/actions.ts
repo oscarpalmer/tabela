@@ -5,7 +5,7 @@ import {getData} from '../misc/data';
 import {tableData, tableFilter} from '../misc/table';
 
 function onAdd(): void {
-	const value = amount.peek();
+	const value = +amount.peek();
 
 	if (value > 0) {
 		tableData()?.add(getData(value));
@@ -27,7 +27,7 @@ function onName(): void {
 }
 
 function onRemove(): void {
-	const value = amount.peek();
+	const value = +amount.peek();
 
 	if (value > 0) {
 		tableData()?.remove(getRandomItems(tableData()?.get() ?? [], value));
@@ -35,7 +35,7 @@ function onRemove(): void {
 }
 
 function onSynchronize(): void {
-	const value = amount.peek();
+	const value = +amount.peek();
 
 	if (value <= 0) {
 		return;
@@ -73,7 +73,7 @@ function updateAll(): void {
 }
 
 function updateAmount(): void {
-	const value = amount.peek();
+	const value = +amount.peek();
 
 	if (value > 0) {
 		tableData()?.update(
