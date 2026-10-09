@@ -2,12 +2,12 @@ import {isKey, isPlainObject} from '@oscarpalmer/atoms/is';
 import type {PlainObject} from '@oscarpalmer/atoms/models';
 import {getValue} from '@oscarpalmer/atoms/value/handle';
 import {createGroup} from '../../components/group.component';
-import {getColumn} from '../../managers/column.manager';
-import {addGroups, getGroup, updateGroups} from '../../managers/group.manager';
 import type {ColumnComponent} from '../../models/column.model';
 import {EVENT_DATA_ADD} from '../../models/event.model';
 import type {GroupComponent} from '../../models/group.model';
 import type {State} from '../../models/tabela.model';
+import {getColumn} from '../column.helper';
+import {addGroups, getGroup, updateGroups} from '../group.helper';
 import {renderData} from './data.render';
 import {updateData} from './data.update';
 

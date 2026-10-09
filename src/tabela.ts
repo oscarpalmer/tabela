@@ -1,17 +1,11 @@
 import {destroyTabela, initializeTabela} from './helpers/tabela.helper';
-import {setColumns} from './managers/column.manager';
-import {initializeNavigation} from './managers/navigation.manager';
-import {SYMBOL, type Tabela} from './models/tabela.model';
 import type {TabelaOptions} from './models/options.model';
+import {SYMBOL, type Tabela} from './models/tabela.model';
 
 // #region Instances
 
 function Tabela(this: Tabela, element: HTMLElement, options: TabelaOptions): void {
 	this[SYMBOL] = initializeTabela(this, element, options);
-
-	setColumns(this[SYMBOL], options.columns);
-
-	initializeNavigation(this[SYMBOL]);
 }
 
 Tabela.prototype.destroy = destroyTabela;

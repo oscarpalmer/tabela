@@ -1,18 +1,18 @@
+import {filter} from '@oscarpalmer/atoms/array/filter';
 import {select} from '@oscarpalmer/atoms/array/select';
 import {toRecord} from '@oscarpalmer/atoms/array/to-record';
 import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
 import {createGroup} from '../components/group.component';
+import {getColumn} from '../helpers/column.helper';
 import {addData} from '../helpers/data/data.add';
-import {clearData} from '../helpers/data/data.remove';
+import {clearData, removeData} from '../helpers/data/data.remove';
 import {renderData} from '../helpers/data/data.render';
 import {synchronizeData} from '../helpers/data/data.synchronize';
 import {updateData} from '../helpers/data/data.update';
-import {isGroupKey} from '../helpers/misc.helpers';
+import {isGroupKey, setGroups} from '../helpers/group.helper';
 import type {DataManager, DataValue, TabelaData} from '../models/data.model';
 import type {GroupComponent} from '../models/group.model';
 import {SYMBOL, type State} from '../models/tabela.model';
-import {getColumn} from './column.manager';
-import {setGroups} from './group.manager';
 
 // #region Instances
 
@@ -57,6 +57,7 @@ function TabelaData(this: TabelaData, state: State): void {
 TabelaData.prototype.add = addTabelaData;
 TabelaData.prototype.clear = clearTabelaData;
 TabelaData.prototype.get = getTabelaData;
+TabelaData.prototype.remove = removeTabelaData;
 TabelaData.prototype.synchronize = synchronizeTabelaData;
 TabelaData.prototype.update = updateTabelaData;
 
@@ -106,7 +107,7 @@ function getData(this: DataManager, active?: boolean): PlainObject[] {
 				key => !isGroupKey(key),
 				key => data.values.mapped.get(key as Key)!,
 			)
-		: (data.values.array.filter(item => !isGroupKey(item)) as PlainObject[]);
+		: (filter.remove(data.values.array, isGroupKey) as PlainObject[]);
 }
 
 function getIndex(this: DataManager, item: Key): number {
@@ -123,6 +124,14 @@ function getSize(this: DataManager): number {
 
 function getTabelaData(this: TabelaData, active?: boolean): PlainObject[] {
 	return this[SYMBOL].managers.data.get(active);
+}
+
+function removeTabelaData(this: TabelaData, keys: Key[]): Promise<void>;
+
+function removeTabelaData(this: TabelaData, data: PlainObject[]): Promise<void>;
+
+function removeTabelaData(this: TabelaData, value: Key[] | PlainObject[]): Promise<void> {
+	return removeData(this[SYMBOL], value, true);
 }
 
 function setData(this: DataManager, data: PlainObject[]): void {

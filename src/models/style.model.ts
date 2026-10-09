@@ -10,6 +10,8 @@ export type StyleManager = {
 
 // #region Variables
 
+// #region CSS Classes
+
 export const CSS_BUTTON = 'tabela__button';
 
 export const CSS_BUTTON_GROUP = 'tabela__button--group';
@@ -61,6 +63,22 @@ export const CSS_SELECTION = 'tabela__selection';
 export const CSS_TABLE = 'tabela__table';
 
 export const CSS_WRAPPER = 'tabela';
+
+// #endregion
+
+// #region CSS Selectors
+
+// #endregion
+
+export const SELECTOR_CELL: string = `.${CSS_CELL}`;
+
+export const SELECTOR_GROUP_SELECTED: string = `.${CSS_GROUP_SELECTED}`;
+
+export const SELECTOR_GROUP_TOTAL: string = `.${CSS_GROUP_TOTAL}`;
+
+export const SELECTOR_ROW: string = `.${CSS_ROW}`;
+
+export const SELECTOR_TABLE: string = `.${CSS_TABLE}`;
 
 // #endregion
 

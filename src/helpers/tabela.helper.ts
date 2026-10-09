@@ -1,4 +1,4 @@
-import {createElement} from '@oscarpalmer/toretto';
+import {createElement} from '@oscarpalmer/toretto/create';
 import {createBody} from '../components/body.component';
 import {createFooter} from '../components/footer.component';
 import {createHeader} from '../components/header.component';
@@ -20,9 +20,11 @@ import {
 	ELEMENT_DIV,
 	ROLE_GRID,
 } from '../models/dom.model';
+import type {TabelaOptions} from '../models/options.model';
 import {CSS_TABLE, CSS_WRAPPER} from '../models/style.model';
 import {type State, SYMBOL, type Tabela} from '../models/tabela.model';
-import type {TabelaOptions} from '../models/options.model';
+import {setColumns} from './column.helper';
+import {initializeNavigation} from './navigation.helper';
 
 // #region Functions
 
@@ -127,6 +129,9 @@ export function initializeTabela(
 	);
 
 	element.append(table);
+
+	setColumns(state, options.columns);
+	initializeNavigation(state);
 
 	state.managers.data.set(options.data);
 

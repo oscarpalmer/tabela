@@ -3,10 +3,6 @@ import {isKey, isPlainObject} from '@oscarpalmer/atoms/is';
 import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
 import {delay} from '@oscarpalmer/atoms/promise/delay';
 import {getValue} from '@oscarpalmer/atoms/value/handle';
-import {removeRow} from '../../components/row.component';
-import {isGroupKey} from '../../helpers/misc.helpers';
-import {clearGroups, getGroup, removeGroups, updateGroups} from '../../managers/group.manager';
-import {clearRows} from '../../managers/row.manager';
 import {
 	EVENT_DATA_CLEAR,
 	EVENT_DATA_REMOVE,
@@ -14,6 +10,8 @@ import {
 } from '../../models/event.model';
 import type {GroupComponent} from '../../models/group.model';
 import type {State} from '../../models/tabela.model';
+import {clearGroups, getGroup, isGroupKey, removeGroups, updateGroups} from '../group.helper';
+import {clearRows, removeRow} from '../row.helper';
 import {renderData} from './data.render';
 
 // #region Functions

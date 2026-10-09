@@ -185,6 +185,12 @@ export const EVENT_NAMES = [
 	EVENT_SORT_SET,
 ] as Array<EventName>;
 
+// #region Variables
+
+export const mappedEventManagers: WeakMap<HTMLElement, EventManager> = new WeakMap();
+
+// #endregion
+
 // #endregion
 
 // #region Exports

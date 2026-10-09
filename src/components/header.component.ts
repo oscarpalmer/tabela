@@ -1,5 +1,4 @@
 import {createRowGroupElement} from '../helpers/dom.helpers';
-import type {ColumnComponent} from '../models/column.model';
 import type {HeaderComponent} from '../models/header.model';
 import {CSS_ROW_HEADER, CSS_ROWGROUP_HEADER} from '../models/style.model';
 import type {State} from '../models/tabela.model';
@@ -31,14 +30,6 @@ export function createHeader(state: State): HeaderComponent {
 function destroyHeader(this: HeaderComponent): void {
 	this.elements.group = undefined as never;
 	this.elements.row = undefined as never;
-}
-
-export function setHeader(state: State, columns: ColumnComponent[]): void {
-	const {header} = state.components;
-
-	header.elements.row.innerHTML = '';
-
-	header.elements.row.append(...columns.map(column => column.elements.wrapper));
 }
 
 // #endregion

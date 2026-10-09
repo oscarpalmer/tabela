@@ -1,12 +1,13 @@
+import {filter} from '@oscarpalmer/atoms/array/filter';
 import {sort} from '@oscarpalmer/atoms/array/sort';
 import {toMap} from '@oscarpalmer/atoms/array/to-map';
 import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
 import {getValue} from '@oscarpalmer/atoms/value/handle';
-import {isGroupKey} from '../../helpers/misc.helpers';
-import {render} from '../../managers/render.manager';
-import {sortDataGrouped} from '../../managers/sort.manager';
 import {RENDER_ORIGIN_DATA} from '../../models/render.model';
 import type {State} from '../../models/tabela.model';
+import {isGroupKey} from '../group.helper';
+import {render} from '../render.helper';
+import {sortDataGrouped} from '../sort.helper';
 
 // #region Functions
 
@@ -26,7 +27,7 @@ export function renderData(state: State): void {
 	);
 
 	data.values.mapped = toMap(
-		data.values.array.filter(item => !isGroupKey(item)) as PlainObject[],
+		filter.remove(data.values.array, isGroupKey) as PlainObject[],
 		item => getValue(item, state.key) as Key,
 	);
 

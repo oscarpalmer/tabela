@@ -21,3 +21,9 @@ export type TabelaSelection = {
 };
 
 // #endregion
+
+// #region Variables
+
+export const mappedSelectionManagers: WeakMap<Element, SelectionManager> = new WeakMap();
+
+// #endregion

@@ -1,9 +1,9 @@
 import {isKey, isPlainObject} from '@oscarpalmer/atoms/is';
 import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
 import {getValue} from '@oscarpalmer/atoms/value/handle';
-import {isGroupKey} from '../../helpers/misc.helpers';
 import {EVENT_DATA_SYNCHRONIZE} from '../../models/event.model';
 import type {State} from '../../models/tabela.model';
+import {isGroupKey} from '../group.helper';
 import {addData} from './data.add';
 import {clearData, removeData} from './data.remove';
 import {renderData} from './data.render';

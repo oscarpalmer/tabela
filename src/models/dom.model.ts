@@ -1,5 +1,7 @@
 // #region Variables
 
+// #region Misc.
+
 export const ARIA_ACTIVEDESCENDANT = 'aria-activedescendant';
 
 export const ARIA_COLCOUNT = 'aria-colcount';
@@ -37,5 +39,13 @@ export const ROLE_GRID = 'grid';
 export const ROLE_ROW = 'row';
 
 export const ROLE_ROWGROUP = 'rowgroup';
+
+// #endregion
+
+// #region CSS Selectors
+
+export const SELECTOR_EVENT_ATTRIBUTE: string = `[${ATTRIBUTE_DATA_EVENT}]`;
+
+// #endregion
 
 // #endregion

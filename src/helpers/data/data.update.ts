@@ -1,9 +1,9 @@
 import {isKey, isPlainObject} from '@oscarpalmer/atoms/is';
 import type {PlainObject} from '@oscarpalmer/atoms/models';
 import {getValue} from '@oscarpalmer/atoms/value/handle';
-import {updateRow} from '../../managers/row.manager';
 import {EVENT_DATA_UPDATE} from '../../models/event.model';
 import type {State} from '../../models/tabela.model';
+import {updateRow} from '../row.helper';
 
 // #region Functions
 
