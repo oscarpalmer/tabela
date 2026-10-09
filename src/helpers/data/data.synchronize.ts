@@ -2,8 +2,8 @@ import {isKey, isPlainObject} from '@oscarpalmer/atoms/is';
 import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
 import {getValue} from '@oscarpalmer/atoms/value/handle';
 import {isGroupKey} from '../../helpers/misc.helpers';
-import type {DataState} from '../../models/data.model';
 import {EVENT_DATA_SYNCHRONIZE} from '../../models/event.model';
+import type {State} from '../../models/tabela.model';
 import {addData} from './data.add';
 import {clearData, removeData} from './data.remove';
 import {renderData} from './data.render';
@@ -12,7 +12,7 @@ import {updateData} from './data.update';
 // #region Functions
 
 export async function synchronizeData(
-	state: DataState,
+	state: State,
 	data: PlainObject[],
 	remove: boolean,
 ): Promise<void> {
@@ -44,7 +44,7 @@ export async function synchronizeData(
 			continue;
 		}
 
-		if (state.values.mapped.has(key)) {
+		if (state.managers.data.data.values.mapped.has(key)) {
 			updated.push(object);
 		} else {
 			added.push(object);
@@ -60,7 +60,9 @@ export async function synchronizeData(
 	let removed: PlainObject[] = [];
 
 	if (remove) {
-		const toRemove = state.keys.original.filter(key => !isGroupKey(key) && !keys.has(key)) as Key[];
+		const toRemove = state.managers.data.data.keys.original.filter(
+			key => !isGroupKey(key) && !keys.has(key),
+		) as Key[];
 
 		if (toRemove.length > 0) {
 			removed = await removeData(state, toRemove, false);

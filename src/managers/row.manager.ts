@@ -1,22 +1,17 @@
-import type {Key} from '@oscarpalmer/atoms/models';
-import {removeRow, renderRow, RowComponent} from '../components/row.component';
-import type {State} from '../models/tabela.model';
 import {isKey} from '@oscarpalmer/atoms/is';
+import type {Key} from '@oscarpalmer/atoms/models';
+import {createRow, removeRow, renderRow} from '../components/row.component';
+import type {RowComponent, RowManager} from '../models/row.model';
+import type {State} from '../models/tabela.model';
 
-// #region Types
+// #region Instances
 
-export class RowManager {
-	components = new Map<Key, RowComponent>();
-
-	constructor(public state: State) {}
-
-	destroy(): void {
-		clearRows(this.state);
-
-		this.components = undefined as never;
-		this.state = undefined as never;
-	}
+function RowManager(this: RowManager, state: State): void {
+	this.components = new Map<Key, RowComponent>();
+	this.state = state;
 }
+
+RowManager.prototype.destroy = destroyRowManager;
 
 // #endregion
 
@@ -35,15 +30,27 @@ export function clearRows(state: State): void {
 	components.clear();
 }
 
+export function createRowManager(state: State): RowManager {
+	// @ts-expect-error All good, no worries :-)
+	return new RowManager(state);
+}
+
+function destroyRowManager(this: RowManager): void {
+	clearRows(this.state);
+
+	this.components = undefined as never;
+	this.state = undefined as never;
+}
+
 export function getRow(state: State, key: unknown, create: boolean): RowComponent | undefined {
 	if (!isKey(key)) {
-		return;
+		return undefined;
 	}
 
 	let row = state.managers.row.components.get(key);
 
 	if (row == null && create) {
-		row = new RowComponent(key);
+		row = createRow(key);
 
 		state.managers.row.components.set(key, row);
 	}

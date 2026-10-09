@@ -1,37 +1,42 @@
-import {ColumnComponent} from '../components/column.component';
+import {createColumn} from '../components/column.component';
 import {setFooter} from '../components/footer.component';
 import {setHeader} from '../components/header.component';
 import {getValidColumn} from '../helpers/misc.helpers';
-import type {TabelaColumn} from '../models/column.model';
+import type {ColumnComponent, ColumnManager, TabelaColumn} from '../models/column.model';
 import {ARIA_COLCOUNT} from '../models/dom.model';
 import type {State} from '../models/tabela.model';
 import {removeCells} from './render.manager';
 
-// #region Types
+// #region Instances
 
-export class ColumnManager {
-	items: ColumnComponent[] = [];
-
-	keys: string[] = [];
-
-	constructor(public state: State) {}
-
-	destroy(): void {
-		const {length} = this.items;
-
-		for (let index = 0; index < length; index += 1) {
-			this.items[index].destroy();
-		}
-
-		this.items = undefined as never;
-		this.keys = undefined as never;
-		this.state = undefined as never;
-	}
+function ColumnManager(this: ColumnManager, state: State): void {
+	this.items = [];
+	this.keys = [];
+	this.state = state;
 }
+
+ColumnManager.prototype.destroy = destroyColumnManager;
 
 // #endregion
 
 // #region Functions
+
+export function createColumnManager(state: State): ColumnManager {
+	// @ts-expect-error All good, no worries :-)
+	return new ColumnManager(state);
+}
+
+function destroyColumnManager(this: ColumnManager): void {
+	const {length} = this.items;
+
+	for (let index = 0; index < length; index += 1) {
+		this.items[index].destroy();
+	}
+
+	this.items = undefined as never;
+	this.keys = undefined as never;
+	this.state = undefined as never;
+}
 
 export function getColumn(state: State, key: string): ColumnComponent | undefined {
 	return state.managers.column.items.find(item => item.options.key === key);
@@ -77,13 +82,13 @@ export function setColumns(state: State, columns: TabelaColumn[]): void {
 		return;
 	}
 
-	items.splice(0, items.length, ...validated.map(column => new ColumnComponent(state, column)));
+	items.splice(0, items.length, ...validated.map(column => createColumn(state, column)));
 	keys.splice(0, keys.length, ...validated.map(column => column.key));
 
 	setFooter(state, items);
 	setHeader(state, items);
 
-	state.element.setAttribute(ARIA_COLCOUNT, String(items.length));
+	state.elements.wrapper.setAttribute(ARIA_COLCOUNT, String(items.length));
 }
 
 // #endregion

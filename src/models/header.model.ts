@@ -1,6 +1,11 @@
 // #region Types
 
-export type HeaderElements = {
+export type HeaderComponent = {
+	elements: HeaderElements;
+	destroy(): void;
+};
+
+type HeaderElements = {
 	group: HTMLDivElement;
 	row: HTMLDivElement;
 };

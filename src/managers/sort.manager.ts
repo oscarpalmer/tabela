@@ -1,9 +1,9 @@
 import {
-	type ArrayValueSorter,
-	type SortDirection,
 	sort,
 	SORT_DIRECTION_ASCENDING,
 	SORT_DIRECTION_DESCENDING,
+	type ArrayValueSorter,
+	type SortDirection,
 } from '@oscarpalmer/atoms/array/sort';
 import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
 import {compare} from '@oscarpalmer/atoms/value/compare';
@@ -27,48 +27,67 @@ import {
 } from '../models/event.model';
 import {RENDER_ORIGIN_SORT} from '../models/render.model';
 import {
+	SORT_NONE,
+	SORT_OTHER,
 	type ExtendedArrayValueSorter,
+	type SortManager,
 	type TabelaSort,
 	type TabelaSorter,
 } from '../models/sort.model';
-import type {State} from '../models/tabela.model';
+import {SYMBOL, type State} from '../models/tabela.model';
 import {getGroup} from './group.manager';
 import {updateNavigation} from './navigation.manager';
 import {render} from './render.manager';
 
-// #region Types
+// #region Instances
 
-export class SortManager {
-	default: ExtendedArrayValueSorter[];
+function SortManager(this: SortManager, state: State): void {
+	this.default = [getValidSorter(state.options.sorting ?? state.key)!];
+	this.items = [];
 
-	handlers: TabelaSort = {
-		add: (key, direction) => addSorter(this.state, key, direction),
-		flip: key => flipSorter(this.state, key),
-		clear: () => clearSorters(this.state),
-		remove: key => removeSorter(this.state, key),
-		set: items => setSorters(this.state, items, true),
-	};
-
-	items: ExtendedArrayValueSorter[] = [];
-
-	get size(): number {
-		return this.items.length === 0 ? (this.default == null ? 0 : 1) : this.items.length;
-	}
-
-	constructor(public state: State) {
-		this.default = [getValidSorter(state.options.sorting ?? state.key)!];
-	}
-
-	destroy(): void {
-		this.handlers = undefined as never;
-		this.items = undefined as never;
-		this.state = undefined as never;
-	}
+	// @ts-expect-error All good, no worries :-)
+	this.handlers = new TabelaSort(state);
 }
+
+SortManager.prototype.destroy = destroySortManager;
+
+Object.defineProperties(SortManager.prototype, {
+	size: {
+		enumerable: true,
+		get: getSize,
+	},
+});
+
+function TabelaSort(this: TabelaSort, state: State): void {
+	this[SYMBOL] = state;
+}
+
+TabelaSort.prototype.add = addTabelaSorter;
+TabelaSort.prototype.clear = clearTabelaSorters;
+TabelaSort.prototype.flip = flipTabelaSorter;
+TabelaSort.prototype.remove = removeTabelaSorter;
+TabelaSort.prototype.set = setTabelaSorters;
 
 // #endregion
 
 // #region Functions
+
+function addOrSetSorter(event: KeyboardEvent | MouseEvent, state: State, key: string): void {
+	if (event.ctrlKey || event.metaKey) {
+		addSorter(state, key);
+	} else {
+		setSorters(
+			state,
+			[
+				{
+					key,
+					direction: SORT_DIRECTION_ASCENDING,
+				},
+			],
+			false,
+		);
+	}
+}
 
 function addSorter(state: State, key: string, direction?: SortDirection): void {
 	const {event, sort} = state.managers;
@@ -95,21 +114,8 @@ function addSorter(state: State, key: string, direction?: SortDirection): void {
 	sortData(state);
 }
 
-function addOrSetSorter(event: KeyboardEvent | MouseEvent, state: State, key: string): void {
-	if (event.ctrlKey || event.metaKey) {
-		addSorter(state, key);
-	} else {
-		setSorters(
-			state,
-			[
-				{
-					key,
-					direction: SORT_DIRECTION_ASCENDING,
-				},
-			],
-			false,
-		);
-	}
+function addTabelaSorter(this: TabelaSort, key: string, direction?: SortDirection): void {
+	addSorter(this[SYMBOL], key, direction);
 }
 
 function clearSorters(state: State): void {
@@ -124,6 +130,10 @@ function clearSorters(state: State): void {
 	event.herald.emit(EVENT_SORT_CLEAR);
 
 	sortData(state);
+}
+
+function clearTabelaSorters(this: TabelaSort): void {
+	clearSorters(this[SYMBOL]);
 }
 
 function compareGroups(this: State, first: unknown, second: unknown): number {
@@ -156,6 +166,17 @@ function compareGroups(this: State, first: unknown, second: unknown): number {
 	return 0;
 }
 
+export function createSortManager(state: State): SortManager {
+	// @ts-expect-error All good, no worries :-)
+	return new SortManager(state);
+}
+
+function destroySortManager(this: SortManager): void {
+	this.default = undefined as never;
+	this.handlers = undefined as never;
+	this.items = undefined as never;
+}
+
 function flipSorter(state: State, key: string): void {
 	const {event, sort} = state.managers;
 
@@ -175,20 +196,26 @@ function flipSorter(state: State, key: string): void {
 	sortData(state);
 }
 
+function flipTabelaSorter(this: TabelaSort, key: string): void {
+	flipSorter(this[SYMBOL], key);
+}
+
 function getSortedItems(state: State, sorters: ExtendedArrayValueSorter[]): Key[] {
-	const data = (state.managers.data.state.keys.active?.map(key =>
-		isGroupKey(key) ? key : state.managers.data.state.values.mapped.get(key)!,
-	) ?? state.managers.data.state.values.array) as DataValue[];
+	const data = (state.managers.data.data.keys.active?.map(key =>
+		isGroupKey(key) ? key : state.managers.data.data.values.mapped.get(key)!,
+	) ?? state.managers.data.data.values.array) as DataValue[];
 
 	if (!state.managers.group.enabled) {
-		return sort(data as PlainObject[], sorters).map(
-			item => getValue(item, state.key) as Key,
-		);
+		return sort(data as PlainObject[], sorters).map(item => getValue(item, state.key) as Key);
 	}
 
 	return sortDataGrouped(state, data, sorters).map(item =>
 		isGroupKey(item) ? item : (getValue(item as PlainObject, state.key) as Key),
 	) as Key[];
+}
+
+function getSize(this: SortManager): number {
+	return this.items.length === 0 ? (this.default == null ? 0 : 1) : this.items.length;
 }
 
 export function onSort(event: KeyboardEvent | MouseEvent, state: State, target: HTMLElement): void {
@@ -231,6 +258,10 @@ function removeSorter(state: State, key: string): void {
 	sortData(state);
 }
 
+function removeTabelaSorter(this: TabelaSort, key: string): void {
+	removeSorter(this[SYMBOL], key);
+}
+
 function setSorters(state: State, items: TabelaSorter[], set: boolean): void {
 	const {event, sort} = state.managers;
 
@@ -248,6 +279,10 @@ function setSorters(state: State, items: TabelaSorter[], set: boolean): void {
 	}
 
 	sortData(state);
+}
+
+function setTabelaSorters(this: TabelaSort, items: TabelaSorter[], set: boolean): void {
+	setSorters(this[SYMBOL], items, set);
 }
 
 export function sortData(state: State): void {
@@ -275,7 +310,7 @@ export function sortData(state: State): void {
 		);
 	}
 
-	state.managers.data.state.keys.active =
+	state.managers.data.data.keys.active =
 		size === 0 ? undefined : getSortedItems(state, items.length === 0 ? sort.default! : items);
 
 	event.herald.emit(EVENT_DATA_SORTED, state.managers.data.get(true));
@@ -314,13 +349,5 @@ function toggleSorter(
 			return;
 	}
 }
-
-// #endregion
-
-// #region Variables
-
-const SORT_NONE = 'none';
-
-const SORT_OTHER = 'other';
 
 // #endregion

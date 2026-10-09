@@ -1,4 +1,4 @@
-import {herald, type Events, type Herald} from '@oscarpalmer/atoms/herald';
+import {herald} from '@oscarpalmer/atoms/herald';
 import {on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
 import {ATTRIBUTE_DATA_EVENT} from '../models/dom.model';
@@ -7,6 +7,7 @@ import {
 	EVENT_HEADER,
 	EVENT_NAMES,
 	EVENT_ROW,
+	type EventManager,
 	type EventMap,
 } from '../models/event.model';
 import {CSS_TABLE} from '../models/style.model';
@@ -16,31 +17,36 @@ import {handleNavigation} from './navigation.manager';
 import {onSelection} from './selection.manager';
 import {onSort} from './sort.manager';
 
-// #region Types
+// #region Instances
 
-export class EventManager {
-	readonly herald: Herald<EventMap>;
+function EventManager(this: EventManager, state: State): void {
+	this.state = state;
 
-	get events(): Events<EventMap> {
-		return this.herald.events;
-	}
+	this.herald = herald<EventMap>({
+		names: EVENT_NAMES,
+	});
 
-	constructor(public state: State) {
-		this.herald = herald(EVENT_NAMES);
-
-		mapped.set(state.element, this);
-	}
-
-	destroy(): void {
-		mapped.delete(this.state.element);
-
-		this.state = undefined as never;
-	}
+	mapped.set(state.elements.wrapper, this);
 }
+
+EventManager.prototype.destroy = destroyEventManager;
 
 // #endregion
 
 // #region Functions
+
+export function createEventManager(state: State): EventManager {
+	// @ts-expect-error All good, no worries :-)
+	return new EventManager(state);
+}
+
+function destroyEventManager(this: EventManager): void {
+	mapped.delete(this.state.elements.wrapper);
+
+	this.herald.clear();
+
+	this.state = undefined as never;
+}
 
 function onClick(event: MouseEvent): void {
 	const target = findAncestor(event, eventAttribute);

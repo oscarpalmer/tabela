@@ -1,9 +1,9 @@
 import {isKey} from '@oscarpalmer/atoms/is';
-import type {EventPosition, Key} from '@oscarpalmer/atoms/models';
+import type {Key} from '@oscarpalmer/atoms/models';
 import {setAttribute} from '@oscarpalmer/toretto/attribute';
-import {getPosition, on} from '@oscarpalmer/toretto/event';
+import {getEventPosition, on} from '@oscarpalmer/toretto/event';
 import {findAncestor} from '@oscarpalmer/toretto/find';
-import {createElement} from '../helpers/dom.helpers';
+import type {EventPosition} from '@oscarpalmer/toretto/models';
 import {getKey, isGroupKey} from '../helpers/misc.helpers';
 import {preventSelection} from '../helpers/style.helper';
 import {ARIA_SELECTED, ATTRIBUTE_DATA_KEY, ELEMENT_DIV} from '../models/dom.model';
@@ -12,39 +12,35 @@ import {
 	EVENT_SELECTION_CLEAR,
 	EVENT_SELECTION_REMOVE,
 } from '../models/event.model';
-import type {TabelaSelection} from '../models/selection.model';
+import type {SelectionManager, TabelaSelection} from '../models/selection.model';
 import {CSS_CELL, CSS_ROW, CSS_ROW_SELECTED, CSS_SELECTION, CSS_TABLE} from '../models/style.model';
-import type {State} from '../models/tabela.model';
+import {SYMBOL, type State} from '../models/tabela.model';
 import {getRow} from './row.manager';
+import {createElement} from '@oscarpalmer/toretto/create';
 
-// #region Types
+// #region Instances
 
-export class SelectionManager {
-	handlers: TabelaSelection = {
-		add: keys => addSelection(this.state, keys),
-		clear: () => clearSelection(this.state),
-		remove: keys => removeSelection(this.state, keys),
-		set: keys => setSelection(this.state, keys),
-		toggle: () => toggleSelection(this.state),
-	};
+function SelectionManager(this: SelectionManager, state: State): void {
+	this.keys = new Set<Key>();
+	this.state = state;
 
-	last: Key | undefined;
+	// @ts-expect-error All good, no worries :-)
+	this.handlers = new TabelaSelection(state);
 
-	keys = new Set<Key>();
-
-	constructor(public state: State) {
-		mapped.set(state.element, this);
-	}
-
-	destroy(): void {
-		mapped.delete(this.state.element);
-
-		this.handlers = undefined as never;
-		this.keys = undefined as never;
-		this.last = undefined;
-		this.state = undefined as never;
-	}
+	mapped.set(state.elements.wrapper, this);
 }
+
+SelectionManager.prototype.destroy = destroySelectionManager;
+
+function TabelaSelection(this: TabelaSelection, state: State): void {
+	this[SYMBOL] = state;
+}
+
+TabelaSelection.prototype.add = addTabelaSelection;
+TabelaSelection.prototype.clear = clearTabelaSelection;
+TabelaSelection.prototype.remove = removeTabelaSelection;
+TabelaSelection.prototype.set = setTabelaSelection;
+TabelaSelection.prototype.toggle = toggleTabelaSelection;
 
 // #endregion
 
@@ -79,6 +75,10 @@ export function addSelection(state: State, keys: Key[]): void {
 	}
 }
 
+function addTabelaSelection(this: TabelaSelection, keys: Key[]): void {
+	addSelection(this[SYMBOL], keys);
+}
+
 function canBeAdded(state: State, key: Key): boolean {
 	return (
 		isKey(key) &&
@@ -103,9 +103,29 @@ function clearSelection(state: State): void {
 	event.herald.emit(EVENT_SELECTION_CLEAR);
 }
 
+function clearTabelaSelection(this: TabelaSelection): void {
+	clearSelection(this[SYMBOL]);
+}
+
+export function createSelectionManager(state: State): SelectionManager {
+	// @ts-expect-error All good, no worries :-)
+	return new SelectionManager(state);
+}
+
+function destroySelectionManager(this: SelectionManager): void {
+	mapped.delete(this.state.elements.wrapper);
+
+	this.handlers = undefined as never;
+	this.keys = undefined as never;
+	this.last = undefined;
+	this.state = undefined as never;
+}
+
 function getPlaceholder(): HTMLElement {
 	placeholder ??= createElement(ELEMENT_DIV, {
-		className: CSS_SELECTION,
+		property: {
+			className: CSS_SELECTION,
+		},
 	});
 
 	return placeholder;
@@ -163,7 +183,7 @@ function onMouseDown(event: MouseEvent): void {
 		}
 
 		startElement = row;
-		startPosition = getPosition(event)!;
+		startPosition = getEventPosition(event)!;
 
 		preventSelection.set();
 	}
@@ -174,7 +194,7 @@ function onMouseMove(event: MouseEvent): void {
 		return;
 	}
 
-	const currentPosition = getPosition(event)!;
+	const currentPosition = getEventPosition(event)!;
 
 	if (currentPosition == null || startPosition == null) {
 		return;
@@ -277,6 +297,10 @@ export function removeSelection(state: State, keys: Key[]): void {
 	}
 }
 
+function removeTabelaSelection(this: TabelaSelection, keys: Key[]): void {
+	removeSelection(this[SYMBOL], keys);
+}
+
 function setRangeSelection(
 	state: State,
 	from: Key | HTMLElement,
@@ -350,6 +374,10 @@ function setSelection(state: State, keys: Key[]): void {
 	updateSelection(state, added, removed);
 }
 
+function setTabelaSelection(this: TabelaSelection, keys: Key[]): void {
+	setSelection(this[SYMBOL], keys);
+}
+
 function toggleSelection(state: State): void {
 	const {selection} = state.managers;
 	const {keys: items} = selection;
@@ -363,6 +391,10 @@ function toggleSelection(state: State): void {
 			keys.filter(key => !isGroupKey(key)),
 		);
 	}
+}
+
+function toggleTabelaSelection(this: TabelaSelection): void {
+	toggleSelection(this[SYMBOL]);
 }
 
 function updateSelection(state: State, added: Key[], removed: Key[]): void {

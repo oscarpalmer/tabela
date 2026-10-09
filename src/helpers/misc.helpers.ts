@@ -1,25 +1,12 @@
-import {SORT_DIRECTION_ASCENDING, type SortDirection} from '@oscarpalmer/atoms/array/sort';
 import {isPlainObject} from '@oscarpalmer/atoms/is';
-import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
+import type {Key} from '@oscarpalmer/atoms/models';
 import {getNumber} from '@oscarpalmer/atoms/number';
-import {getValue} from '@oscarpalmer/atoms/value/handle';
-import type {GroupComponent} from '../components/group.component';
 import {columnFooters, type TabelaColumn, type TabelaColumnFooter} from '../models/column.model';
 import {filterComparisons, type TabelaFilterItem} from '../models/filter.model';
-import {GROUP_KEY_EXPRESSION, type TabelaGroup} from '../models/group.model';
-import {
-	sortDirections,
-	type ExtendedArrayValueSorter,
-	type TabelaSorter,
-} from '../models/sort.model';
+import {GROUP_KEY_EXPRESSION, type Group, type GroupComponent} from '../models/group.model';
+import {type ExtendedArrayValueSorter, type TabelaSorter} from '../models/sort.model';
 
-// #region Types
-
-function getDirection(direction: unknown): SortDirection {
-	return sortDirections.has(direction as never)
-		? (direction as SortDirection)
-		: SORT_DIRECTION_ASCENDING;
-}
+// #region Functions
 
 function getFooter(value: unknown): TabelaColumnFooter | undefined {
 	return columnFooters.has(value as TabelaColumnFooter) ? (value as TabelaColumnFooter) : undefined;
@@ -54,7 +41,7 @@ export function getTabelaFilter(item: TabelaFilterItem): TabelaFilterItem {
 	};
 }
 
-export function getTabelaGroup(group: GroupComponent): TabelaGroup {
+export function getTabelaGroup(group: GroupComponent): Group {
 	return {
 		value: group.value.original,
 	};
@@ -105,38 +92,8 @@ export function getValidFilter(value: unknown): TabelaFilterItem | undefined {
 	};
 }
 
-export function getValidSorter(value: unknown): ExtendedArrayValueSorter | undefined {
-	if (typeof value === 'string') {
-		return {
-			direction: SORT_DIRECTION_ASCENDING,
-			field: value,
-			value: item => getValue(item as PlainObject, value as string),
-		};
-	}
-
-	if (isSorter(value)) {
-		return {
-			direction: getDirection((value as TabelaSorter).direction),
-			field: (value as TabelaSorter).key,
-			value:
-				(value as TabelaSorter).value ??
-				(item => getValue(item as PlainObject, (value as TabelaSorter).key)),
-		};
-	}
-}
-
 export function isGroupKey(key: unknown): boolean {
 	return typeof key === 'string' && GROUP_KEY_EXPRESSION.test(key);
-}
-
-export function isSorter(value: unknown): value is TabelaSorter {
-	return (
-		isPlainObject(value) &&
-		typeof (value as TabelaSorter).key === 'string' &&
-		('value' in (value as TabelaSorter)
-			? typeof (value as TabelaSorter).value === 'function'
-			: true)
-	);
 }
 
 // #endregion

@@ -3,39 +3,39 @@ import {isKey, isPlainObject} from '@oscarpalmer/atoms/is';
 import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
 import {delay} from '@oscarpalmer/atoms/promise/delay';
 import {getValue} from '@oscarpalmer/atoms/value/handle';
-import {type GroupComponent} from '../../components/group.component';
 import {removeRow} from '../../components/row.component';
 import {isGroupKey} from '../../helpers/misc.helpers';
-import type {DataState} from '../../models/data.model';
+import {clearGroups, getGroup, removeGroups, updateGroups} from '../../managers/group.manager';
+import {clearRows} from '../../managers/row.manager';
 import {
 	EVENT_DATA_CLEAR,
 	EVENT_DATA_REMOVE,
 	EVENT_DATA_SYNCHRONIZE,
 } from '../../models/event.model';
-import {clearGroups, getGroup, removeGroups, updateGroups} from '../group.manager';
-import {clearRows} from '../row.manager';
+import type {GroupComponent} from '../../models/group.model';
+import type {State} from '../../models/tabela.model';
 import {renderData} from './data.render';
 
 // #region Functions
 
-export async function clearData(state: DataState, synchronize: boolean): Promise<void> {
+export async function clearData(state: State, synchronize: boolean): Promise<void> {
 	return removeItems(state, [], true, synchronize, true).then(() => undefined);
 }
 
 export async function removeData(
-	state: DataState,
+	state: State,
 	items: Array<Key | PlainObject>,
 	render: false,
 ): Promise<PlainObject[]>;
 
 export async function removeData(
-	state: DataState,
+	state: State,
 	items: Array<Key | PlainObject>,
 	render: true,
 ): Promise<void>;
 
 export async function removeData(
-	state: DataState,
+	state: State,
 	items: Array<Key | PlainObject>,
 	render: boolean,
 ): Promise<unknown> {
@@ -53,7 +53,7 @@ export async function removeData(
 }
 
 async function removeItems(
-	state: DataState,
+	state: State,
 	data: Key[],
 	clear: boolean,
 	synchronize: boolean,
@@ -61,7 +61,7 @@ async function removeItems(
 ): Promise<PlainObject[]>;
 
 async function removeItems(
-	state: DataState,
+	state: State,
 	data: Key[],
 	clear: boolean,
 	synchronize: boolean,
@@ -69,18 +69,20 @@ async function removeItems(
 ): Promise<void>;
 
 async function removeItems(
-	state: DataState,
+	state: State,
 	keys: Key[],
 	clear: boolean,
 	synchronize: boolean,
 	render: boolean,
 ): Promise<unknown> {
-	if (clear) {
-		state.keys.active = undefined;
-		state.keys.original = [];
-		state.values.array = [];
+	const {data} = state.managers.data;
 
-		state.values.mapped.clear();
+	if (clear) {
+		data.keys.active = undefined;
+		data.keys.original = [];
+		data.values.array = [];
+
+		data.values.mapped.clear();
 
 		clearRows(state);
 
@@ -109,15 +111,15 @@ async function removeItems(
 
 		for (let keyIndex = 0; keyIndex < chunkLength; keyIndex += 1) {
 			const key = chunk[keyIndex];
-			const dataIndex = state.keys.original.indexOf(key);
+			const dataIndex = data.keys.original.indexOf(key);
 
 			let dataValue: PlainObject | undefined;
 
-			[dataValue] = state.values.array.splice(dataIndex, 1) as PlainObject[];
+			[dataValue] = data.values.array.splice(dataIndex, 1) as PlainObject[];
 
 			removedData.push(dataValue);
 
-			state.keys.original.splice(dataIndex, 1);
+			data.keys.original.splice(dataIndex, 1);
 
 			const row = state.managers.row.components.get(key);
 
@@ -125,7 +127,7 @@ async function removeItems(
 				removeRow(state, row, true);
 			}
 
-			state.values.mapped.delete(key);
+			data.values.mapped.delete(key);
 
 			if (!state.managers.group.enabled || isGroupKey(key)) {
 				continue;
@@ -159,11 +161,11 @@ async function removeItems(
 				updatedGroups.splice(groupIndex, 1);
 			}
 
-			groupIndex = state.values.array.indexOf(group.key.full);
+			groupIndex = data.values.array.indexOf(group.key.full);
 
 			if (groupIndex > -1) {
-				state.keys.original.splice(groupIndex, 1);
-				state.values.array.splice(groupIndex, 1);
+				data.keys.original.splice(groupIndex, 1);
+				data.values.array.splice(groupIndex, 1);
 			}
 
 			removedGroups.push(group);

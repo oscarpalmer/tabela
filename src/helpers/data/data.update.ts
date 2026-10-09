@@ -1,14 +1,14 @@
 import {isKey, isPlainObject} from '@oscarpalmer/atoms/is';
 import type {PlainObject} from '@oscarpalmer/atoms/models';
 import {getValue} from '@oscarpalmer/atoms/value/handle';
-import type {DataState} from '../../models/data.model';
+import {updateRow} from '../../managers/row.manager';
 import {EVENT_DATA_UPDATE} from '../../models/event.model';
-import {updateRow} from '../row.manager';
+import type {State} from '../../models/tabela.model';
 
 // #region Functions
 
 export async function updateData(
-	state: DataState,
+	state: State,
 	data: PlainObject[],
 	render: boolean,
 ): Promise<void> {
@@ -33,15 +33,15 @@ export async function updateData(
 			continue;
 		}
 
-		const existing = state.keys.original.indexOf(key);
+		const existing = state.managers.data.data.keys.original.indexOf(key);
 
 		if (existing === -1) {
 			continue;
 		}
 
-		Object.assign(state.values.array[existing], item);
+		Object.assign(state.managers.data.data.values.array[existing], item);
 
-		updated.push(state.values.array[existing] as PlainObject);
+		updated.push(state.managers.data.data.values.array[existing] as PlainObject);
 
 		if (render && state.managers.render.visible.keys.has(key)) {
 			updateRow(state, key);

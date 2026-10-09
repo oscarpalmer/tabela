@@ -5,7 +5,7 @@ import {isNullableOrWhitespace} from '@oscarpalmer/atoms/is';
 import type {Key, Simplify} from '@oscarpalmer/atoms/models';
 import {getString} from '@oscarpalmer/atoms/string';
 import {compare} from '@oscarpalmer/atoms/value/compare';
-import {removeGroup, updateGroup, type GroupComponent} from '../components/group.component';
+import {removeGroup, updateGroup} from '../components/group.component';
 import {getTabelaGroup} from '../helpers/misc.helpers';
 import {
 	EVENT_GROUP_ADD,
@@ -14,63 +14,40 @@ import {
 	EVENT_GROUP_TOGGLE,
 	EVENT_GROUP_UPDATE,
 } from '../models/event.model';
-import type {TabelaGroupHandlers} from '../models/group.model';
+import type {GroupComponent, GroupManager, TabelaGroup} from '../models/group.model';
 import {RENDER_ORIGIN_DATA} from '../models/render.model';
-import type {State} from '../models/tabela.model';
+import {SYMBOL, type State} from '../models/tabela.model';
 import {focusNavigation} from './navigation.manager';
 import {render} from './render.manager';
 
-// #region Types
+// #region Instances
 
-export class GroupManager {
-	collapsed = new Set<Key>();
+function GroupManager(this: GroupManager, state: State): void {
+	this.collapsed = new Set<Key>();
+	this.enabled = false;
+	this.items = [];
+	this.mapped = new Map();
+	this.order = {};
+	this.state = state;
 
-	enabled = false;
+	// @ts-expect-error All good, no worries :-)
+	this.handlers = new TabelaGroup(this);
 
-	key!: string;
-
-	handlers: TabelaGroupHandlers = {
-		set: (key?: string) => {
-			if (key === this.key) {
-				return;
-			}
-
-			this.enabled = !isNullableOrWhitespace(key);
-			this.key = key ?? '';
-
-			this.state.managers.data.set(this.state.managers.data.get());
-		},
-	};
-
-	items: GroupComponent[] = [];
-
-	mapped = new Map<string, GroupComponent>();
-
-	order: Record<never, number> = {};
-
-	constructor(public state: State) {
-		if (isNullableOrWhitespace(state.options.grouping)) {
-			return;
-		}
-
-		this.enabled = true;
-		this.key = state.options.grouping;
+	if (isNullableOrWhitespace(state.options.grouping)) {
+		return;
 	}
 
-	destroy(): void {
-		const groups = this.items.splice(0);
-		const {length} = groups;
-
-		for (let index = 0; index < length; index += 1) {
-			removeGroup(groups[index]);
-		}
-
-		this.collapsed.clear();
-
-		this.handlers = undefined as never;
-		this.state = undefined as never;
-	}
+	this.enabled = true;
+	this.key = state.options.grouping;
 }
+
+GroupManager.prototype.destroy = destroyGroupManager;
+
+function TabelaGroup(this: TabelaGroup, state: State): void {
+	this[SYMBOL] = state;
+}
+
+TabelaGroup.prototype.set = setTabelaGrouping;
 
 // #endregion
 
@@ -96,6 +73,25 @@ export function clearGroups(state: State): void {
 	state.managers.group.collapsed.clear();
 
 	state.managers.event.herald.emit(EVENT_GROUP_CLEAR);
+}
+
+export function createGroupManager(state: State): GroupManager {
+	// @ts-expect-error All good, no worries :-)
+	return new GroupManager(state);
+}
+
+function destroyGroupManager(this: GroupManager): void {
+	const groups = this.items.splice(0);
+	const {length} = groups;
+
+	for (let index = 0; index < length; index += 1) {
+		removeGroup(groups[index]);
+	}
+
+	this.collapsed.clear();
+
+	this.handlers = undefined as never;
+	this.state = undefined as never;
 }
 
 export function getGroup(state: State, value: unknown, forValue: true): GroupComponent | undefined;
@@ -150,7 +146,7 @@ export function removeGroups(state: State, groups: GroupComponent[]): void {
 	state.managers.event.herald.emit(EVENT_GROUP_REMOVE, groups.map(getTabelaGroup));
 }
 
-export function setGroups(state: State, groups: GroupComponent[]) {
+export function setGroups(state: State, groups: GroupComponent[]): void {
 	state.managers.group.items = sort(groups, (first, second) => compare(first.label, second.label));
 
 	state.managers.group.mapped = toMap(groups, group => group.key.full);
@@ -162,6 +158,20 @@ export function setGroups(state: State, groups: GroupComponent[]) {
 	);
 }
 
+function setTabelaGrouping(this: TabelaGroup, key?: string): void {
+	const {managers} = this[SYMBOL];
+	const manager = managers.group;
+
+	if (key === manager.key) {
+		return;
+	}
+
+	manager.enabled = !isNullableOrWhitespace(key);
+	manager.key = key ?? '';
+
+	managers.data.set(managers.data.get());
+}
+
 export function toggleGroup(state: State, group: GroupComponent): void {
 	const {collapsed, items} = state.managers.group;
 
@@ -169,15 +179,15 @@ export function toggleGroup(state: State, group: GroupComponent): void {
 
 	const index = items.indexOf(group);
 
-	let first = state.managers.data.state.keys.original.indexOf(group.key.full) + 1;
+	let first = state.managers.data.data.keys.original.indexOf(group.key.full) + 1;
 
 	const last =
 		items[index + 1] == null
-			? state.managers.data.state.keys.original.length - 1
-			: state.managers.data.state.keys.original.indexOf(items[index + 1].key.full) - 1;
+			? state.managers.data.data.keys.original.length - 1
+			: state.managers.data.data.keys.original.indexOf(items[index + 1].key.full) - 1;
 
 	for (; first <= last; first += 1) {
-		const key = state.managers.data.state.keys.original[first] as Key;
+		const key = state.managers.data.data.keys.original[first] as Key;
 
 		if (group.expanded) {
 			collapsed.delete(key);

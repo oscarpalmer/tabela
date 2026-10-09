@@ -1,8 +1,5 @@
 import {isNullableOrWhitespace} from '@oscarpalmer/atoms/is';
 import type {Key} from '@oscarpalmer/atoms/models';
-import {getNumber} from '@oscarpalmer/atoms/number';
-import {getString} from '@oscarpalmer/atoms/string';
-import {endsWith, includes, startsWith} from '@oscarpalmer/atoms/string/match';
 import {equal} from '@oscarpalmer/atoms/value/equal';
 import {getValue} from '@oscarpalmer/atoms/value/handle';
 import {getTabelaFilter, getValidFilter, isGroupKey} from '../helpers/misc.helpers';
@@ -13,43 +10,35 @@ import {
 	EVENT_FILTER_SET,
 } from '../models/event.model';
 import {
-	FILTER_ENDS_WITH,
-	FILTER_EQUALS,
-	FILTER_GREATER_THAN,
-	FILTER_GREATER_THAN_OR_EQUAL,
-	FILTER_INCLUDES,
-	FILTER_LESS_THAN,
-	FILTER_LESS_THAN_OR_EQUAL,
-	FILTER_NOT_EQUALS,
-	FILTER_NOT_INCLUDES,
-	FILTER_STARTS_WITH,
+	filterComparators,
+	type FilterManager,
 	type TabelaFilter,
 	type TabelaFilterItem,
 } from '../models/filter.model';
 import {RENDER_ORIGIN_FILTER} from '../models/render.model';
-import type {State} from '../models/tabela.model';
+import {SYMBOL, type State} from '../models/tabela.model';
 import {render} from './render.manager';
 
-// #region Types
+// #region Instances
 
-export class FilterManager {
-	handlers: TabelaFilter = {
-		add: item => addFilter(this.state, item),
-		clear: () => clearFilters(this.state),
-		remove: value => removeFilter(this.state, value),
-		set: items => setFilters(this.state, items),
-	};
+function FilterManager(this: FilterManager, state: State): void {
+	this.items = {};
+	this.state = state;
 
-	items: Record<string, TabelaFilterItem[]> = {};
-
-	constructor(public state: State) {}
-
-	destroy(): void {
-		this.handlers = undefined as never;
-		this.items = undefined as never;
-		this.state = undefined as never;
-	}
+	// @ts-expect-error All good, no worries :-)
+	this.handlers = new TabelaFilter(state);
 }
+
+FilterManager.prototype.destroy = destroyFilterManager;
+
+function TabelaFilter(this: TabelaFilter, state: State): void {
+	this[SYMBOL] = state;
+}
+
+TabelaFilter.prototype.add = addTabelaFilter;
+TabelaFilter.prototype.clear = clearTabelaFilters;
+TabelaFilter.prototype.remove = removeTabelaFilter;
+TabelaFilter.prototype.set = setTabelaFilters;
 
 // #endregion
 
@@ -82,6 +71,10 @@ function addFilter(state: State, item: TabelaFilterItem): void {
 	filterData(state);
 }
 
+function addTabelaFilter(this: TabelaFilter, item: TabelaFilterItem): void {
+	addFilter(this[SYMBOL], item);
+}
+
 function clearFilters(state: State): void {
 	const {event, filter} = state.managers;
 
@@ -96,13 +89,28 @@ function clearFilters(state: State): void {
 	filterData(state);
 }
 
+function clearTabelaFilters(this: TabelaFilter): void {
+	clearFilters(this[SYMBOL]);
+}
+
+export function createFilterManager(state: State): FilterManager {
+	// @ts-expect-error All good, no worries :-)
+	return new FilterManager(state);
+}
+
+function destroyFilterManager(this: FilterManager): void {
+	this.handlers = undefined as never;
+	this.items = undefined as never;
+	this.state = undefined as never;
+}
+
 export function filterData(state: State): void {
 	const {filter} = state.managers;
 
 	const filters = Object.entries(filter.items);
 
 	if (filters.length === 0) {
-		state.managers.data.state.keys.active = undefined;
+		state.managers.data.data.keys.active = undefined;
 
 		render(state, RENDER_ORIGIN_FILTER);
 
@@ -123,7 +131,7 @@ export function filterData(state: State): void {
 			continue;
 		}
 
-		const row = state.managers.data.state.values.mapped.get(key);
+		const row = state.managers.data.data.values.mapped.get(key);
 
 		if (row == null) {
 			continue;
@@ -139,7 +147,7 @@ export function filterData(state: State): void {
 
 				if (
 					isNullableOrWhitespace(filter.value) ||
-					comparators[filter.comparison](value, filter.value)
+					filterComparators[filter.comparison](value, filter.value)
 				) {
 					filtered.push(key);
 
@@ -149,7 +157,7 @@ export function filterData(state: State): void {
 		}
 	}
 
-	state.managers.data.state.keys.active = filtered;
+	state.managers.data.data.keys.active = filtered;
 
 	render(state, RENDER_ORIGIN_FILTER);
 }
@@ -207,6 +215,10 @@ function removeFilter(state: State, value: string | TabelaFilterItem): void {
 	filterData(state);
 }
 
+function removeTabelaFilter(this: TabelaFilter, value: string | TabelaFilterItem): void {
+	removeFilter(this[SYMBOL], value);
+}
+
 function setFilters(state: State, items: TabelaFilterItem[]): void {
 	const {event, filter} = state.managers;
 
@@ -236,31 +248,10 @@ function setFilters(state: State, items: TabelaFilterItem[]): void {
 	filterData(state);
 }
 
+function setTabelaFilters(this: TabelaFilter, items: TabelaFilterItem[]): void {
+	setFilters(this[SYMBOL], items);
+}
+
 function updateFilters(state: State): void {}
-
-// #endregion
-
-// #region Variables
-
-const comparators: Record<string, (row: unknown, filter: unknown) => boolean> = {
-	[FILTER_ENDS_WITH]: (row, filter) => endsWith(getString(row), getString(filter), true),
-	[FILTER_EQUALS]: (row, filter) => equalizer(row, filter),
-	[FILTER_GREATER_THAN]: (row, filter) => getNumber(row) > getNumber(filter),
-	[FILTER_GREATER_THAN_OR_EQUAL]: (row, filter) => getNumber(row) >= getNumber(filter),
-	[FILTER_INCLUDES]: (row, filter) => includes(getString(row), getString(filter), true),
-	[FILTER_LESS_THAN]: (row, filter) => getNumber(row) < getNumber(filter),
-	[FILTER_LESS_THAN_OR_EQUAL]: (row, filter) => getNumber(row) <= getNumber(filter),
-	[FILTER_NOT_EQUALS]: (row, filter) => !equalizer(row, filter),
-	[FILTER_NOT_INCLUDES]: (row, filter) => !includes(getString(row), getString(filter), true),
-	[FILTER_STARTS_WITH]: (row, filter) => startsWith(getString(row), getString(filter), true),
-};
-
-// #endregion
-
-// #region Variables
-
-const equalizer = equal.initialize({
-	ignoreCase: true,
-});
 
 // #endregion

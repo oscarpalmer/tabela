@@ -1,10 +1,11 @@
-import type {TabelaOptions} from './models/tabela.options';
-import {Tabela} from './tabela';
+import type {Tabela} from './models/tabela.model';
+import type {TabelaOptions} from './models/options.model';
+import {createTabela} from './tabela';
 
 // #region Functions
 
 export function tabela(element: HTMLElement, options: TabelaOptions): Tabela {
-	return new Tabela(element, options);
+	return createTabela(element, options);
 }
 
 // #endregion

@@ -1,5 +1,4 @@
-import {setAttributes} from '@oscarpalmer/toretto/attribute';
-import {setStyles} from '@oscarpalmer/toretto/style';
+import {createElement} from '@oscarpalmer/toretto/create';
 import {ELEMENT_DIV, ROLE_CELL, ROLE_ROW, ROLE_ROWGROUP} from '../models/dom.model';
 import {CSS_CELL, CSS_CELL_BODY, CSS_ROW, CSS_ROWGROUP} from '../models/style.model';
 import type {State} from '../models/tabela.model';
@@ -15,19 +14,17 @@ type RowGroupWithRow = {
 
 // #region Functions
 
-export function createCell(width: number, body?: boolean): HTMLDivElement {
-	const cell = createElement(
-		ELEMENT_DIV,
-		{
+export function createCellElement(width: number, body?: boolean): HTMLDivElement {
+	const cell = createElement(ELEMENT_DIV, {
+		property: {
 			className: CSS_CELL,
 			role: ROLE_CELL,
 			tabIndex: -1,
 		},
-		{},
-		{
+		style: {
 			flex: `0 0 ${width}px`,
 		},
-	);
+	});
 
 	if (body ?? true) {
 		cell.classList.add(CSS_CELL_BODY);
@@ -36,60 +33,39 @@ export function createCell(width: number, body?: boolean): HTMLDivElement {
 	return cell;
 }
 
-export function createElement<TagName extends keyof HTMLElementTagNameMap>(
-	tagName: TagName,
-	properties?: Partial<HTMLElementTagNameMap[TagName]>,
-	attributes?: Record<string, string>,
-	style?: Partial<CSSStyleDeclaration>,
-): HTMLElementTagNameMap[TagName] {
-	const element = document.createElement(tagName);
+export function createRowGroupElement(state: State): RowGroupWithRow;
 
-	const props = properties ?? {};
-	const keys = Object.keys(props);
+export function createRowGroupElement(state: State, withRow: boolean): HTMLDivElement;
 
-	for (const key of keys) {
-		(element as any)[key] = props[key as keyof typeof props];
-	}
-
-	setAttributes(element, attributes ?? {});
-	setStyles(element, style ?? {});
-
-	return element;
-}
-
-export function createRowGroup(state: State): RowGroupWithRow;
-
-export function createRowGroup(state: State, withRow: boolean): HTMLDivElement;
-
-export function createRowGroup(state: State, withRow?: boolean) {
+export function createRowGroupElement(state: State, withRow?: boolean) {
 	const group = createElement(ELEMENT_DIV, {
-		className: CSS_ROWGROUP,
-		role: ROLE_ROWGROUP,
+		property: {
+			className: CSS_ROWGROUP,
+			role: ROLE_ROWGROUP,
+		},
 	});
 
 	if (!(withRow ?? true)) {
 		return group;
 	}
 
-	const row = createRow(state.options.rowHeight);
+	const row = createRowElement(state.options.rowHeight);
 
 	group.append(row);
 
 	return {group, row};
 }
 
-export function createRow(height: number): HTMLDivElement {
-	const row = createElement(
-		ELEMENT_DIV,
-		{
+export function createRowElement(height: number): HTMLDivElement {
+	const row = createElement(ELEMENT_DIV, {
+		property: {
 			className: CSS_ROW,
 			role: ROLE_ROW,
 		},
-		{},
-		{
+		style: {
 			height: `${height}px`,
 		},
-	);
+	});
 
 	return row;
 }

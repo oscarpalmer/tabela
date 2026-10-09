@@ -1,5 +1,6 @@
-/// <reference types="vitest" />
+/// <reference types="vite-plus/test" />
 import {defineConfig} from 'vite-plus';
+import rules from './node_modules/@oscarpalmer/atoms/plugin/rules.js';
 
 export default defineConfig({
 	base: './',
@@ -9,9 +10,20 @@ export default defineConfig({
 		singleQuote: true,
 		useTabs: true,
 	},
-	lint: {},
+	lint: {
+		jsPlugins: ['./node_modules/@oscarpalmer/atoms/plugin/index.js'],
+		rules: {
+			...rules,
+		},
+	},
 	logLevel: 'silent',
 	pack: {
+		deps: {
+			// tsdown <0.23 compatibility: resolve external dependency subpaths.
+			// Remove to preserve subpath imports as written (the new default).
+			// https://tsdown.dev/options/dependencies#deps-resolvedepsubpath
+			resolveDepSubpath: true,
+		},
 		clean: false,
 		dts: true,
 		entry: ['./src/**/*.ts'],
@@ -19,10 +31,11 @@ export default defineConfig({
 	},
 	test: {
 		coverage: {
-			include: ['src/**/*.ts'],
+			include: ['./src/**/*.ts'],
 			provider: 'istanbul',
 		},
 		environment: 'jsdom',
+		include: ['./test/**/*.test.ts'],
 		watch: false,
 	},
 });

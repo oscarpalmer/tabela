@@ -1,17 +1,16 @@
 import {getString} from '@oscarpalmer/atoms/string';
 import {setAttributes} from '@oscarpalmer/toretto/attribute';
-import {createElement} from '../helpers/dom.helpers';
+import {createElement} from '@oscarpalmer/toretto/create';
 import {
 	ARIA_ROWINDEX,
 	ATTRIBUTE_DATA_EVENT,
 	ATTRIBUTE_DATA_KEY,
-	ATTRIBUTE_ROLE,
 	ELEMENT_DIV,
 	ROLE_CELL,
 	ROLE_ROW,
 } from '../models/dom.model';
 import {EVENT_GROUP, EVENT_GROUP_UPDATE} from '../models/event.model';
-import {GROUP_KEY_PREFIX, type GroupValue} from '../models/group.model';
+import {GROUP_KEY_PREFIX, type GroupComponent} from '../models/group.model';
 import {
 	CSS_BUTTON,
 	CSS_BUTTON_GROUP,
@@ -23,51 +22,37 @@ import {
 	CSS_ROW_GROUP,
 } from '../models/style.model';
 import type {State} from '../models/tabela.model';
-import type {Key} from '@oscarpalmer/atoms/models';
 
-// #region Types
+// #region Instances
 
-export class GroupComponent {
-	element: HTMLElement | undefined;
+function GroupComponent(this: GroupComponent, label: string, value: unknown): void {
+	this.expanded = true;
+	this.filtered = 0;
+	this.label = label;
+	this.selected = 0;
+	this.total = 0;
 
-	expanded = true;
+	const stringified = getString(value);
 
-	filtered = 0;
+	this.key = {
+		full: `${GROUP_KEY_PREFIX}${stringified}`,
+		short: stringified,
+	};
 
-	readonly key: GroupComponentKey;
-
-	selected = 0;
-
-	total = 0;
-
-	readonly value: GroupValue;
-
-	constructor(
-		readonly label: string,
-		value: unknown,
-	) {
-		const stringified = getString(value);
-
-		this.key = {
-			full: `${GROUP_KEY_PREFIX}${stringified}`,
-			short: stringified,
-		};
-
-		this.value = {
-			stringified,
-			original: value,
-		};
-	}
+	this.value = {
+		stringified,
+		original: value,
+	};
 }
-
-type GroupComponentKey = {
-	full: string;
-	short: Key;
-};
 
 // #endregion
 
 // #region Functions
+
+export function createGroup(label: string, value: unknown): GroupComponent {
+	// @ts-expect-error All good, no worries :-)
+	return new GroupComponent(label, value);
+}
 
 export function removeGroup(group: GroupComponent): void {
 	if (group.element == null) {
@@ -80,9 +65,12 @@ export function removeGroup(group: GroupComponent): void {
 }
 
 export function renderGroup(state: State, component: GroupComponent): void {
-	component.element ??= createElement(
-		ELEMENT_DIV,
-		{
+	component.element ??= createElement(ELEMENT_DIV, {
+		attribute: {
+			[ARIA_ROWINDEX]: String(state.managers.data.getIndex(component.key.full) + 1),
+			[ATTRIBUTE_DATA_KEY]: component.key.full,
+		},
+		property: {
 			className: `${CSS_ROW} ${CSS_ROW_GROUP}`,
 			id: `${state.prefix}_group_${component.key.short}`,
 			innerHTML: `<div class="${CSS_CELL} ${CSS_CELL_GROUP}" id="${state.prefix}_group_${component.key.short}_column" role="${ROLE_CELL}" tabindex="-1">
@@ -94,16 +82,12 @@ export function renderGroup(state: State, component: GroupComponent): void {
 	<span class="${CSS_GROUP_TOTAL}">${component.total}</span>
 	<span class="${CSS_GROUP_SELECTED}">${component.selected === 0 ? '' : component.selected}</span>
 </div>`,
+			role: ROLE_ROW,
 		},
-		{
-			[ARIA_ROWINDEX]: String(state.managers.data.getIndex(component.key.full) + 1),
-			[ATTRIBUTE_DATA_KEY]: component.key.full,
-			[ATTRIBUTE_ROLE]: ROLE_ROW,
-		},
-		{
+		style: {
 			height: `${state.options.rowHeight}px`,
 		},
-	);
+	});
 }
 
 export function updateGroup(state: State, component: GroupComponent, emit: boolean): void {

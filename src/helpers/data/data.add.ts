@@ -1,22 +1,19 @@
 import {isKey, isPlainObject} from '@oscarpalmer/atoms/is';
 import type {PlainObject} from '@oscarpalmer/atoms/models';
 import {getValue} from '@oscarpalmer/atoms/value/handle';
-import type {ColumnComponent} from '../../components/column.component';
-import {GroupComponent} from '../../components/group.component';
-import type {DataState} from '../../models/data.model';
+import {createGroup} from '../../components/group.component';
+import {getColumn} from '../../managers/column.manager';
+import {addGroups, getGroup, updateGroups} from '../../managers/group.manager';
+import type {ColumnComponent} from '../../models/column.model';
 import {EVENT_DATA_ADD} from '../../models/event.model';
-import {getColumn} from '../column.manager';
-import {addGroups, getGroup, updateGroups} from '../group.manager';
+import type {GroupComponent} from '../../models/group.model';
+import type {State} from '../../models/tabela.model';
 import {renderData} from './data.render';
 import {updateData} from './data.update';
 
 // #region Functions
 
-export async function addData(
-	state: DataState,
-	data: PlainObject[],
-	render: boolean,
-): Promise<void> {
+export async function addData(state: State, data: PlainObject[], render: boolean): Promise<void> {
 	if (!Array.isArray(data) || data.length === 0) {
 		return;
 	}
@@ -43,7 +40,7 @@ export async function addData(
 			continue;
 		}
 
-		if (state.values.mapped.has(key)) {
+		if (state.managers.data.data.values.mapped.has(key)) {
 			updatedData.push(item);
 
 			continue;
@@ -51,8 +48,8 @@ export async function addData(
 
 		addedData.push(item);
 
-		state.values.array.push(item);
-		state.values.mapped.set(key, item);
+		state.managers.data.data.values.array.push(item);
+		state.managers.data.data.values.mapped.set(key, item);
 
 		if (!state.managers.group.enabled) {
 			continue;
@@ -67,12 +64,12 @@ export async function addData(
 		if (group == null) {
 			groupColumn ??= getColumn(state, state.managers.group.key);
 
-			group = new GroupComponent(
+			group = createGroup(
 				`${groupColumn?.options.label ?? state.managers.group.key}: ${String(groupValue)}`,
 				groupValue,
 			);
 
-			state.values.array.push(group.key.full);
+			state.managers.data.data.values.array.push(group.key.full);
 
 			addedGroups.push(group);
 		} else if (!addedGroups.includes(group) && !updatedGroups.includes(group)) {

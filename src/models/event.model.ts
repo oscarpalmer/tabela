@@ -1,9 +1,23 @@
+import type {Herald} from '@oscarpalmer/atoms/herald';
 import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
 import type {TabelaFilterItem} from './filter.model';
-import type {TabelaGroup, TabelaGroupToggle} from './group.model';
+import type {Group, GroupToggle} from './group.model';
 import type {TabelaSorter} from './sort.model';
+import type {State} from './tabela.model';
 
 // #region Types
+
+// #region Misc.
+
+export type EventManager = {
+	herald: Herald<EventMap>;
+	state: State;
+	destroy(): void;
+};
+
+// #endregion
+
+// #region Events
 
 export type EventDataAdd = (data: PlainObject[]) => void;
 
@@ -34,15 +48,15 @@ export type EventFilterSet = (filters: {
 	removed: TabelaFilterItem[];
 }) => void;
 
-export type EventGroupAdd = (groups: TabelaGroup[]) => void;
+export type EventGroupAdd = (groups: Group[]) => void;
 
 export type EventGroupClear = () => void;
 
-export type EventGroupRemove = (groups: TabelaGroup[]) => void;
+export type EventGroupRemove = (groups: Group[]) => void;
 
-export type EventGroupToggle = (event: TabelaGroupToggle) => void;
+export type EventGroupToggle = (event: GroupToggle) => void;
 
-export type EventGroupUpdate = (groups: TabelaGroup[]) => void;
+export type EventGroupUpdate = (groups: Group[]) => void;
 
 export type EventName = keyof EventMap;
 
@@ -69,6 +83,8 @@ export type EventSortFlip = (sorters: TabelaSorter[]) => void;
 export type EventSortRemove = (sorters: TabelaSorter[]) => void;
 
 export type EventSortSet = (sorters: {added: TabelaSorter[]; removed: TabelaSorter[]}) => void;
+
+// #endregion
 
 // #endregion
 

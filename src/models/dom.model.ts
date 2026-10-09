@@ -26,8 +26,6 @@ export const ATTRIBUTE_DATA_SORT_DIRECTION = 'data-sort-direction';
 
 export const ATTRIBUTE_DATA_SORT_POSITION = 'data-sort-position';
 
-export const ATTRIBUTE_ROLE = 'role';
-
 export const ELEMENT_DIV = 'div';
 
 export const ROLE_CELL = 'gridcell';

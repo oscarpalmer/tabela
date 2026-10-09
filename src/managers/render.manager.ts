@@ -1,5 +1,4 @@
 import {on} from '@oscarpalmer/toretto/event';
-import type {RemovableEventListener} from '@oscarpalmer/toretto/models';
 import {updateFooter} from '../components/footer.component';
 import {renderGroup} from '../components/group.component';
 import {removeRow, renderRow} from '../components/row.component';
@@ -9,11 +8,9 @@ import {EVENT_RENDER_BEGIN, EVENT_RENDER_END} from '../models/event.model';
 import {
 	RENDER_ORIGIN_DATA,
 	RENDER_ORIGIN_SORT,
-	type RenderElements,
+	type RenderManager,
 	type RenderOrigin,
 	type RenderRange,
-	type RenderState,
-	type RenderVisible,
 } from '../models/render.model';
 import type {State} from '../models/tabela.model';
 import {filterData} from './filter.manager';
@@ -21,70 +18,66 @@ import {getGroup} from './group.manager';
 import {getRow} from './row.manager';
 import {sortData} from './sort.manager';
 
-// #region Types
+// #region Instances
 
-export class RenderManager {
-	fragment!: DocumentFragment;
+function RenderManager(this: RenderManager, state: State): void {
+	this.listener = on(state.elements.wrapper, 'scroll', onScroll.bind(this));
+	this.state = state;
+	this.top = 0;
 
-	listener: RemovableEventListener;
-
-	pool: RenderElements = {
+	this.pool = {
 		cells: {},
 		rows: [],
 	};
 
-	state: RenderState;
-
-	visible: RenderVisible = {
+	this.visible = {
 		indiced: new Map(),
 		keys: new Set(),
 	};
-
-	constructor(state: State) {
-		this.listener = on(state.element, 'scroll', onScroll.bind(this));
-
-		this.state = {
-			...state,
-			top: 0,
-		};
-	}
-
-	destroy(): void {
-		const {listener, pool, visible} = this;
-
-		listener();
-
-		visible.indiced.clear();
-		visible.keys.clear();
-
-		const cells = Object.values(pool.cells).flat();
-
-		let {length} = cells;
-
-		for (let index = 0; index < length; index += 1) {
-			cells[index].remove();
-		}
-
-		length = pool.rows.length;
-
-		for (let index = 0; index < length; index += 1) {
-			pool.rows[index].remove();
-		}
-
-		pool.cells = {};
-		pool.rows = [];
-
-		this.fragment = undefined as never;
-		this.listener = undefined as never;
-		this.pool = undefined as never;
-		this.state = undefined as never;
-		this.visible = undefined as never;
-	}
 }
+
+RenderManager.prototype.destroy = destroyRenderManager;
 
 // #endregion
 
 // #region Functions
+
+export function createRenderManager(state: State): RenderManager {
+	// @ts-expect-error All good, no worries :-)
+	return new RenderManager(state);
+}
+
+function destroyRenderManager(this: RenderManager): void {
+	const {listener, pool, visible} = this;
+
+	listener();
+
+	visible.indiced.clear();
+	visible.keys.clear();
+
+	const cells = Object.values(pool.cells).flat();
+
+	let {length} = cells;
+
+	for (let index = 0; index < length; index += 1) {
+		cells[index].remove();
+	}
+
+	length = pool.rows.length;
+
+	for (let index = 0; index < length; index += 1) {
+		pool.rows[index].remove();
+	}
+
+	pool.cells = {};
+	pool.rows = [];
+
+	this.fragment = undefined as never;
+	this.listener = undefined as never;
+	this.pool = undefined as never;
+	this.state = undefined as never;
+	this.visible = undefined as never;
+}
 
 function getFragment(state: State): DocumentFragment {
 	state.managers.render.fragment ??= document.createDocumentFragment();
@@ -95,8 +88,8 @@ function getFragment(state: State): DocumentFragment {
 }
 
 function getRange(state: State, down: boolean): RenderRange {
-	const {element, managers, options} = state;
-	const {clientHeight, scrollTop} = element;
+	const {elements, managers, options} = state;
+	const {clientHeight, scrollTop} = elements.wrapper;
 
 	const {keys} = managers.data;
 
@@ -119,11 +112,11 @@ function getRange(state: State, down: boolean): RenderRange {
 function onScroll(this: RenderManager): void {
 	const {state} = this;
 
-	const top = state.element.scrollTop;
+	const top = state.elements.wrapper.scrollTop;
 
-	update(state, top > state.top);
+	update(state, top > this.top);
 
-	state.top = top;
+	this.top = top;
 }
 
 export function removeCells(state: State, keys: string[]): void {
@@ -284,7 +277,7 @@ function update(state: State, down: boolean, rerender?: boolean): void {
 		components.body.elements.group.prepend(fragment);
 	}
 
-	state.element.setAttribute(ARIA_ROWCOUNT, String(state.managers.data.keys.length));
+	state.elements.wrapper.setAttribute(ARIA_ROWCOUNT, String(state.managers.data.keys.length));
 
 	managers.event.herald.emit(EVENT_RENDER_END);
 }

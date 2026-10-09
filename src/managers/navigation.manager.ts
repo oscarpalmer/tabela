@@ -3,49 +3,55 @@ import {clamp} from '@oscarpalmer/atoms/number';
 import {isGroupKey} from '../helpers/misc.helpers';
 import {ATTRIBUTE_DATA_ACTIVE} from '../models/dom.model';
 import {GROUP_KEY_PREFIX} from '../models/group.model';
+import type {NavigationManager, NavigationManagerActiveType} from '../models/navigation.model';
 import type {State} from '../models/tabela.model';
 import {getGroup} from './group.manager';
 import {getRow} from './row.manager';
 
-// #region Types
+// #region Instances
 
-export class NavigationManager {
-	readonly active: NavigationManagerActive = {
+function NavigationManager(this: NavigationManager, state: State): void {
+	this.state = state;
+
+	this.active = {
 		index: -1,
 	};
-
-	constructor(public state: State) {}
-
-	activate(row?: Key, column?: string, focus?: boolean): void {
-		if (row == null || column == null) {
-			return;
-		}
-
-		this.active.column = column;
-		this.active.index = this.state.managers.data.getIndex(row);
-		this.active.row = row;
-		this.active.type = 'row';
-
-		setStyles(this.state, focus);
-	}
-
-	destroy(): void {
-		this.state = undefined as never;
-	}
 }
 
-type NavigationManagerActive = {
-	column?: string;
-	index: number;
-	row?: Key;
-	type?: NavigationManagerActiveType;
-};
-
-type NavigationManagerActiveType = 'footer' | 'group' | 'header' | 'row';
+NavigationManager.prototype.activate = activateNavigation;
+NavigationManager.prototype.destroy = destroyNavigation;
 
 // #endregion
 
 // #region Functions
+
+function activateNavigation(
+	this: NavigationManager,
+	row?: Key,
+	column?: string,
+	focus?: boolean,
+): void {
+	if (row == null || column == null) {
+		return;
+	}
+
+	this.active.column = column;
+	this.active.index = this.state.managers.data.getIndex(row);
+	this.active.row = row;
+	this.active.type = 'row';
+
+	setStyles(this.state, focus);
+}
+
+export function createNavigationManager(state: State): NavigationManager {
+	// @ts-expect-error All good, no worries :-)
+	return new NavigationManager(state);
+}
+
+function destroyNavigation(this: NavigationManager): void {
+	this.active = undefined as never;
+	this.state = undefined as never;
+}
 
 export function focusNavigation(state: State): void {
 	const {active} = state.managers.navigation;
@@ -89,7 +95,7 @@ function getRowSelector(
 			return `${prefix}_row_${row}`;
 
 		default:
-			break;
+			return undefined;
 	}
 }
 
@@ -194,7 +200,7 @@ function setOffset(state: State, event: KeyboardEvent): void {
 function setStyles(state: State, focus?: boolean): void {
 	const {active} = state.managers.navigation;
 
-	const elements = state.element.querySelectorAll(`[${ATTRIBUTE_DATA_ACTIVE}]`);
+	const elements = state.elements.wrapper.querySelectorAll(`[${ATTRIBUTE_DATA_ACTIVE}]`);
 
 	for (const element of elements) {
 		(element as HTMLElement).tabIndex = -1;
@@ -204,24 +210,24 @@ function setStyles(state: State, focus?: boolean): void {
 
 	const selector = getRowSelector(active.type!, state.prefix, active.row!);
 
-	state.element.tabIndex = selector == null ? 0 : -1;
+	state.elements.wrapper.tabIndex = selector == null ? 0 : -1;
 
 	if (selector == null) {
-		state.element.focus();
+		state.elements.wrapper.focus();
 
 		return;
 	}
 
-	state.element.querySelector(selector)?.setAttribute(ATTRIBUTE_DATA_ACTIVE, '');
+	state.elements.wrapper.querySelector(selector)?.setAttribute(ATTRIBUTE_DATA_ACTIVE, '');
 
-	const element = state.element.querySelector(
+	const element = state.elements.wrapper.querySelector(
 		`#${CSS.escape(`${selector}_column${active.type === 'group' ? '' : `_${active.column}`}`)}`,
 	);
 
-	state.element.tabIndex = element == null ? 0 : -1;
+	state.elements.wrapper.tabIndex = element == null ? 0 : -1;
 
 	if (element == null) {
-		state.element.focus();
+		state.elements.wrapper.focus();
 
 		return;
 	}

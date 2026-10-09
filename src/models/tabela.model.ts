@@ -1,28 +1,29 @@
-import type {BodyComponent} from '../components/body.component';
-import type {FooterComponent} from '../components/footer.component';
-import type {HeaderComponent} from '../components/header.component';
-import type {ColumnManager} from '../managers/column.manager';
-import type {DataManager} from '../managers/data/data.manager';
-import type {EventManager} from '../managers/event.manager';
-import type {FilterManager} from '../managers/filter.manager';
-import type {GroupManager} from '../managers/group.manager';
-import type {NavigationManager} from '../managers/navigation.manager';
-import type {RenderManager} from '../managers/render.manager';
-import type {RowManager} from '../managers/row.manager';
-import type {SelectionManager} from '../managers/selection.manager';
-import type {SortManager} from '../managers/sort.manager';
-import type {StyleManager} from '../managers/style.manager';
-import type {TabelaOptions} from './tabela.options';
+import type {HeraldEvents} from '@oscarpalmer/atoms/herald';
+import type {BodyComponent} from './body.model';
+import type {ColumnManager} from './column.model';
+import type {DataManager, TabelaData} from './data.model';
+import type {EventManager, EventMap} from './event.model';
+import type {FilterManager, TabelaFilter} from './filter.model';
+import type {FooterComponent} from './footer.model';
+import type {GroupManager, TabelaGroup} from './group.model';
+import type {HeaderComponent} from './header.model';
+import type {NavigationManager} from './navigation.model';
+import type {RenderManager} from './render.model';
+import type {RowManager} from './row.model';
+import type {SelectionManager, TabelaSelection} from './selection.model';
+import type {SortManager, TabelaSort} from './sort.model';
+import type {StyleManager} from './style.model';
+import type {TabelaOptions} from './options.model';
 
 // #region Types
 
-export type Components = {
+type Components = {
 	body: BodyComponent;
 	footer: FooterComponent;
 	header: HeaderComponent;
 };
 
-export type Managers = {
+type Managers = {
 	column: ColumnManager;
 	data: DataManager;
 	event: EventManager;
@@ -38,12 +39,33 @@ export type Managers = {
 
 export type State = {
 	components: Components;
-	element: HTMLElement;
+	elements: StateElements;
 	id: number;
 	key: string;
 	managers: Managers;
 	prefix: string;
 	options: TabelaOptions;
 };
+
+type StateElements = {
+	table: HTMLDivElement;
+	wrapper: HTMLElement;
+};
+
+export type Tabela = {
+	[SYMBOL]: State;
+	data: TabelaData;
+	events: HeraldEvents<EventMap>;
+	filter: TabelaFilter;
+	group: TabelaGroup;
+	selection: TabelaSelection;
+	sort: TabelaSort;
+};
+
+// #endregion
+
+// #region Variables
+
+export const SYMBOL: unique symbol = Symbol('tabela');
 
 // #endregion

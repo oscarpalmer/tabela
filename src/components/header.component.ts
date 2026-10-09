@@ -1,34 +1,37 @@
-import {createRowGroup} from '../helpers/dom.helpers';
-import type {HeaderElements} from '../models/header.model';
+import {createRowGroupElement} from '../helpers/dom.helpers';
+import type {ColumnComponent} from '../models/column.model';
+import type {HeaderComponent} from '../models/header.model';
 import {CSS_ROW_HEADER, CSS_ROWGROUP_HEADER} from '../models/style.model';
 import type {State} from '../models/tabela.model';
-import type {ColumnComponent} from './column.component';
 
-// #region Types
+// #region Instances
 
-export class HeaderComponent {
-	readonly elements: HeaderElements;
+function HeaderComponent(this: HeaderComponent, state: State): void {
+	const {group, row} = createRowGroupElement(state);
 
-	constructor(state: State) {
-		const {group, row} = createRowGroup(state);
+	row.id = `${state.prefix}_header`;
 
-		row.id = `${state.prefix}_header`;
+	this.elements = {group, row};
 
-		this.elements = {group, row};
-
-		group.classList.add(CSS_ROWGROUP_HEADER);
-		row.classList.add(CSS_ROW_HEADER);
-	}
-
-	destroy(): void {
-		this.elements.group = undefined as never;
-		this.elements.row = undefined as never;
-	}
+	group.classList.add(CSS_ROWGROUP_HEADER);
+	row.classList.add(CSS_ROW_HEADER);
 }
+
+HeaderComponent.prototype.destroy = destroyHeader;
 
 // #endregion
 
 // #region Functions
+
+export function createHeader(state: State): HeaderComponent {
+	// @ts-expect-error All good, no worries :-)
+	return new HeaderComponent(state);
+}
+
+function destroyHeader(this: HeaderComponent): void {
+	this.elements.group = undefined as never;
+	this.elements.row = undefined as never;
+}
 
 export function setHeader(state: State, columns: ColumnComponent[]): void {
 	const {header} = state.components;

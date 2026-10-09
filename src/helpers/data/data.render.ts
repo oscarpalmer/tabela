@@ -3,28 +3,30 @@ import {toMap} from '@oscarpalmer/atoms/array/to-map';
 import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
 import {getValue} from '@oscarpalmer/atoms/value/handle';
 import {isGroupKey} from '../../helpers/misc.helpers';
-import type {DataState} from '../../models/data.model';
+import {render} from '../../managers/render.manager';
+import {sortDataGrouped} from '../../managers/sort.manager';
 import {RENDER_ORIGIN_DATA} from '../../models/render.model';
-import {render} from '../render.manager';
-import {sortDataGrouped} from '../sort.manager';
+import type {State} from '../../models/tabela.model';
 
 // #region Functions
 
-export function renderData(state: DataState): void {
+export function renderData(state: State): void {
+	const {data} = state.managers.data;
+
 	if (state.managers.group.enabled) {
-		sortDataGrouped(state, state.values.array, state.managers.sort.default!);
+		sortDataGrouped(state, data.values.array, state.managers.sort.default!);
 	} else {
-		sort(state.values.array as PlainObject[], state.managers.sort.default!);
+		sort(data.values.array as PlainObject[], state.managers.sort.default!);
 	}
 
-	state.keys.active = undefined;
+	data.keys.active = undefined;
 
-	state.keys.original = state.values.array.map(item =>
+	data.keys.original = data.values.array.map(item =>
 		typeof item === 'string' ? item : (getValue(item, state.key) as Key),
 	);
 
-	state.values.mapped = toMap(
-		state.values.array.filter(item => !isGroupKey(item)) as PlainObject[],
+	data.values.mapped = toMap(
+		data.values.array.filter(item => !isGroupKey(item)) as PlainObject[],
 		item => getValue(item, state.key) as Key,
 	);
 

@@ -1,55 +1,55 @@
 import {unique} from '@oscarpalmer/atoms/array';
 import {average, max, median, min, sum} from '@oscarpalmer/atoms/math';
 import type {PlainObject} from '@oscarpalmer/atoms/models';
-import {createCell, createRowGroup} from '../helpers/dom.helpers';
-import type {TabelaColumn, TabelaColumnFooter} from '../models/column.model';
-import type {FooterElements} from '../models/footer.model';
+import {createCellElement, createRowGroupElement} from '../helpers/dom.helpers';
+import type {ColumnComponent, TabelaColumn, TabelaColumnFooter} from '../models/column.model';
+import type {FooterComponent} from '../models/footer.model';
 import {CSS_CELL_FOOTER, CSS_ROW_FOOTER, CSS_ROWGROUP_FOOTER} from '../models/style.model';
 import type {State} from '../models/tabela.model';
-import type {ColumnComponent} from './column.component';
 
-// #region Types
+// #region Instances
 
-export class FooterComponent {
-	elements: FooterElements;
+function FooterComponent(this: FooterComponent, state: State): void {
+	const {group, row} = createRowGroupElement(state);
 
-	readonly hidden: boolean;
+	row.id = `${state.prefix}_footer`;
 
-	constructor(public state: State) {
-		const {group, row} = createRowGroup(state);
+	this.elements = {
+		group,
+		row,
+		cells: [],
+	};
 
-		row.id = `${state.prefix}_footer`;
+	this.hidden = state.options.footer === false;
 
-		this.elements = {
-			group,
-			row,
-			cells: [],
-		};
+	group.classList.add(CSS_ROWGROUP_FOOTER);
+	row.classList.add(CSS_ROW_FOOTER);
 
-		this.hidden = state.options.footer === false;
-
-		group.classList.add(CSS_ROWGROUP_FOOTER);
-		row.classList.add(CSS_ROW_FOOTER);
-
-		if (this.hidden) {
-			group.hidden = true;
-		}
-	}
-
-	destroy(): void {
-		this.elements.cells.length = 0;
-
-		this.elements.group = undefined as never;
-		this.elements.row = undefined as never;
+	if (this.hidden) {
+		group.hidden = true;
 	}
 }
+
+FooterComponent.prototype.destroy = destroyFooter;
 
 // #endregion
 
 // #region Functions
 
+export function createFooter(state: State): FooterComponent {
+	// @ts-expect-error All good, no worries :-)
+	return new FooterComponent(state);
+}
+
+function destroyFooter(this: FooterComponent): void {
+	this.elements.cells.length = 0;
+
+	this.elements.group = undefined as never;
+	this.elements.row = undefined as never;
+}
+
 function getCell(footer: FooterComponent, column: ColumnComponent): HTMLDivElement {
-	const cell = createCell(column.options.width, false);
+	const cell = createCellElement(column.options.width, false);
 
 	cell.id = `${footer.elements.row.id}_column_${column.options.key}`;
 
@@ -127,13 +127,13 @@ const handlers: Record<
 	TabelaColumnFooter,
 	(column: TabelaColumn, values: PlainObject[]) => number
 > = {
-	average: (column, data) => average(data, item => item[column.key] as number),
-	count: (_, data) => data.length,
-	max: (column, data) => max(data, item => item[column.key] as number),
-	median: (column, data) => median(data, item => item[column.key] as number),
-	min: (column, data) => min(data, item => item[column.key] as number),
-	sum: (column, data) => sum(data, item => item[column.key] as number),
-	unique: (column, data) => unique(data.map(item => item[column.key])).length,
+	average: (column, values) => average(values, item => item[column.key] as number),
+	count: (_, values) => values.length,
+	max: (column, values) => max(values, item => item[column.key] as number),
+	median: (column, values) => median(values, item => item[column.key] as number),
+	min: (column, values) => min(values, item => item[column.key] as number),
+	sum: (column, values) => sum(values, item => item[column.key] as number),
+	unique: (column, values) => unique(values.map(item => item[column.key])).length,
 };
 
 // #endregion

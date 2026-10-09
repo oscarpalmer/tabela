@@ -1,5 +1,5 @@
 import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
-import type {State} from './tabela.model';
+import type {State, SYMBOL} from './tabela.model';
 
 // #region Types
 
@@ -8,10 +8,23 @@ type DataKeys = {
 	original: Key[];
 };
 
-export type DataState = {
+export type DataManager = {
+	data: DataManagerData;
+	handlers: TabelaData;
+	state: State;
+	get keys(): Key[];
+	get size(): number;
+	clear(): Promise<void>;
+	destroy(): void;
+	get(active?: boolean): PlainObject[];
+	getIndex(item: Key): number;
+	set(data: PlainObject[]): void;
+};
+
+type DataManagerData = {
 	keys: DataKeys;
 	values: DataValues;
-} & State;
+};
 
 export type DataValue = string | PlainObject;
 
@@ -21,6 +34,7 @@ type DataValues = {
 };
 
 export type TabelaData = {
+	[SYMBOL]: State;
 	add(data: PlainObject[]): Promise<void>;
 	clear(): Promise<void>;
 	get(active?: boolean): PlainObject[];
