@@ -11,7 +11,7 @@ export default defineConfig({
 		},
 	],
 	deps: {
-		alwaysBundle: /^@oscarpalmer/,
+		alwaysBundle: /^.*/,
 		onlyBundle: false,
 	},
 	dts: false,

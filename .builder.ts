@@ -51,7 +51,7 @@ async function createJavaScript(): Promise<void> {
 			},
 		],
 		deps: {
-			alwaysBundle: /^@oscarpalmer/,
+			alwaysBundle: /.*/,
 			onlyBundle: false,
 		},
 		dts: false,
@@ -132,7 +132,7 @@ async function installDependency(name: string): Promise<void> {
 }
 
 async function prepare(): Promise<void> {
-	console.log('--- Preparing build directory');
+	console.log('--- Preparing directories');
 
 	await rm('./build', {recursive: true, force: true});
 	await rm('./vendor', {recursive: true, force: true});
@@ -141,7 +141,7 @@ async function prepare(): Promise<void> {
 	await mkdir('./build/assets/stylesheets', {recursive: true});
 	await mkdir('./vendor', {recursive: true});
 
-	console.log('  ✓ Prepared build directory');
+	console.log('  ✓ Prepared directories');
 }
 
 await prepare();
