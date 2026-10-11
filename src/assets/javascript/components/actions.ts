@@ -101,12 +101,7 @@ export default html`
 
 					<div class="flow flow-small">
 						<div class="flow flow-small">
-							<input
-								class="oui-input"
-								id="amount"
-								type="number"
-								value="${amount}"
-							/>
+							<input class="oui-input" id="amount" type="number" value="${amount}" />
 
 							<div class="stack stack--small">
 								<button
@@ -193,13 +188,7 @@ export default html`
 			<div class="flow flex-ai--fe flex-jc--sb">
 				<div class="stack stack--small">
 					<label class="oui-vh" for="name">Name</label>
-					<input
-						class="oui-input"
-						id="name"
-						type="text"
-						value="${name}"
-						@on="${onName}"
-					/>
+					<input class="oui-input" id="name" type="text" value="${name}" @on="${onName}" />
 				</div>
 			</div>
 		</details>

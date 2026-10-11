@@ -158,12 +158,12 @@ function onUpdateGroups(groups: unknown[]): void {
 	addLog('group:update', `Updating ${groups.length} groups`);
 }
 
-export function setupLogger(tabel: Tabela): void {
+export function setupLogger(table: Tabela): void {
 	for (const name of names) {
 		const calllback = events[name];
 
 		if (calllback != null) {
-			tabel.events.subscribe(name, calllback);
+			table.events[name](calllback);
 		}
 	}
 }

@@ -1,4 +1,3 @@
-import '@oscarpalmer/oui/popover';
 import {html} from '@oscarpalmer/abydon';
 import logs from './logs';
 
@@ -40,7 +39,10 @@ export default html`
 	<footer class="footer flow flex-ai--fs flex-jc--sb">
 		<div class="stack stack--small">
 			<p>&copy 2026, Oscar Palmér</p>
-			<p>Built with ${getLink('abydon')}, ${getLink('atoms')}, ${getLink('oui')}, ${getLink('tabela')}, and ${getLink('toretto')}.</p>
+			<p>
+				Built with ${getLink('abydon')}, ${getLink('atoms')}, ${getLink('oui')},
+				${getLink('tabela')}, and ${getLink('toretto')}.
+			</p>
 		</div>
 		${logs}
 	</footer>

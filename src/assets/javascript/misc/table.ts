@@ -20,6 +20,7 @@ const columns: TabelaOptions['columns'] = [
 		footer: 'sum',
 		key: 'age',
 		label: 'Age',
+		width: 10,
 	},
 	{
 		key: 'active',
@@ -28,7 +29,7 @@ const columns: TabelaOptions['columns'] = [
 ];
 
 const options: TabelaOptions = {
-	columns: [...columns, ...columns, ...columns, ...columns, ...columns, ...columns, ...columns, ...columns, ...columns],
+	columns,
 	data: [],
 	// footer: false,
 	grouping: 'age',

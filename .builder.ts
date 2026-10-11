@@ -114,11 +114,15 @@ async function installDependencies(): Promise<void> {
 
 async function installDependency(name: string): Promise<void> {
 	return new Promise<void>((resolve, reject) => {
-		exec(`cd node_modules/@oscarpalmer/${name} && npm i`, error => {
-			if (error) {
-				reject(error);
-			} else {
+		exec(`cd node_modules/@oscarpalmer/${name} && npm i`, (error: unknown) => {
+			if (error == null) {
+				console.log('  ✓ Installed dependency:', name);
+
 				resolve();
+			} else {
+				console.log('  ! Failed to install dependency:', name);
+
+				reject(error);
 			}
 		});
 	});
@@ -141,6 +145,7 @@ await createHtml();
 
 if (watch) {
 	const {result} = concurrently([
+		watch ? `cd build && php -S localhost:3000` : '',
 		`npx sass --watch --no-source-map src/assets/stylesheets/styles.local.scss:build/assets/stylesheets/styles.${timestamp}.css`,
 		`TIMESTAMP=${timestamp} npx tsdown -c ./tsdown.config.ts --watch`,
 	]);
