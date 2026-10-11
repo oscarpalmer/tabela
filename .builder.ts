@@ -10,7 +10,7 @@ const timestamp = Date.now();
 const watch = process.argv.includes('--watch');
 
 async function copyFiles(): Promise<void> {
-	console.log('--- Copying files');
+	console.log('- Copying files');
 
 	await copyFile('./src/robots.txt', './build/robots.txt');
 
@@ -18,7 +18,7 @@ async function copyFiles(): Promise<void> {
 }
 
 async function createHtml(): Promise<void> {
-	console.log('--- Creating HTML');
+	console.log('- Creating HTML');
 
 	const original = await readFile('./src/index.html', 'utf-8');
 
@@ -40,7 +40,7 @@ async function createHtml(): Promise<void> {
 }
 
 async function createJavaScript(): Promise<void> {
-	console.log('--- Creating JavaScript');
+	console.log('- Creating JavaScript');
 
 	await build({
 		copy: [
@@ -59,6 +59,7 @@ async function createJavaScript(): Promise<void> {
 		// logLevel: 'silent',
 		minify: true,
 		outDir: './build/assets/javascript',
+		tsconfig: './tsconfig.json',
 		unbundle: false,
 	});
 
@@ -68,7 +69,7 @@ async function createJavaScript(): Promise<void> {
 }
 
 async function createStylesheets(): Promise<void> {
-	console.log('--- Creating stylesheets');
+	console.log('- Creating stylesheets');
 
 	const source = await readFile('./src/assets/stylesheets/styles.scss', 'utf-8');
 
@@ -101,7 +102,7 @@ async function createStylesheets(): Promise<void> {
 }
 
 async function installDependencies(): Promise<void> {
-	console.log('--- Installing dependencies');
+	console.log('- Installing dependencies');
 
 	await installDependency('abydon');
 	await installDependency('atoms');
@@ -132,7 +133,7 @@ async function installDependency(name: string): Promise<void> {
 }
 
 async function prepare(): Promise<void> {
-	console.log('--- Preparing directories');
+	console.log('- Preparing directories');
 
 	await rm('./build', {recursive: true, force: true});
 	await rm('./vendor', {recursive: true, force: true});
@@ -150,7 +151,7 @@ await createHtml();
 
 if (watch) {
 	const {result} = concurrently([
-		watch ? `cd build && php -S localhost:3000` : '',
+		'cd build && php -S localhost:3000',
 		`npx sass --watch --no-source-map src/assets/stylesheets/styles.local.scss:build/assets/stylesheets/styles.${timestamp}.css`,
 		`TIMESTAMP=${timestamp} npx tsdown -c ./tsdown.config.ts --watch`,
 	]);
@@ -162,4 +163,4 @@ if (watch) {
 	await createStylesheets();
 }
 
-console.log('--- Build complete');
+console.log('✓ Build complete');
