@@ -114,17 +114,20 @@ async function installDependencies(): Promise<void> {
 
 async function installDependency(name: string): Promise<void> {
 	return new Promise<void>((resolve, reject) => {
-		exec(`cd node_modules/@oscarpalmer/${name} && npm i`, (error: unknown) => {
-			if (error == null) {
-				console.log('  ✓ Installed dependency:', name);
+		exec(
+			`cd vendor && git clone https://github.com/oscarpalmer/${name}.git && cd ${name} && npm i`,
+			(error: unknown) => {
+				if (error == null) {
+					console.log('  ✓ Installed dependency:', name);
 
-				resolve();
-			} else {
-				console.log('  ! Failed to install dependency:', name);
+					resolve();
+				} else {
+					console.log('  ! Failed to install dependency:', name);
 
-				reject(error);
-			}
-		});
+					reject(error);
+				}
+			},
+		);
 	});
 }
 
@@ -132,9 +135,11 @@ async function prepare(): Promise<void> {
 	console.log('--- Preparing build directory');
 
 	await rm('./build', {recursive: true, force: true});
+	await rm('./vendor', {recursive: true, force: true});
 
 	await mkdir('./build/assets/javascript', {recursive: true});
 	await mkdir('./build/assets/stylesheets', {recursive: true});
+	await mkdir('./vendor', {recursive: true});
 
 	console.log('  ✓ Prepared build directory');
 }

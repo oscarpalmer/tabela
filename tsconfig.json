@@ -28,6 +28,13 @@
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
 		"outDir": "./dist",
+		"paths": {
+			"@oscarpalmer/abydon": ["./vendor/abydon/src/index.ts"],
+			"@oscarpalmer/atoms/*": ["./vendor/atoms/src/*"],
+			"@oscarpalmer/oui/*": ["./vendor/oui/src/js/*"],
+			"@oscarpalmer/tabela": ["./vendor/tabela/src/index.ts"],
+			"@oscarpalmer/toretto/*": ["./vendor/toretto/src/*"]
+		},
 		"resolveJsonModule": true,
 		"rootDir": "./",
 		"skipLibCheck": true,
