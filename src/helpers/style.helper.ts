@@ -1,9 +1,10 @@
 import {toggleStyles, type StyleToggler} from '@oscarpalmer/toretto/style';
 import {tabelaCSS} from '../models/style.model';
+import type {State} from '../models/tabela.model';
 
 // #region Functions
 
-export function appendStyles(): void {
+export function appendBaseStyles(): void {
 	if (appended) {
 		return;
 	}
@@ -15,6 +16,24 @@ export function appendStyles(): void {
 	style.textContent = tabelaCSS;
 
 	document.head.appendChild(style);
+}
+
+export function updateColumnWidthStyling(state: State): void {
+	const {style} = state.managers;
+
+	if (style.widths == null) {
+		style.widths = document.createElement('style');
+
+		state.elements.wrapper.append(style.widths);
+	}
+
+	let styling = '';
+
+	for (const column of state.managers.column.items) {
+		styling += `--tabela-width-${column.key.normalized}: ${column.elements.wrapper.style.width};`;
+	}
+
+	style.widths.textContent = `#${state.elements.wrapper.id} { ${styling} }`;
 }
 
 // #endregion

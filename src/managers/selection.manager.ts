@@ -28,7 +28,7 @@ function SelectionManager(this: SelectionManager, state: State): void {
 	// @ts-expect-error All good, no worries :-)
 	this.handlers = new TabelaSelection(state);
 
-	mappedSelectionManagers.set(state.elements.wrapper, this);
+	mappedSelectionManagers.set(state.elements.table, this);
 }
 
 SelectionManager.prototype.destroy = destroySelectionManager;
@@ -61,7 +61,7 @@ export function createSelectionManager(state: State): SelectionManager {
 }
 
 function destroySelectionManager(this: SelectionManager): void {
-	mappedSelectionManagers.delete(this.state.elements.wrapper);
+	mappedSelectionManagers.delete(this.state.elements.table);
 
 	this.handlers = undefined as never;
 	this.keys = undefined as never;

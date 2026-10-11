@@ -4,6 +4,8 @@ import type {State} from './tabela.model';
 
 export type StyleManager = {
 	state: State;
+	widths: HTMLStyleElement;
+	updateWidths(): void;
 };
 
 // #endregion
@@ -35,6 +37,12 @@ export const CSS_GROUP_TOTAL = 'tabela__group__total';
 export const CSS_HEADING = 'tabela__heading';
 
 export const CSS_HEADING_CONTENT = 'tabela__heading__content';
+
+export const CSS_HEADING_FILTER = 'tabela__heading__filter';
+
+export const CSS_HEADING_FILTER_BUTTON = 'tabela__heading__filter__button';
+
+export const CSS_HEADING_FILTER_POPOVER = 'tabela__heading__filter__popover';
 
 export const CSS_HEADING_SORTER = 'tabela__heading__sorter';
 
@@ -173,7 +181,7 @@ export const tabelaCSS: string = //css
 
 :where(.${CSS_WRAPPER} .${CSS_CELL}:last-child),
 :where(.${CSS_ROW} .${CSS_HEADING}:last-child) {
-	flex: 1;
+	flex: 1 !important;
 	border-right-width: 0;
 }
 
@@ -187,23 +195,42 @@ export const tabelaCSS: string = //css
 	display: flex;
 	flex-flow: row nowrap;
 	align-items: center;
-	justify-content: space-between;
 	gap: 0.5em;
 	cursor: pointer;
 }
 
 :where(.${CSS_HEADING_CONTENT}) {
 	overflow: hidden;
+	flex: 1;
 	white-space: nowrap;
 	text-overflow: ellipsis;
 }
 
-:where(.${CSS_HEADING}[data-sort-direction] .${CSS_HEADING_SORTER})::after {
+:where(.${CSS_HEADING_FILTER}) {
+	cursor: default;
+}
+
+:where(.${CSS_HEADING_FILTER_BUTTON}) {
+	padding: 0;
+}
+
+:where(.${CSS_HEADING_SORTER}) {
 	width: 1em;
-	height: 1em;
-	display: inline-flex;
+	display: none;
 	font-size: .75em;
 	font-weight: bold;
+	position: relative;
+}
+
+:where(.${CSS_HEADING}[data-sort-direction] .${CSS_HEADING_SORTER}) {
+	display: inline-flex;
+}
+
+:where(.${CSS_HEADING}[data-sort-direction] .${CSS_HEADING_SORTER})::after {
+	display: inline-flex;
+	position: absolute;
+	inset: 50% auto auto 50%;
+	transform: translate3d(-50%, -50%, 0);
 }
 
 :where(.${CSS_HEADING}[data-sort-direction="ascending"] .${CSS_HEADING_SORTER})::after {

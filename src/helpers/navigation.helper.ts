@@ -95,7 +95,7 @@ function setAbsolute(manager: NavigationManager, home: boolean): void {
 function setDefault(state: State, focus?: boolean): void {
 	const {active} = state.managers.navigation;
 
-	active.column = state.managers.column.items[0]?.options.key;
+	active.column = state.managers.column.items[0]?.key.original;
 	active.row = 'header';
 	active.type = 'header';
 

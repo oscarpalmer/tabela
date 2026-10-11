@@ -11,6 +11,7 @@ export type Column = {
 
 export type ColumnComponent = {
 	elements: ColumnComponentElements;
+	key: ColumnComponentKey;
 	options: Column;
 	destroy(): void;
 };
@@ -19,6 +20,11 @@ export type ColumnComponentElements = {
 	content: HTMLDivElement;
 	sorter: HTMLDivElement;
 	wrapper: HTMLDivElement;
+};
+
+export type ColumnComponentKey = {
+	normalized: string;
+	original: string;
 };
 
 export type ColumnManager = {

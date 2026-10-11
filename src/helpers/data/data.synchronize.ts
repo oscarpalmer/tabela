@@ -70,7 +70,6 @@ export async function synchronizeData(
 	}
 
 	await updateData(state, updated, added.length === 0);
-
 	await addData(state, added, false);
 
 	state.managers.event.herald.emit(EVENT_DATA_SYNCHRONIZE, {

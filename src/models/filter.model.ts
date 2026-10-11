@@ -1,14 +1,35 @@
+import type {Key} from '@oscarpalmer/atoms/models';
 import {getNumber} from '@oscarpalmer/atoms/number';
-import {getString} from '@oscarpalmer/atoms/string';
 import {endsWith, includes, startsWith} from '@oscarpalmer/atoms/string/match';
 import {equal, type Equalizer} from '@oscarpalmer/atoms/value/equal';
 import type {State, SYMBOL} from './tabela.model';
 
 // #region Types
 
+type FilterCache = {
+	id: Map<number, FilterCacheItem>;
+	value: Map<string, FilterCacheItem>;
+};
+
+type FilterCacheItem = {
+	count: number;
+	id: number;
+	keys: Set<Key>;
+	value: unknown;
+};
+
+type FilterComparator = (value: FilterComparatorValue, filter: FilterComparatorValue) => boolean;
+
+type FilterComparatorValue = {
+	raw: unknown;
+	string: string;
+};
+
 export type FilterManager = {
+	active: Set<string>;
+	cache: Map<string, FilterCache>;
 	handlers: TabelaFilter;
-	items: Record<string, TabelaFilterItem[]>;
+	items: Map<string, TabelaFilterItem>;
 	state: State;
 	destroy(): void;
 };
@@ -79,17 +100,17 @@ export const filterComparisons: Set<TabelaFilterComparison> = new Set([
 
 // #region Variables
 
-export const filterComparators: Record<string, (row: unknown, filter: unknown) => boolean> = {
-	[FILTER_ENDS_WITH]: (row, filter) => endsWith(getString(row), getString(filter), true),
-	[FILTER_EQUALS]: (row, filter) => filterEqualizer.compare(row, filter),
-	[FILTER_GREATER_THAN]: (row, filter) => getNumber(row) > getNumber(filter),
-	[FILTER_GREATER_THAN_OR_EQUAL]: (row, filter) => getNumber(row) >= getNumber(filter),
-	[FILTER_INCLUDES]: (row, filter) => includes(getString(row), getString(filter), true),
-	[FILTER_LESS_THAN]: (row, filter) => getNumber(row) < getNumber(filter),
-	[FILTER_LESS_THAN_OR_EQUAL]: (row, filter) => getNumber(row) <= getNumber(filter),
-	[FILTER_NOT_EQUALS]: (row, filter) => !filterEqualizer.compare(row, filter),
-	[FILTER_NOT_INCLUDES]: (row, filter) => !includes(getString(row), getString(filter), true),
-	[FILTER_STARTS_WITH]: (row, filter) => startsWith(getString(row), getString(filter), true),
+export const filterComparators: Record<string, FilterComparator> = {
+	[FILTER_ENDS_WITH]: (value, filter) => endsWith(value.string, filter.string, true),
+	[FILTER_EQUALS]: (value, filter) => filterEqualizer.compare(value.raw, filter.raw),
+	[FILTER_GREATER_THAN]: (value, filter) => getNumber(value.raw) > getNumber(filter.raw),
+	[FILTER_GREATER_THAN_OR_EQUAL]: (value, filter) => getNumber(value.raw) >= getNumber(filter.raw),
+	[FILTER_INCLUDES]: (value, filter) => includes(value.string, filter.string, true),
+	[FILTER_LESS_THAN]: (value, filter) => getNumber(value.raw) < getNumber(filter.raw),
+	[FILTER_LESS_THAN_OR_EQUAL]: (value, filter) => getNumber(value.raw) <= getNumber(filter.raw),
+	[FILTER_NOT_EQUALS]: (value, filter) => !filterEqualizer.compare(value.raw, filter.raw),
+	[FILTER_NOT_INCLUDES]: (value, filter) => !includes(value.string, filter.string, true),
+	[FILTER_STARTS_WITH]: (value, filter) => startsWith(value.string, filter.string, true),
 };
 
 export const filterEqualizer: Equalizer = equal.initialize({

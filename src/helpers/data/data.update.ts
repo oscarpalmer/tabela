@@ -1,8 +1,10 @@
 import {isKey, isPlainObject} from '@oscarpalmer/atoms/is';
-import type {PlainObject} from '@oscarpalmer/atoms/models';
+import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
 import {getValue} from '@oscarpalmer/atoms/value/handle';
+import {DATA_UPDATE_UPDATE} from '../../models/data.model';
 import {EVENT_DATA_UPDATE} from '../../models/event.model';
 import type {State} from '../../models/tabela.model';
+import {updateFilterCache} from '../filter.helper';
 import {updateRow} from '../row.helper';
 
 // #region Functions
@@ -18,30 +20,33 @@ export async function updateData(
 
 	const {length} = data;
 
+	const map = new Map<Key, PlainObject>();
 	const updated: PlainObject[] = [];
 
-	for (let index = 0; index < length; index += 1) {
-		const item = data[index];
+	for (let dataIndex = 0; dataIndex < length; dataIndex += 1) {
+		const dataItem = data[dataIndex];
 
-		if (!isPlainObject(item)) {
+		if (!isPlainObject(dataItem)) {
 			continue;
 		}
 
-		const key = getValue(item, state.key);
+		const key = getValue(dataItem, state.key);
 
 		if (!isKey(key)) {
 			continue;
 		}
 
-		const existing = state.managers.data.data.keys.original.indexOf(key);
+		const existingIndex = state.managers.data.data.keys.original.indexOf(key);
+		const existingItem = state.managers.data.data.values.array[existingIndex];
 
-		if (existing === -1) {
+		if (!isPlainObject(existingItem)) {
 			continue;
 		}
 
-		Object.assign(state.managers.data.data.values.array[existing], item);
+		Object.assign(existingItem, dataItem);
 
-		updated.push(state.managers.data.data.values.array[existing] as PlainObject);
+		map.set(key, existingItem);
+		updated.push(existingItem);
 
 		if (render && state.managers.render.visible.keys.has(key)) {
 			updateRow(state, key);
@@ -51,6 +56,8 @@ export async function updateData(
 	if (updated.length > 0) {
 		state.managers.event.herald.emit(EVENT_DATA_UPDATE, updated);
 	}
+
+	return updateFilterCache(DATA_UPDATE_UPDATE, state, map);
 }
 
 // #endregion

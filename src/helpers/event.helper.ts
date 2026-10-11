@@ -1,6 +1,7 @@
 import {findAncestor} from '@oscarpalmer/toretto/find';
-import {ATTRIBUTE_DATA_EVENT, SELECTOR_EVENT_ATTRIBUTE} from '../models/dom.model';
+import {ATTRIBUTE_DATA_EVENT, SELECTOR_EVENT} from '../models/dom.model';
 import {
+	EVENT_FILTER_INPUT,
 	EVENT_GROUP,
 	EVENT_HEADER,
 	EVENT_ROW,
@@ -12,11 +13,21 @@ import {onGroup} from './group.helper';
 import {handleNavigation} from './navigation.helper';
 import {onSelection} from './selection.helper';
 import {onSort} from './sort.helper';
+import {onFilter} from './filter.helper';
 
 // #region Functions
 
 export function onClick(event: MouseEvent): void {
-	const target = findAncestor(event, SELECTOR_EVENT_ATTRIBUTE);
+	onEvent(event, (event, manager, target) => {
+		onType(manager, event, target, target?.getAttribute(ATTRIBUTE_DATA_EVENT) ?? undefined);
+	});
+}
+
+function onEvent<Evt extends Event>(
+	event: Evt,
+	callback: (event: Evt, manager: EventManager, target: HTMLElement) => void,
+): void {
+	const target = findAncestor(event, SELECTOR_EVENT);
 	const table = findAncestor(event, SELECTOR_TABLE);
 
 	if (!(target instanceof HTMLElement) || !(table instanceof HTMLElement)) {
@@ -26,33 +37,47 @@ export function onClick(event: MouseEvent): void {
 	const manager = mappedEventManagers.get(table);
 
 	if (manager != null) {
-		onType(manager, event, target, target?.getAttribute(ATTRIBUTE_DATA_EVENT) ?? undefined);
+		callback(event, manager, target);
 	}
 }
 
+function onF(_: EventManager, __: KeyboardEvent, target: HTMLElement): void {
+	const button = target.querySelector('button');
+
+	if (button?.hasAttribute('popovertarget')) {
+		button.click();
+	}
+}
+
+export function onInput(event: InputEvent): void {
+	onEvent(event, (_, manager, target) => {
+		const type = target?.getAttribute(ATTRIBUTE_DATA_EVENT) ?? undefined;
+
+		if (type === EVENT_FILTER_INPUT) {
+			onFilter(manager.state, target as HTMLInputElement);
+		}
+	});
+}
+
 export function onKeydown(event: KeyboardEvent): void {
-	const target = findAncestor(event, SELECTOR_EVENT_ATTRIBUTE);
-	const table = findAncestor(event, SELECTOR_TABLE);
+	onEvent(event, (event, manager, target) => {
+		switch (event.key) {
+			case ' ':
+				event.preventDefault();
+				onType(manager, event, target, manager.state.managers.navigation.active.type);
+				break;
 
-	if (!(target instanceof HTMLElement) || !(table instanceof HTMLElement)) {
-		return;
-	}
+			case 'f':
+				event.preventDefault();
+				onF(manager, event, target);
+				return;
 
-	const manager = mappedEventManagers.get(table);
+			default:
+				break;
+		}
 
-	if (manager == null) {
-		return;
-	}
-
-	if (event.key === ' ') {
-		event.preventDefault();
-
-		onType(manager, event, target, manager.state.managers.navigation.active.type);
-
-		return;
-	}
-
-	handleNavigation(manager.state, event);
+		handleNavigation(manager.state, event);
+	});
 }
 
 function onType(

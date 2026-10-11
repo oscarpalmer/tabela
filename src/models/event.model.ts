@@ -120,6 +120,8 @@ export const EVENT_FILTER_ADD = 'filter:add';
 
 export const EVENT_FILTER_CLEAR = 'filter:clear';
 
+export const EVENT_FILTER_INPUT = 'filter:input';
+
 export const EVENT_FILTER_REMOVE = 'filter:remove';
 
 export const EVENT_FILTER_SET = 'filter:set';

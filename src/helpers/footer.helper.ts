@@ -10,9 +10,9 @@ import {createCellElement} from './dom.helpers';
 // #region Functions
 
 function getCell(footer: FooterComponent, column: ColumnComponent): HTMLDivElement {
-	const cell = createCellElement(column.options.width, false);
+	const cell = createCellElement(column.key.normalized, false);
 
-	cell.id = `${footer.elements.row.id}_column_${column.options.key}`;
+	cell.id = `${footer.elements.row.id}_column_${column.key.normalized}`;
 
 	cell.classList.add(CSS_CELL_FOOTER);
 

@@ -1,6 +1,6 @@
 import {herald} from '@oscarpalmer/atoms/herald';
 import {on} from '@oscarpalmer/toretto/event';
-import {onClick, onKeydown} from '../helpers/event.helper';
+import {onClick, onInput, onKeydown} from '../helpers/event.helper';
 import {
 	EVENT_NAMES,
 	mappedEventManagers,
@@ -18,7 +18,7 @@ function EventManager(this: EventManager, state: State): void {
 		names: EVENT_NAMES,
 	});
 
-	mappedEventManagers.set(state.elements.wrapper, this);
+	mappedEventManagers.set(state.elements.table, this);
 }
 
 EventManager.prototype.destroy = destroyEventManager;
@@ -33,7 +33,7 @@ export function createEventManager(state: State): EventManager {
 }
 
 function destroyEventManager(this: EventManager): void {
-	mappedEventManagers.delete(this.state.elements.wrapper);
+	mappedEventManagers.delete(this.state.elements.table);
 
 	this.herald.clear();
 
@@ -45,6 +45,7 @@ function destroyEventManager(this: EventManager): void {
 // #region Initialization
 
 on(document, 'click', onClick);
+on(document, 'input', onInput);
 on(document, 'keydown', onKeydown, {passive: false});
 
 // #endregion

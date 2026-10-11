@@ -38,6 +38,7 @@
 	},
 	"dependencies": {
 		"@oscarpalmer/atoms": "^0.216",
+		"@oscarpalmer/oui": "^0.39",
 		"@oscarpalmer/toretto": "^0.56"
 	},
 	"devDependencies": {

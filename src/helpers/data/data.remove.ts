@@ -3,6 +3,7 @@ import {isKey, isPlainObject} from '@oscarpalmer/atoms/is';
 import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
 import {delay} from '@oscarpalmer/atoms/promise/delay';
 import {getValue} from '@oscarpalmer/atoms/value/handle';
+import {DATA_UPDATE_REMOVE, DATA_UPDATE_SET} from '../../models/data.model';
 import {
 	EVENT_DATA_CLEAR,
 	EVENT_DATA_REMOVE,
@@ -10,6 +11,7 @@ import {
 } from '../../models/event.model';
 import type {GroupComponent} from '../../models/group.model';
 import type {State} from '../../models/tabela.model';
+import {updateFilterCache} from '../filter.helper';
 import {clearGroups, getGroup, isGroupKey, removeGroups, updateGroups} from '../group.helper';
 import {clearRows, removeRow} from '../row.helper';
 import {renderData} from './data.render';
@@ -90,6 +92,8 @@ async function removeItems(
 
 		state.managers.event.herald.emit(EVENT_DATA_CLEAR);
 
+		void updateFilterCache(DATA_UPDATE_SET, state);
+
 		renderData(state);
 
 		return render ? undefined : [];
@@ -99,6 +103,7 @@ async function removeItems(
 	const updatedGroups: GroupComponent[] = [];
 
 	const removedData: PlainObject[] = [];
+	const removedMap = new Map<Key, PlainObject>();
 
 	const chunked = chunk(keys);
 	const chunkedLength = chunked.length;
@@ -116,6 +121,7 @@ async function removeItems(
 			[dataValue] = data.values.array.splice(dataIndex, 1) as PlainObject[];
 
 			removedData.push(dataValue);
+			removedMap.set(key, dataValue);
 
 			data.keys.original.splice(dataIndex, 1);
 
@@ -176,6 +182,8 @@ async function removeItems(
 
 	removeGroups(state, removedGroups);
 	updateGroups(state, updatedGroups);
+
+	void updateFilterCache(DATA_UPDATE_REMOVE, state, removedMap);
 
 	state.managers.event.herald.emit(EVENT_DATA_REMOVE, removedData);
 

@@ -10,12 +10,14 @@ import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
 import {compare} from '@oscarpalmer/atoms/value/compare';
 import {getValue} from '@oscarpalmer/atoms/value/handle';
 import {setAttribute, setAttributes} from '@oscarpalmer/toretto/attribute';
+import {findAncestor} from '@oscarpalmer/toretto/find';
 import type {DataValue} from '../models/data.model';
 import {
 	ARIA_SORT,
 	ATTRIBUTE_DATA_KEY,
 	ATTRIBUTE_DATA_SORT_DIRECTION,
 	ATTRIBUTE_DATA_SORT_POSITION,
+	SELECTOR_FILTER,
 } from '../models/dom.model';
 import {
 	EVENT_DATA_SORTED,
@@ -37,6 +39,7 @@ import type {State} from '../models/tabela.model';
 import {getGroup, isGroupKey} from './group.helper';
 import {updateNavigation} from './navigation.helper';
 import {render} from './render.helper';
+import {updateColumnWidthStyling} from './style.helper';
 
 // #region Functions
 
@@ -126,8 +129,8 @@ function compareGroups(this: State, first: unknown, second: unknown): number {
 	return 0;
 }
 
-export function flipSorter(state: State, key: string): void {
-	const {event, sort} = state.managers;
+export function flipSorter(state: State, key: string, event?: KeyboardEvent | MouseEvent): void {
+	const {sort} = state.managers;
 
 	const item = sort.items.find(item => item.field === key);
 
@@ -135,12 +138,16 @@ export function flipSorter(state: State, key: string): void {
 		return;
 	}
 
+	if (event != null && !(event.ctrlKey || event.metaKey)) {
+		sort.items = [item];
+	}
+
 	item.direction =
 		item.direction === SORT_DIRECTION_ASCENDING
 			? SORT_DIRECTION_DESCENDING
 			: SORT_DIRECTION_ASCENDING;
 
-	event.herald.emit(EVENT_SORT_FLIP, [getSorter(item)]);
+	state.managers.event.herald.emit(EVENT_SORT_FLIP, [getSorter(item)]);
 
 	sortData(state);
 }
@@ -205,14 +212,17 @@ export function isSorter(value: unknown): value is TabelaSorter {
 }
 
 export function onSort(event: KeyboardEvent | MouseEvent, state: State, target: HTMLElement): void {
-	const direction = target.getAttribute(ATTRIBUTE_DATA_SORT_DIRECTION);
+	if (findAncestor(event, SELECTOR_FILTER) != null) {
+		return;
+	}
+
 	const key = target.getAttribute(ATTRIBUTE_DATA_KEY);
 
 	if (key == null) {
 		return;
 	}
 
-	toggleSorter(event, state, key, direction);
+	toggleSorter(event, state, key, target.getAttribute(ATTRIBUTE_DATA_SORT_DIRECTION));
 
 	const {active} = state.managers.navigation;
 
@@ -221,11 +231,12 @@ export function onSort(event: KeyboardEvent | MouseEvent, state: State, target: 
 	active.row = 'header';
 	active.type = 'header';
 
+	updateColumnWidthStyling(state);
 	updateNavigation(state, !(event instanceof KeyboardEvent));
 }
 
-export function removeSorter(state: State, key: string): void {
-	const {event, sort} = state.managers;
+export function removeSorter(state: State, key: string, event?: KeyboardEvent | MouseEvent): void {
+	const {sort} = state.managers;
 
 	const index = sort.items.findIndex(item => item.field === key);
 
@@ -233,12 +244,18 @@ export function removeSorter(state: State, key: string): void {
 		return;
 	}
 
-	const spliced = sort.items.splice(index, 1);
+	let spliced: ExtendedArrayValueSorter[];
 
-	event.herald.emit(EVENT_SORT_REMOVE, spliced.map(getSorter));
+	if (event != null && !(event.ctrlKey || event.metaKey)) {
+		spliced = sort.items.splice(0, sort.items.length);
+	} else {
+		spliced = sort.items.splice(index, 1);
+	}
+
+	state.managers.event.herald.emit(EVENT_SORT_REMOVE, spliced.map(getSorter));
 
 	if (sort.items.length === 0) {
-		event.herald.emit(EVENT_SORT_CLEAR);
+		state.managers.event.herald.emit(EVENT_SORT_CLEAR);
 	}
 
 	sortData(state);
@@ -272,7 +289,7 @@ export function sortData(state: State): void {
 	for (let index = 0; index < length; index += 1) {
 		const column = state.managers.column.items[index];
 
-		const sorterIndex = items.findIndex(item => item.field === column.options.key);
+		const sorterIndex = items.findIndex(item => item.field === column.key.original);
 		const sorterItem = items[sorterIndex];
 
 		setAttributes(column.elements.wrapper, {
@@ -315,11 +332,11 @@ function toggleSorter(
 ): void {
 	switch (direction) {
 		case SORT_DIRECTION_ASCENDING:
-			flipSorter(state, key);
+			flipSorter(state, key, event);
 			return;
 
 		case SORT_DIRECTION_DESCENDING:
-			removeSorter(state, key);
+			removeSorter(state, key, event);
 			return;
 
 		default:

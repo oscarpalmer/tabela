@@ -1,3 +1,4 @@
+import '@oscarpalmer/oui/popover';
 import type {Tabela} from './models/tabela.model';
 import type {TabelaOptions} from './models/options.model';
 import {createTabela} from './tabela';

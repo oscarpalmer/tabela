@@ -122,22 +122,22 @@ export function renderRow(state: State, row: RowComponent): void {
 	}
 
 	for (let index = 0; index < length; index += 1) {
-		const {options} = columns[index];
-		const {key, width} = options;
+		const {key, options} = columns[index];
 
-		managers.render.pool.cells[key] ??= [];
+		managers.render.pool.cells[key.original] ??= [];
 
-		const cell = managers.render.pool.cells[key].shift() ?? createCellElement(width);
+		const cell =
+			managers.render.pool.cells[key.original].shift() ?? createCellElement(key.normalized);
 
-		cell.dataset.key = key;
-		cell.id = `${prefix}_row_${row.key}_column_${key}`;
-		cell.textContent = String(getValue(data, key));
+		cell.dataset.key = key.original;
+		cell.id = `${prefix}_row_${row.key}_column_${key.normalized}`;
+		cell.textContent = String(getValue(data, key.original));
 
-		if (active && key === managers.navigation.active.column) {
+		if (active && key.original === managers.navigation.active.column) {
 			cell.setAttribute(ATTRIBUTE_DATA_ACTIVE, '');
 		}
 
-		row.cells[key] = cell;
+		row.cells[key.original] = cell;
 
 		element.append(cell);
 	}

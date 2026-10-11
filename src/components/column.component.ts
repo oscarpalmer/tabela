@@ -1,5 +1,10 @@
-import {createHeading} from '../helpers/column.helper';
-import type {Column, ColumnComponent, TabelaColumn} from '../models/column.model';
+import {createColumnElements} from '../helpers/column.helper';
+import type {
+	Column,
+	ColumnComponent,
+	ColumnComponentKey,
+	TabelaColumn,
+} from '../models/column.model';
 import type {State} from '../models/tabela.model';
 
 // #region Instances
@@ -16,7 +21,9 @@ function ColumnComponent(this: ColumnComponent, state: State, column: TabelaColu
 		label: column.label ?? column.key,
 	} as Column;
 
-	this.elements = createHeading(state, this, width);
+	this.key = createKey(this.options.key);
+
+	this.elements = createColumnElements(state, this);
 }
 
 ColumnComponent.prototype.destroy = destroyColumn;
@@ -28,6 +35,15 @@ ColumnComponent.prototype.destroy = destroyColumn;
 export function createColumn(state: State, column: TabelaColumn): ColumnComponent {
 	// @ts-expect-error All good, no worries :-)
 	return new ColumnComponent(state, column);
+}
+
+function createKey(original: string): ColumnComponentKey {
+	const normalized = original.toLowerCase().replace(/[^a-z0-9]+/giu, '_');
+
+	return {
+		normalized,
+		original,
+	};
 }
 
 function destroyColumn(this: ColumnComponent): void {

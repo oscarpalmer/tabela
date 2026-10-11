@@ -1,5 +1,7 @@
 // #region Variables
 
+import {CSS_HEADING_FILTER} from './style.model';
+
 // #region Misc.
 
 export const ARIA_ACTIVEDESCENDANT = 'aria-activedescendant';
@@ -44,7 +46,11 @@ export const ROLE_ROWGROUP = 'rowgroup';
 
 // #region CSS Selectors
 
-export const SELECTOR_EVENT_ATTRIBUTE: string = `[${ATTRIBUTE_DATA_EVENT}]`;
+export const SELECTOR_DATA_KEY: string = `[${ATTRIBUTE_DATA_KEY}]`;
+
+export const SELECTOR_EVENT: string = `[${ATTRIBUTE_DATA_EVENT}]`;
+
+export const SELECTOR_FILTER: string = `.${CSS_HEADING_FILTER}`;
 
 // #endregion
 

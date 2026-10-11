@@ -1,4 +1,4 @@
-import {appendStyles} from '../helpers/style.helper';
+import {appendBaseStyles, updateColumnWidthStyling} from '../helpers/style.helper';
 import {type StyleManager} from '../models/style.model';
 import type {State} from '../models/tabela.model';
 
@@ -7,8 +7,10 @@ import type {State} from '../models/tabela.model';
 function StyleManager(this: StyleManager, state: State): void {
 	this.state = state;
 
-	appendStyles();
+	appendBaseStyles();
 }
+
+StyleManager.prototype.updateWidths = updateWidths;
 
 // #endregion
 
@@ -17,6 +19,10 @@ function StyleManager(this: StyleManager, state: State): void {
 export function createStyleManager(state: State): StyleManager {
 	// @ts-expect-error All good, no worries :-)
 	return new StyleManager(state);
+}
+
+function updateWidths(this: StyleManager): void {
+	updateColumnWidthStyling(this.state);
 }
 
 // #endregion

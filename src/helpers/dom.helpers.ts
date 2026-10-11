@@ -14,7 +14,7 @@ type RowGroupWithRow = {
 
 // #region Functions
 
-export function createCellElement(width: number, body?: boolean): HTMLDivElement {
+export function createCellElement(key: string, body?: boolean): HTMLDivElement {
 	const cell = createElement(ELEMENT_DIV, {
 		property: {
 			className: CSS_CELL,
@@ -22,7 +22,7 @@ export function createCellElement(width: number, body?: boolean): HTMLDivElement
 			tabIndex: -1,
 		},
 		style: {
-			flex: `0 0 ${width}px`,
+			flex: `0 0 var(--tabela-width-${key})`,
 		},
 	});
 

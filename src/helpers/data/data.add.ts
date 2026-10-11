@@ -1,12 +1,14 @@
 import {isKey, isPlainObject} from '@oscarpalmer/atoms/is';
-import type {PlainObject} from '@oscarpalmer/atoms/models';
+import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
 import {getValue} from '@oscarpalmer/atoms/value/handle';
 import {createGroup} from '../../components/group.component';
 import type {ColumnComponent} from '../../models/column.model';
+import {DATA_UPDATE_ADD} from '../../models/data.model';
 import {EVENT_DATA_ADD} from '../../models/event.model';
 import type {GroupComponent} from '../../models/group.model';
 import type {State} from '../../models/tabela.model';
 import {getColumn} from '../column.helper';
+import {updateFilterCache} from '../filter.helper';
 import {addGroups, getGroup, updateGroups} from '../group.helper';
 import {renderData} from './data.render';
 import {updateData} from './data.update';
@@ -23,6 +25,8 @@ export async function addData(state: State, data: PlainObject[], render: boolean
 
 	const addedGroups: GroupComponent[] = [];
 	const updatedGroups: GroupComponent[] = [];
+
+	const addedMap = new Map<Key, PlainObject>();
 
 	let groupColumn: ColumnComponent | undefined;
 	let {length} = data;
@@ -47,6 +51,7 @@ export async function addData(state: State, data: PlainObject[], render: boolean
 		}
 
 		addedData.push(item);
+		addedMap.set(key, item);
 
 		state.managers.data.data.values.array.push(item);
 		state.managers.data.data.values.mapped.set(key, item);
@@ -86,9 +91,15 @@ export async function addData(state: State, data: PlainObject[], render: boolean
 	addGroups(state, addedGroups);
 	updateGroups(state, updatedGroups);
 
-	await updateData(state, updatedData, addedData.length === 0);
+	const noAddedData = addedData.length === 0;
 
-	if (addedData.length === 0) {
+	if (!noAddedData) {
+		await updateFilterCache(DATA_UPDATE_ADD, state, addedMap);
+	}
+
+	await updateData(state, updatedData, noAddedData);
+
+	if (noAddedData) {
 		return;
 	}
 

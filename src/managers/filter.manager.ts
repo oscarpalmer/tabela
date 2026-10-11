@@ -5,7 +5,9 @@ import {SYMBOL, type State} from '../models/tabela.model';
 // #region Instances
 
 function FilterManager(this: FilterManager, state: State): void {
-	this.items = {};
+	this.active = new Set();
+	this.cache = new Map();
+	this.items = new Map();
 	this.state = state;
 
 	// @ts-expect-error All good, no worries :-)

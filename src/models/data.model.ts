@@ -26,6 +26,8 @@ type DataManagerData = {
 	values: DataValues;
 };
 
+export type DataUpdate = 'add' | 'set' | 'remove' | 'update';
+
 export type DataValue = string | PlainObject;
 
 type DataValues = {
@@ -43,5 +45,17 @@ export type TabelaData = {
 	synchronize(data: PlainObject[], remove?: boolean): Promise<void>;
 	update(data: PlainObject[]): Promise<void>;
 };
+
+// #endregion
+
+// #region Variables
+
+export const DATA_UPDATE_ADD: DataUpdate = 'add';
+
+export const DATA_UPDATE_SET: DataUpdate = 'set';
+
+export const DATA_UPDATE_REMOVE: DataUpdate = 'remove';
+
+export const DATA_UPDATE_UPDATE: DataUpdate = 'update';
 
 // #endregion

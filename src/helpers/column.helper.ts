@@ -18,30 +18,33 @@ import {
 import {EVENT_HEADER} from '../models/event.model';
 import {CSS_HEADING, CSS_HEADING_CONTENT, CSS_HEADING_SORTER} from '../models/style.model';
 import type {State} from '../models/tabela.model';
+import {createFilterElement} from './filter.helper';
 import {setFooter} from './footer.helper';
 import {setHeader} from './header.helper';
 import {removeCells} from './render.helper';
+import {updateColumnWidthStyling} from './style.helper';
 
 // #region Functions
 
-export function createHeading(
+export function createColumnElements(
 	state: State,
 	column: ColumnComponent,
-	width: number,
 ): ColumnComponentElements {
+	const id = `${state.prefix}_header_column_${column.key.normalized}`;
+
 	const wrapper = createElement(ELEMENT_DIV, {
 		attribute: {
 			[ATTRIBUTE_DATA_EVENT]: EVENT_HEADER,
-			[ATTRIBUTE_DATA_KEY]: column.options.key,
+			[ATTRIBUTE_DATA_KEY]: column.key.original,
 		},
 		property: {
+			id,
 			className: CSS_HEADING,
-			id: `${state.prefix}_header_column_${column.options.key}`,
 			role: ROLE_COLUMNHEADER,
 			tabIndex: -1,
 		},
 		style: {
-			flex: `0 0 ${width}px`,
+			width: `${column.options.width}px`,
 		},
 	});
 
@@ -52,19 +55,21 @@ export function createHeading(
 		},
 	});
 
+	const filter = createFilterElement(state, column, id);
+
 	const sorter = createElement(ELEMENT_DIV, {
 		property: {
 			className: CSS_HEADING_SORTER,
 		},
 	});
 
-	wrapper.append(content, sorter);
+	wrapper.append(content, filter, sorter);
 
 	return {content, sorter, wrapper};
 }
 
 export function getColumn(state: State, key: string): ColumnComponent | undefined {
-	return state.managers.column.items.find(item => item.options.key === key);
+	return state.managers.column.items.find(item => item.key.original === key);
 }
 
 function getColumnFooter(value: unknown): TabelaColumnFooter | undefined {
@@ -110,7 +115,7 @@ export function removeColumns(state: State, value: unknown): void {
 	}
 
 	for (let keyIndex = 0; keyIndex < length; keyIndex += 1) {
-		const itemIndex = items.findIndex(component => component.options.key === keys[keyIndex]);
+		const itemIndex = items.findIndex(component => component.key.original === keys[keyIndex]);
 
 		if (itemIndex > -1) {
 			items[itemIndex].destroy();
@@ -141,6 +146,8 @@ export function setColumns(state: State, columns: TabelaColumn[]): void {
 	setFooter(state, items);
 
 	state.elements.table.setAttribute(ARIA_COLCOUNT, String(items.length));
+
+	updateColumnWidthStyling(state);
 }
 
 // #endregion
