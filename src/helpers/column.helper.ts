@@ -1,4 +1,7 @@
+import {filter} from '@oscarpalmer/atoms/array/filter';
+import {select} from '@oscarpalmer/atoms/array/select';
 import {isPlainObject} from '@oscarpalmer/atoms/is';
+import {getString} from '@oscarpalmer/atoms/string';
 import {createElement} from '@oscarpalmer/toretto/create';
 import {createColumn} from '../components/column.component';
 import {
@@ -16,7 +19,12 @@ import {
 	ROLE_COLUMNHEADER,
 } from '../models/dom.model';
 import {EVENT_HEADER} from '../models/event.model';
-import {CSS_HEADING, CSS_HEADING_CONTENT, CSS_HEADING_SORTER} from '../models/style.model';
+import {
+	CSS_HEADING,
+	CSS_HEADING_CONTENT,
+	CSS_HEADING_RESIZER,
+	CSS_HEADING_SORTER,
+} from '../models/style.model';
 import type {State} from '../models/tabela.model';
 import {createFilterElement} from './filter.helper';
 import {setFooter} from './footer.helper';
@@ -63,9 +71,27 @@ export function createColumnElements(
 		},
 	});
 
-	wrapper.append(content, filter, sorter);
+	const resizable = createElement('span', {
+		aria: {
+			hidden: true,
+		},
+		attribute: {
+			'oui-resizable-handle': '',
+		},
+		property: {
+			className: CSS_HEADING_RESIZER,
+			hidden: true,
+		},
+	});
 
-	return {content, sorter, wrapper};
+	wrapper.append(content, filter.button, filter.popover, sorter, resizable);
+
+	return {
+		content,
+		filter,
+		sorter,
+		wrapper,
+	};
 }
 
 export function getColumn(state: State, key: string): ColumnComponent | undefined {
@@ -76,15 +102,15 @@ function getColumnFooter(value: unknown): TabelaColumnFooter | undefined {
 	return columnFooters.has(value as TabelaColumnFooter) ? (value as TabelaColumnFooter) : undefined;
 }
 
-export function getValidColumn(value: unknown): TabelaColumn | undefined {
+export function getValidColumn(value: unknown): TabelaColumn {
 	if (!isPlainObject(value)) {
-		return;
+		throw new TypeError('Column must be a plain object');
 	}
 
 	const column = value as TabelaColumn;
 
 	if (typeof column.key !== 'string' || column.key.trim().length === 0) {
-		return;
+		throw new TypeError('Column key must be a non-empty string');
 	}
 
 	return {
@@ -106,7 +132,7 @@ export function removeColumns(state: State, keys: string[]): void;
 export function removeColumns(state: State, value: unknown): void {
 	const {items} = state.managers.column;
 
-	const keys = (Array.isArray(value) ? value : [value]).filter(item => typeof item === 'string');
+	const keys = filter(Array.isArray(value) ? value : [value], item => typeof item === 'string');
 
 	const {length} = keys;
 
@@ -133,7 +159,7 @@ export function removeColumns(state: State, value: unknown): void {
 export function setColumns(state: State, columns: TabelaColumn[]): void {
 	const {items, keys} = state.managers.column;
 
-	const validated = columns.map(getValidColumn).filter(item => item != null);
+	const validated = select.reverse(columns, getValidColumn, item => item != null);
 
 	if (validated.length === 0) {
 		return;
@@ -145,7 +171,7 @@ export function setColumns(state: State, columns: TabelaColumn[]): void {
 	setHeader(state, items);
 	setFooter(state, items);
 
-	state.elements.table.setAttribute(ARIA_COLCOUNT, String(items.length));
+	state.elements.table.setAttribute(ARIA_COLCOUNT, getString(items.length));
 
 	updateColumnWidthStyling(state);
 }

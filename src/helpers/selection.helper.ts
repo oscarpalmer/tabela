@@ -1,5 +1,8 @@
+import {filter} from '@oscarpalmer/atoms/array/filter';
 import {isKey} from '@oscarpalmer/atoms/is';
+import {min} from '@oscarpalmer/atoms/math';
 import type {Key} from '@oscarpalmer/atoms/models';
+import {getString} from '@oscarpalmer/atoms/string';
 import {setAttribute} from '@oscarpalmer/toretto/attribute';
 import {createElement} from '@oscarpalmer/toretto/create';
 import {getEventPosition} from '@oscarpalmer/toretto/event';
@@ -125,8 +128,8 @@ export function onSelectionMouseMove(event: MouseEvent): void {
 	const {x: cX, y: cY} = currentPosition;
 	const {x: sX, y: sY} = startPosition;
 
-	const top = Math.min(cY, sY);
-	const left = Math.min(cX, sX);
+	const top = min([cY, sY]);
+	const left = min([cX, sX]);
 
 	const width = Math.abs(cX - sX);
 	const height = Math.abs(cY - sY);
@@ -315,9 +318,8 @@ export function setSelection(state: State, keys: Key[]): void {
 	const {selection} = state.managers;
 	const {keys: items} = selection;
 
-	const removed = [...items].filter(key => !keys.includes(key));
-
-	const added = keys.filter(key => canBeAdded(state, key));
+	const removed = filter([...items], key => !keys.includes(key));
+	const added = filter(keys, key => canBeAdded(state, key));
 
 	if (removed.length === 0 && added.length === 0) {
 		return;
@@ -338,7 +340,7 @@ export function toggleSelection(state: State): void {
 	} else {
 		setSelection(
 			state,
-			keys.filter(key => !isGroupKey(key)),
+			filter(keys, key => !isGroupKey(key)),
 		);
 	}
 }
@@ -362,7 +364,7 @@ function updateSelection(state: State, added: Key[], removed: Key[]): void {
 			continue;
 		}
 
-		setAttribute(element, ARIA_SELECTED, String(!removed));
+		setAttribute(element, ARIA_SELECTED, getString(!removed));
 
 		if (removed) {
 			element.classList.remove(CSS_ROW_SELECTED);

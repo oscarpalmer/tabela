@@ -1,5 +1,6 @@
 import {isKey, isPlainObject} from '@oscarpalmer/atoms/is';
 import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
+import {getString} from '@oscarpalmer/atoms/string';
 import {getValue} from '@oscarpalmer/atoms/value/handle';
 import {createGroup} from '../../components/group.component';
 import type {ColumnComponent} from '../../models/column.model';
@@ -38,7 +39,7 @@ export async function addData(state: State, data: PlainObject[], render: boolean
 			continue;
 		}
 
-		const key = getValue(item, state.key);
+		const key = getValue(item, state.key, state.options.relaxedKeys);
 
 		if (!isKey(key)) {
 			continue;
@@ -60,7 +61,7 @@ export async function addData(state: State, data: PlainObject[], render: boolean
 			continue;
 		}
 
-		const groupValue = getValue(item, state.managers.group.key);
+		const groupValue = getValue(item, state.managers.group.key, state.options.relaxedKeys);
 
 		let group =
 			getGroup(state, groupValue, true) ??
@@ -70,7 +71,7 @@ export async function addData(state: State, data: PlainObject[], render: boolean
 			groupColumn ??= getColumn(state, state.managers.group.key);
 
 			group = createGroup(
-				`${groupColumn?.options.label ?? state.managers.group.key}: ${String(groupValue)}`,
+				`${groupColumn?.options.label ?? state.managers.group.key}: ${getString(groupValue)}`,
 				groupValue,
 			);
 

@@ -1,3 +1,5 @@
+import {ceil, floor, max, min} from '@oscarpalmer/atoms/math';
+import {getString} from '@oscarpalmer/atoms/string';
 import {ARIA_ROWCOUNT} from '../models/dom.model';
 import {EVENT_RENDER_BEGIN, EVENT_RENDER_END} from '../models/event.model';
 import {
@@ -30,18 +32,18 @@ function getRange(state: State, down: boolean): RenderRange {
 
 	const {keys} = managers.data;
 
-	const firstIndex = Math.floor(scrollTop / options.rowHeight);
+	const firstIndex = floor(scrollTop / options.rowHeight);
 	const lastIndex = keys.length - managers.group.collapsed.size - 1;
 
-	const last = Math.min(lastIndex, Math.ceil((scrollTop + clientHeight) / options.rowHeight) - 1);
+	const last = min([lastIndex, ceil((scrollTop + clientHeight) / options.rowHeight) - 1]);
 
 	const visible = clientHeight / options.rowHeight;
 
-	const before = Math.ceil(visible) * (down ? 1 : 2);
-	const after = Math.ceil(visible) * (down ? 2 : 1);
+	const before = ceil(visible) * (down ? 1 : 2);
+	const after = ceil(visible) * (down ? 2 : 1);
 
-	const start = Math.max(0, firstIndex - before);
-	const end = Math.min(lastIndex, last + after);
+	const start = max([0, firstIndex - before]);
+	const end = min([lastIndex, last + after]);
 
 	return {end, start};
 }
@@ -214,7 +216,7 @@ function update(state: State, down: boolean, rerender?: boolean): void {
 		components.body.elements.group.prepend(fragment);
 	}
 
-	state.elements.table.setAttribute(ARIA_ROWCOUNT, String(state.managers.data.keys.length));
+	state.elements.table.setAttribute(ARIA_ROWCOUNT, getString(state.managers.data.keys.length));
 
 	managers.event.herald.emit(EVENT_RENDER_END);
 }

@@ -40,6 +40,7 @@ import {getGroup, isGroupKey} from './group.helper';
 import {updateNavigation} from './navigation.helper';
 import {render} from './render.helper';
 import {updateColumnWidthStyling} from './style.helper';
+import {select} from '@oscarpalmer/atoms/array/select';
 
 // #region Functions
 
@@ -69,7 +70,7 @@ export function addSorter(state: State, key: string, direction?: SortDirection):
 		return;
 	}
 
-	const sorter = getValidSorter({
+	const sorter = getValidSorter(state, {
 		direction,
 		key,
 	});
@@ -100,18 +101,18 @@ export function clearSorters(state: State): void {
 }
 
 function compareGroups(this: State, first: unknown, second: unknown): number {
-	const {managers} = this;
+	const {options, managers} = this;
 
 	const firstIsGroup = isGroupKey(first);
 	const secondIsGroup = isGroupKey(second);
 
 	const firstValue = firstIsGroup
 		? getGroup(this, first)!.value.stringified
-		: getValue(first as PlainObject, managers.group.key);
+		: getValue(first as PlainObject, managers.group.key, options.relaxedKeys);
 
 	const secondValue = secondIsGroup
 		? getGroup(this, second)!.value.stringified
-		: getValue(second as PlainObject, managers.group.key);
+		: getValue(second as PlainObject, managers.group.key, options.relaxedKeys);
 
 	const firstOrder = managers.group.order[firstValue as never];
 	const secondOrder = managers.group.order[secondValue as never];
@@ -164,11 +165,15 @@ function getSortedItems(state: State, sorters: ExtendedArrayValueSorter[]): Key[
 	) ?? state.managers.data.data.values.array) as DataValue[];
 
 	if (!state.managers.group.enabled) {
-		return sort(data as PlainObject[], sorters).map(item => getValue(item, state.key) as Key);
+		return sort(data as PlainObject[], sorters).map(
+			item => getValue(item, state.key, state.options.relaxedKeys) as Key,
+		);
 	}
 
 	return sortDataGrouped(state, data, sorters).map(item =>
-		isGroupKey(item) ? item : (getValue(item as PlainObject, state.key) as Key),
+		isGroupKey(item)
+			? item
+			: (getValue(item as PlainObject, state.key, state.options.relaxedKeys) as Key),
 	) as Key[];
 }
 
@@ -179,12 +184,12 @@ export function getSorter(original: ExtendedArrayValueSorter): TabelaSorter {
 	};
 }
 
-export function getValidSorter(value: unknown): ExtendedArrayValueSorter | undefined {
+export function getValidSorter(state: State, value: unknown): ExtendedArrayValueSorter | undefined {
 	if (typeof value === 'string') {
 		return {
 			direction: SORT_DIRECTION_ASCENDING,
 			field: value,
-			value: item => getValue(item as PlainObject, value as string),
+			value: item => getValue(item as PlainObject, value as string, state.options.relaxedKeys),
 		};
 	}
 
@@ -194,7 +199,8 @@ export function getValidSorter(value: unknown): ExtendedArrayValueSorter | undef
 			field: (value as TabelaSorter).key,
 			value:
 				(value as TabelaSorter).value ??
-				(item => getValue(item as PlainObject, (value as TabelaSorter).key)),
+				(item =>
+					getValue(item as PlainObject, (value as TabelaSorter).key, state.options.relaxedKeys)),
 		};
 	}
 
@@ -264,7 +270,11 @@ export function removeSorter(state: State, key: string, event?: KeyboardEvent | 
 export function setSorters(state: State, items: TabelaSorter[], set: boolean): void {
 	const {event, sort} = state.managers;
 
-	const sorters = items.map(getValidSorter).filter(sorter => sorter != null);
+	const sorters = select.reverse(
+		items,
+		item => getValidSorter(state, item),
+		item => item != null,
+	) as ExtendedArrayValueSorter[];
 
 	const removed = sort.items.splice(0, sort.items.length, ...sorters);
 

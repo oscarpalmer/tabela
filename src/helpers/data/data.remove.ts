@@ -15,6 +15,7 @@ import {updateFilterCache} from '../filter.helper';
 import {clearGroups, getGroup, isGroupKey, removeGroups, updateGroups} from '../group.helper';
 import {clearRows, removeRow} from '../row.helper';
 import {renderData} from './data.render';
+import {select} from '@oscarpalmer/atoms/array/select';
 
 // #region Functions
 
@@ -39,9 +40,11 @@ export async function removeData(
 	items: Array<Key | PlainObject>,
 	render: boolean,
 ): Promise<unknown> {
-	const keys = items
-		.map(value => (isPlainObject(value) ? getValue(value, state.key) : value) as Key)
-		.filter(key => isKey(key) && !isGroupKey(key));
+	const keys = select.reverse(
+		items,
+		item => (isPlainObject(item) ? getValue(item, state.key, state.options.relaxedKeys) : item),
+		item => isKey(item) && !isGroupKey(item),
+	) as Key[];
 
 	const {length} = keys;
 
@@ -139,7 +142,11 @@ async function removeItems(
 
 			state.managers.group.collapsed.delete(key);
 
-			const groupValue = getValue(dataValue, state.managers.group.key) as unknown;
+			const groupValue = getValue(
+				dataValue,
+				state.managers.group.key,
+				state.options.relaxedKeys,
+			) as unknown;
 
 			const group = getGroup(state, groupValue, true);
 

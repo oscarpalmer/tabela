@@ -1,4 +1,4 @@
-import {addFilter, clearFilters, removeFilter, setFilters} from '../helpers/filter.helper';
+import {addFilters, clearFilters, removeFilter, setFilters} from '../helpers/filter.helper';
 import type {FilterManager, TabelaFilter, TabelaFilterItem} from '../models/filter.model';
 import {SYMBOL, type State} from '../models/tabela.model';
 
@@ -20,7 +20,7 @@ function TabelaFilter(this: TabelaFilter, state: State): void {
 	this[SYMBOL] = state;
 }
 
-TabelaFilter.prototype.add = addTabelaFilter;
+TabelaFilter.prototype.add = addTabelaFilters;
 TabelaFilter.prototype.clear = clearTabelaFilters;
 TabelaFilter.prototype.remove = removeTabelaFilter;
 TabelaFilter.prototype.set = setTabelaFilters;
@@ -29,8 +29,8 @@ TabelaFilter.prototype.set = setTabelaFilters;
 
 // #region Functions
 
-function addTabelaFilter(this: TabelaFilter, item: TabelaFilterItem): void {
-	addFilter(this[SYMBOL], item);
+function addTabelaFilters(this: TabelaFilter, value: TabelaFilterItem | TabelaFilterItem[]): void {
+	addFilters(this[SYMBOL], value);
 }
 
 function clearTabelaFilters(this: TabelaFilter): void {
@@ -48,12 +48,12 @@ function destroyFilterManager(this: FilterManager): void {
 	this.state = undefined as never;
 }
 
-function removeTabelaFilter(this: TabelaFilter, value: string | TabelaFilterItem): void {
+function removeTabelaFilter(this: TabelaFilter, value: string | string[]): void {
 	removeFilter(this[SYMBOL], value);
 }
 
-function setTabelaFilters(this: TabelaFilter, items: TabelaFilterItem[]): void {
-	setFilters(this[SYMBOL], items);
+function setTabelaFilters(this: TabelaFilter, value: TabelaFilterItem | TabelaFilterItem[]): void {
+	setFilters(this[SYMBOL], value);
 }
 
 // #endregion

@@ -1,4 +1,3 @@
-import {createElement} from '@oscarpalmer/toretto/create';
 import {createBody} from '../components/body.component';
 import {createFooter} from '../components/footer.component';
 import {createHeader} from '../components/header.component';
@@ -13,18 +12,14 @@ import {createRowManager} from '../managers/row.manager';
 import {createSelectionManager} from '../managers/selection.manager';
 import {createSortManager} from '../managers/sort.manager';
 import {createStyleManager} from '../managers/style.manager';
-import {
-	ARIA_LABEL,
-	ARIA_ROWCOUNT,
-	ATTRIBUTE_DATA_EVENT,
-	ELEMENT_DIV,
-	ROLE_GRID,
-} from '../models/dom.model';
+import {ARIA_LABEL} from '../models/dom.model';
 import type {TabelaOptions} from '../models/options.model';
-import {CSS_TABLE, CSS_WRAPPER} from '../models/style.model';
+import {CSS_WRAPPER} from '../models/style.model';
 import {type State, SYMBOL, type Tabela} from '../models/tabela.model';
 import {setColumns} from './column.helper';
+import {createTable} from './dom.helpers';
 import {initializeNavigation} from './navigation.helper';
+import {getOptions} from './options.helper';
 
 // #region Functions
 
@@ -68,34 +63,26 @@ export function initializeTabela(
 	element: HTMLElement,
 	options: TabelaOptions,
 ): State {
+	const validated = getOptions(options);
+
 	const id = getId();
 
 	element.innerHTML = '';
 
 	element.classList.add(CSS_WRAPPER);
 
-	const table = createElement(ELEMENT_DIV, {
-		attribute: {
-			[ARIA_LABEL]: options.label,
-			[ARIA_ROWCOUNT]: '0',
-			[ATTRIBUTE_DATA_EVENT]: 'table',
-		},
-		property: {
-			className: CSS_TABLE,
-			role: ROLE_GRID,
-		},
-	});
+	const table = createTable(validated);
 
 	const state: State = {
 		id,
-		options,
 		components: {} as never,
 		elements: {
 			table,
 			wrapper: element,
 		},
-		key: options.key,
+		key: validated.key,
 		managers: {} as never,
+		options: validated,
 		prefix: `tabela_${id}`,
 	};
 

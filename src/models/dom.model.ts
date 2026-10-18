@@ -1,6 +1,6 @@
 // #region Variables
 
-import {CSS_HEADING_FILTER} from './style.model';
+import {CSS_FILTER, CSS_HEADING_FILTER} from './style.model';
 
 // #region Misc.
 
@@ -50,7 +50,7 @@ export const SELECTOR_DATA_KEY: string = `[${ATTRIBUTE_DATA_KEY}]`;
 
 export const SELECTOR_EVENT: string = `[${ATTRIBUTE_DATA_EVENT}]`;
 
-export const SELECTOR_FILTER: string = `.${CSS_HEADING_FILTER}`;
+export const SELECTOR_FILTER: string = `.${CSS_HEADING_FILTER}, .${CSS_FILTER}`;
 
 // #endregion
 

@@ -1,3 +1,4 @@
+import {filter} from '@oscarpalmer/atoms/array/filter';
 import {isKey, isPlainObject} from '@oscarpalmer/atoms/is';
 import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
 import {getValue} from '@oscarpalmer/atoms/value/handle';
@@ -38,7 +39,7 @@ export async function synchronizeData(
 			continue;
 		}
 
-		const key = getValue(object, state.key);
+		const key = getValue(object, state.key, state.options.relaxedKeys);
 
 		if (!isKey(key)) {
 			continue;
@@ -60,7 +61,8 @@ export async function synchronizeData(
 	let removed: PlainObject[] = [];
 
 	if (remove) {
-		const toRemove = state.managers.data.data.keys.original.filter(
+		const toRemove = filter(
+			state.managers.data.data.keys.original,
 			key => !isGroupKey(key) && !keys.has(key),
 		) as Key[];
 

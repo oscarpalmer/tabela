@@ -2,6 +2,7 @@ import {findAncestor} from '@oscarpalmer/toretto/find';
 import {ATTRIBUTE_DATA_EVENT, SELECTOR_EVENT} from '../models/dom.model';
 import {
 	EVENT_FILTER_INPUT,
+	EVENT_FILTER_LIST,
 	EVENT_GROUP,
 	EVENT_HEADER,
 	EVENT_ROW,
@@ -9,13 +10,23 @@ import {
 	type EventManager,
 } from '../models/event.model';
 import {SELECTOR_TABLE} from '../models/style.model';
+import {onFilter} from './filter.helper';
 import {onGroup} from './group.helper';
 import {handleNavigation} from './navigation.helper';
 import {onSelection} from './selection.helper';
 import {onSort} from './sort.helper';
-import {onFilter} from './filter.helper';
 
 // #region Functions
+
+export function onChange(event: Event): void {
+	onEvent(event, (_, manager, target) => {
+		const type = target?.getAttribute(ATTRIBUTE_DATA_EVENT) ?? undefined;
+
+		if (type === EVENT_FILTER_LIST) {
+			onFilter(manager.state, target);
+		}
+	});
+}
 
 export function onClick(event: MouseEvent): void {
 	onEvent(event, (event, manager, target) => {
@@ -54,7 +65,7 @@ export function onInput(event: InputEvent): void {
 		const type = target?.getAttribute(ATTRIBUTE_DATA_EVENT) ?? undefined;
 
 		if (type === EVENT_FILTER_INPUT) {
-			onFilter(manager.state, target as HTMLInputElement);
+			onFilter(manager.state, target);
 		}
 	});
 }

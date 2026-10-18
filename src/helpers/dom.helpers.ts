@@ -1,6 +1,16 @@
 import {createElement} from '@oscarpalmer/toretto/create';
-import {ELEMENT_DIV, ROLE_CELL, ROLE_ROW, ROLE_ROWGROUP} from '../models/dom.model';
-import {CSS_CELL, CSS_CELL_BODY, CSS_ROW, CSS_ROWGROUP} from '../models/style.model';
+import {
+	ARIA_LABEL,
+	ARIA_ROWCOUNT,
+	ATTRIBUTE_DATA_EVENT,
+	ELEMENT_DIV,
+	ROLE_CELL,
+	ROLE_GRID,
+	ROLE_ROW,
+	ROLE_ROWGROUP,
+} from '../models/dom.model';
+import type {Options} from '../models/options.model';
+import {CSS_CELL, CSS_CELL_BODY, CSS_ROW, CSS_ROWGROUP, CSS_TABLE} from '../models/style.model';
 import type {State} from '../models/tabela.model';
 
 // #region Types
@@ -68,6 +78,20 @@ export function createRowElement(height: number): HTMLDivElement {
 	});
 
 	return row;
+}
+
+export function createTable(options: Options): HTMLDivElement {
+	return createElement(ELEMENT_DIV, {
+		attribute: {
+			[ARIA_LABEL]: options.label,
+			[ARIA_ROWCOUNT]: '0',
+			[ATTRIBUTE_DATA_EVENT]: 'table',
+		},
+		property: {
+			className: CSS_TABLE,
+			role: ROLE_GRID,
+		},
+	});
 }
 
 // #endregion

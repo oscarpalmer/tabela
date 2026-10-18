@@ -48,6 +48,8 @@ export type EventFilterSet = (filters: {
 	removed: TabelaFilterItem[];
 }) => void;
 
+export type EventFilterUpdate = (filters: TabelaFilterItem[]) => void;
+
 export type EventGroupAdd = (groups: Group[]) => void;
 
 export type EventGroupClear = () => void;
@@ -122,9 +124,13 @@ export const EVENT_FILTER_CLEAR = 'filter:clear';
 
 export const EVENT_FILTER_INPUT = 'filter:input';
 
+export const EVENT_FILTER_LIST = 'filter:list';
+
 export const EVENT_FILTER_REMOVE = 'filter:remove';
 
 export const EVENT_FILTER_SET = 'filter:set';
+
+export const EVENT_FILTER_UPDATE = 'filter:update';
 
 export const EVENT_HEADER = 'header';
 
@@ -168,6 +174,7 @@ export const EVENT_NAMES = [
 	EVENT_FILTER_CLEAR,
 	EVENT_FILTER_REMOVE,
 	EVENT_FILTER_SET,
+	EVENT_FILTER_UPDATE,
 	EVENT_GROUP_ADD,
 	EVENT_GROUP_CLEAR,
 	EVENT_GROUP_REMOVE,
@@ -209,6 +216,7 @@ export type EventMap = {
 	[EVENT_FILTER_CLEAR]: EventFilterClear;
 	[EVENT_FILTER_REMOVE]: EventFilterRemove;
 	[EVENT_FILTER_SET]: EventFilterSet;
+	[EVENT_FILTER_UPDATE]: EventFilterUpdate;
 	[EVENT_GROUP_ADD]: EventGroupAdd;
 	[EVENT_GROUP_CLEAR]: EventGroupClear;
 	[EVENT_GROUP_REMOVE]: EventGroupRemove;

@@ -30,11 +30,6 @@ export type TabelaSort = {
 	set(items: TabelaSorter[]): void;
 };
 
-export type TableSortItem = {
-	direction: SortDirection;
-	key: string;
-};
-
 export type TabelaSorter = {
 	direction: SortDirection;
 	key: string;

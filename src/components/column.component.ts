@@ -1,3 +1,4 @@
+import {createOuiResizable} from '@oscarpalmer/oui/resizable';
 import {createColumnElements} from '../helpers/column.helper';
 import type {
 	Column,
@@ -19,11 +20,14 @@ function ColumnComponent(this: ColumnComponent, state: State, column: TabelaColu
 		footer: column.footer,
 		key: column.key,
 		label: column.label ?? column.key,
-	} as Column;
+		type: column.type ?? 'string',
+	} satisfies Column;
 
 	this.key = createKey(this.options.key);
 
 	this.elements = createColumnElements(state, this);
+
+	this.resizable = createOuiResizable(this.elements.wrapper);
 }
 
 ColumnComponent.prototype.destroy = destroyColumn;

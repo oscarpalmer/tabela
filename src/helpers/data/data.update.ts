@@ -30,7 +30,7 @@ export async function updateData(
 			continue;
 		}
 
-		const key = getValue(dataItem, state.key);
+		const key = getValue(dataItem, state.key, state.options.relaxedKeys);
 
 		if (!isKey(key)) {
 			continue;

@@ -1,6 +1,6 @@
 import {herald} from '@oscarpalmer/atoms/herald';
 import {on} from '@oscarpalmer/toretto/event';
-import {onClick, onInput, onKeydown} from '../helpers/event.helper';
+import {onChange, onClick, onInput, onKeydown} from '../helpers/event.helper';
 import {
 	EVENT_NAMES,
 	mappedEventManagers,
@@ -44,6 +44,7 @@ function destroyEventManager(this: EventManager): void {
 
 // #region Initialization
 
+on(document, 'change', onChange);
 on(document, 'click', onClick);
 on(document, 'input', onInput);
 on(document, 'keydown', onKeydown, {passive: false});

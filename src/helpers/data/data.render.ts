@@ -23,12 +23,12 @@ export function renderData(state: State): void {
 	data.keys.active = undefined;
 
 	data.keys.original = data.values.array.map(item =>
-		typeof item === 'string' ? item : (getValue(item, state.key) as Key),
+		typeof item === 'string' ? item : (getValue(item, state.key, state.options.relaxedKeys) as Key),
 	);
 
 	data.values.mapped = toMap(
 		filter.remove(data.values.array, isGroupKey) as PlainObject[],
-		item => getValue(item, state.key) as Key,
+		item => getValue(item, state.key, state.options.relaxedKeys) as Key,
 	);
 
 	render(state, RENDER_ORIGIN_DATA);

@@ -28,6 +28,18 @@ export const CSS_CELL_GROUP = 'tabela__cell--group';
 
 export const CSS_FAKER = 'tabela__faker';
 
+export const CSS_FILTER = 'tabela__filter';
+
+export const CSS_FILTER_INPUT = 'tabela__filter__input';
+
+export const CSS_FILTER_ITEM = 'tabela__filter__item';
+
+export const CSS_FILTER_LABEL = 'tabela__filter__label';
+
+export const CSS_FILTER_LIST = 'tabela__filter__list';
+
+export const CSS_FILTER_TYPE = 'tabela__filter__type';
+
 export const CSS_GROUP = 'tabela__group';
 
 export const CSS_GROUP_SELECTED = 'tabela__group__selected';
@@ -40,9 +52,7 @@ export const CSS_HEADING_CONTENT = 'tabela__heading__content';
 
 export const CSS_HEADING_FILTER = 'tabela__heading__filter';
 
-export const CSS_HEADING_FILTER_BUTTON = 'tabela__heading__filter__button';
-
-export const CSS_HEADING_FILTER_POPOVER = 'tabela__heading__filter__popover';
+export const CSS_HEADING_RESIZER = 'tabela__heading__resizer';
 
 export const CSS_HEADING_SORTER = 'tabela__heading__sorter';
 
@@ -207,11 +217,15 @@ export const tabelaCSS: string = //css
 }
 
 :where(.${CSS_HEADING_FILTER}) {
-	cursor: default;
+	padding: 0;
 }
 
-:where(.${CSS_HEADING_FILTER_BUTTON}) {
-	padding: 0;
+:where(.${CSS_HEADING_RESIZER}) {
+	width: 0.25em;
+	height: 100%;
+	margin: 0 -.5em 0 -.25em;
+	background: red;
+	cursor: col-resize;
 }
 
 :where(.${CSS_HEADING_SORTER}) {
@@ -263,6 +277,26 @@ export const tabelaCSS: string = //css
 :where(.${CSS_CELL_FOOTER}[data-active]:focus-visible) {
 	outline: 2px dashed red;
 	outline-offset: -2px;
+}
+
+/** Filtering */
+
+:where(.${CSS_FILTER}) {
+	padding: 0;
+	cursor: default;
+}
+
+:where(.${CSS_FILTER_ITEM}) {
+	padding: 1em;
+	display: flex;
+	flex-flow: column nowrap;
+	gap: 1em;
+}
+
+:where(.${CSS_FILTER_LIST}) {
+	min-width: 12em;
+	height: 100%;
+	max-height: max(40em, 50vh);
 }
 
 /** Misc. */

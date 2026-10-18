@@ -1,5 +1,6 @@
 import {isKey} from '@oscarpalmer/atoms/is';
 import type {Key} from '@oscarpalmer/atoms/models';
+import {getString} from '@oscarpalmer/atoms/string';
 import {getValue} from '@oscarpalmer/atoms/value/handle';
 import {setAttributes} from '@oscarpalmer/toretto/attribute';
 import {createRow} from '../components/row.component';
@@ -90,11 +91,11 @@ export function renderRow(state: State, row: RowComponent): void {
 	const active = row.key === managers.navigation.active.row;
 	const selected = managers.selection.keys.has(row.key);
 
-	const key = String(row.key);
+	const key = getString(row.key);
 
 	setAttributes(element, {
-		[ARIA_SELECTED]: String(selected),
-		[ARIA_ROWINDEX]: String(state.managers.data.getIndex(row.key) + 1),
+		[ARIA_SELECTED]: getString(selected),
+		[ARIA_ROWINDEX]: getString(state.managers.data.getIndex(row.key) + 1),
 		[ATTRIBUTE_DATA_EVENT]: EVENT_ROW,
 		[ATTRIBUTE_DATA_KEY]: key,
 		id: `${prefix}_row_${key}`,
@@ -122,7 +123,7 @@ export function renderRow(state: State, row: RowComponent): void {
 	}
 
 	for (let index = 0; index < length; index += 1) {
-		const {key, options} = columns[index];
+		const {key} = columns[index];
 
 		managers.render.pool.cells[key.original] ??= [];
 
@@ -130,8 +131,8 @@ export function renderRow(state: State, row: RowComponent): void {
 			managers.render.pool.cells[key.original].shift() ?? createCellElement(key.normalized);
 
 		cell.dataset.key = key.original;
-		cell.id = `${prefix}_row_${row.key}_column_${key.normalized}`;
-		cell.textContent = String(getValue(data, key.original));
+		cell.id = `${prefix}_row_${getString(row.key)}_column_${key.normalized}`;
+		cell.textContent = getString(getValue(data, key.original, state.options.relaxedKeys));
 
 		if (active && key.original === managers.navigation.active.column) {
 			cell.setAttribute(ATTRIBUTE_DATA_ACTIVE, '');

@@ -1,3 +1,4 @@
+import {filter} from '@oscarpalmer/atoms/array/filter';
 import {sort} from '@oscarpalmer/atoms/array/sort';
 import {toMap} from '@oscarpalmer/atoms/array/to-map';
 import {toRecord} from '@oscarpalmer/atoms/array/to-record';
@@ -130,7 +131,7 @@ export function removeGroups(state: State, groups: GroupComponent[]): void {
 
 	setGroups(
 		state,
-		state.managers.group.items.filter(item => !groups.includes(item)),
+		filter(state.managers.group.items, item => !groups.includes(item)),
 	);
 
 	state.managers.event.herald.emit(EVENT_GROUP_REMOVE, groups.map(getTabelaGroup));
@@ -139,7 +140,7 @@ export function removeGroups(state: State, groups: GroupComponent[]): void {
 export function renderGroup(state: State, component: GroupComponent): void {
 	component.element ??= createElement(ELEMENT_DIV, {
 		attribute: {
-			[ARIA_ROWINDEX]: String(state.managers.data.getIndex(component.key.full) + 1),
+			[ARIA_ROWINDEX]: getString(state.managers.data.getIndex(component.key.full) + 1),
 			[ATTRIBUTE_DATA_KEY]: component.key.full,
 		},
 		property: {
@@ -217,15 +218,15 @@ export function updateGroup(state: State, component: GroupComponent, emit: boole
 	const total = component.element.querySelector<HTMLSpanElement>(SELECTOR_GROUP_TOTAL);
 
 	if (selected != null) {
-		selected.textContent = component.selected === 0 ? '' : String(component.selected);
+		selected.textContent = component.selected === 0 ? '' : getString(component.selected);
 	}
 
 	if (total != null) {
-		total.textContent = String(component.total);
+		total.textContent = getString(component.total);
 	}
 
 	setAttributes(component.element, {
-		[ARIA_ROWINDEX]: String(state.managers.data.getIndex(component.key.full) + 1),
+		[ARIA_ROWINDEX]: getString(state.managers.data.getIndex(component.key.full) + 1),
 	});
 
 	if (emit) {

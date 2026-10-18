@@ -1,5 +1,6 @@
 import type {Key} from '@oscarpalmer/atoms/models';
 import {clamp} from '@oscarpalmer/atoms/number';
+import {getString} from '@oscarpalmer/atoms/string';
 import {ATTRIBUTE_DATA_ACTIVE} from '../models/dom.model';
 import {GROUP_KEY_PREFIX} from '../models/group.model';
 import type {NavigationManager, NavigationManagerActiveType} from '../models/navigation.model';
@@ -45,7 +46,7 @@ function getRowSelector(
 			return `${prefix}_${type}`;
 
 		case 'group':
-			return `${prefix}_group_${String(row).replace(GROUP_KEY_PREFIX, '')}`;
+			return `${prefix}_group_${getString(row).replace(GROUP_KEY_PREFIX, '')}`;
 
 		case 'row':
 			return `${prefix}_row_${row}`;

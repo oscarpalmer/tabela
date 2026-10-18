@@ -8,12 +8,12 @@ import type {FooterComponent} from './footer.model';
 import type {GroupManager, TabelaGroup} from './group.model';
 import type {HeaderComponent} from './header.model';
 import type {NavigationManager} from './navigation.model';
+import type {Options} from './options.model';
 import type {RenderManager} from './render.model';
 import type {RowManager} from './row.model';
 import type {SelectionManager, TabelaSelection} from './selection.model';
 import type {SortManager, TabelaSort} from './sort.model';
 import type {StyleManager} from './style.model';
-import type {TabelaOptions} from './options.model';
 
 // #region Types
 
@@ -44,7 +44,7 @@ export type State = {
 	key: string;
 	managers: Managers;
 	prefix: string;
-	options: TabelaOptions;
+	options: Options;
 };
 
 type StateElements = {
