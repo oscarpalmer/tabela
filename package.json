@@ -1,6 +1,6 @@
 {
 	"name": "@oscarpalmer/tabela",
-	"version": "0.17.0",
+	"version": "0.18.0",
 	"description": "A modern table.",
 	"keywords": [],
 	"license": "MIT",
@@ -26,35 +26,24 @@
 		}
 	},
 	"scripts": {
-		"build": "vpx vp run tsdown:build && vpx vp pack",
-		"tsdown:build": "vpx tsdown -c ./tsdown.config.ts",
-		"tsdown:watch": "vpx tsdown -c ./tsdown.config.ts --watch",
+		"build": "vpx vp run tsdown && vpx vp pack",
+		"tsdown": "vpx tsdown -c ./tsdown.config.ts",
 		"test": "vpx vp test run --coverage",
-		"test:leak": "vpx vp test run --detect-async-leaks --coverage",
-		"watch": "vpx vite build --watch",
-		"www": "concurrently \"vpx vp run www:css\" \"vpx vp run www:js\"",
-		"www:css": "sass --watch www/.app/css:./www/css",
-		"www:js": "vpx tsdown -c ./www/.app/js/tsdown.config.ts --watch"
+		"test:leak": "vpx vp test run --detect-async-leaks --coverage"
 	},
 	"dependencies": {
-		"@oscarpalmer/atoms": "^0.216",
-		"@oscarpalmer/oui": "^0.39",
-		"@oscarpalmer/toretto": "^0.56"
+		"@oscarpalmer/atoms": "^0.221",
+		"@oscarpalmer/oui": "^0.42",
+		"@oscarpalmer/toretto": "^0.57"
 	},
 	"devDependencies": {
 		"@types/node": "^26.6",
-		"@vitest/coverage-istanbul": "5.0.1",
-		"eslint": "^10.12",
+		"@vitest/coverage-istanbul": "^5",
+		"eslint": "^10.13",
 		"jsdom": "^30.1",
 		"tsdown": "^0.23",
 		"typescript": "^7",
-		"vite": "npm:@voidzero-dev/vite-plus-core@1.0.0",
-		"vite-plus": "1.0.0",
-		"vitest": "5.0.1"
-	},
-	"overrides": {
-		"vite": "npm:@voidzero-dev/vite-plus-core@1.0.0",
-		"vitest": "5.0.1"
+		"vite-plus": "^1.4"
 	},
 	"packageManager": "npm@11.11.1"
 }

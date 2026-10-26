@@ -5,11 +5,13 @@ import {getString} from '@oscarpalmer/atoms/string';
 import {createElement} from '@oscarpalmer/toretto/create';
 import {createColumn} from '../components/column.component';
 import {
-	columnFooters,
+	columnFooterAggregation,
 	type ColumnComponent,
 	type ColumnComponentElements,
 	type TabelaColumn,
-	type TabelaColumnFooter,
+	type TabelaColumnFooterAggregation,
+	type TabelaColumnFooterCallback,
+	type TabelaColumnLabelCallback,
 } from '../models/column.model';
 import {
 	ARIA_COLCOUNT,
@@ -56,12 +58,16 @@ export function createColumnElements(
 		},
 	});
 
+	const label =
+		typeof column.options.label === 'function' ? column.options.label() : column.options.label;
+
 	const content = createElement(ELEMENT_DIV, {
 		property: {
 			className: CSS_HEADING_CONTENT,
-			textContent: column.options.label,
 		},
 	});
+
+	content.append(...((Array.isArray(label) ? label : [label]) as string[]));
 
 	const filter = createFilterElement(state, column, id);
 
@@ -98,8 +104,24 @@ export function getColumn(state: State, key: string): ColumnComponent | undefine
 	return state.managers.column.items.find(item => item.key.original === key);
 }
 
-function getColumnFooter(value: unknown): TabelaColumnFooter | undefined {
-	return columnFooters.has(value as TabelaColumnFooter) ? (value as TabelaColumnFooter) : undefined;
+function getColumnFooter(
+	value: unknown,
+): TabelaColumnFooterAggregation | TabelaColumnFooterCallback | undefined {
+	if (typeof value === 'function') {
+		return value as TabelaColumnFooterCallback;
+	}
+
+	return columnFooterAggregation.has(value as TabelaColumnFooterAggregation)
+		? (value as TabelaColumnFooterAggregation)
+		: undefined;
+}
+
+function getColumnLabel(value: unknown): string | TabelaColumnLabelCallback | undefined {
+	if (typeof value === 'function') {
+		return value as TabelaColumnLabelCallback;
+	}
+
+	return typeof value === 'string' && value.trim().length > 0 ? value : undefined;
 }
 
 export function getValidColumn(value: unknown): TabelaColumn {
@@ -113,13 +135,15 @@ export function getValidColumn(value: unknown): TabelaColumn {
 		throw new TypeError('Column key must be a non-empty string');
 	}
 
+	if (column.render != null && typeof column.render !== 'function') {
+		throw new TypeError('Column render must be a function if defined');
+	}
+
 	return {
 		footer: getColumnFooter(column.footer),
-		label:
-			typeof column.label === 'string' && column.label.trim().length > 0
-				? column.label
-				: column.key,
+		label: getColumnLabel(column.label) ?? column.key,
 		key: column.key,
+		render: column.render,
 		width:
 			typeof column.width === 'number' && !Number.isNaN(column.width) ? column.width : undefined,
 	};

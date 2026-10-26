@@ -15,6 +15,7 @@ import {EVENT_ROW} from '../models/event.model';
 import type {RowComponent} from '../models/row.model';
 import {CSS_ROW_BODY, CSS_ROW_SELECTED} from '../models/style.model';
 import type {State} from '../models/tabela.model';
+import {getRowIndex} from './data/data.misc';
 import {createCellElement, createRowElement} from './dom.helpers';
 
 // #region Functions
@@ -54,6 +55,8 @@ export function hasRow(state: State, key: unknown): boolean {
 
 export function removeRow(state: State, row: RowComponent, unmap?: boolean): void {
 	if (row.element != null) {
+		state.managers.render.observer.unobserve(row.element);
+
 		row.element.innerHTML = '';
 
 		state.managers.render.pool.rows.push(row.element);
@@ -78,7 +81,7 @@ export function removeRowByKey(state: State, key: unknown): void {
 	}
 }
 
-export function renderRow(state: State, row: RowComponent): void {
+export function renderRow(state: State, row: RowComponent, rowIndex: number): void {
 	const {managers, options, prefix} = state;
 
 	const element =
@@ -95,7 +98,7 @@ export function renderRow(state: State, row: RowComponent): void {
 
 	setAttributes(element, {
 		[ARIA_SELECTED]: getString(selected),
-		[ARIA_ROWINDEX]: getString(state.managers.data.getIndex(row.key) + 1),
+		[ARIA_ROWINDEX]: getString(rowIndex + 1),
 		[ATTRIBUTE_DATA_EVENT]: EVENT_ROW,
 		[ATTRIBUTE_DATA_KEY]: key,
 		id: `${prefix}_row_${key}`,
@@ -123,7 +126,7 @@ export function renderRow(state: State, row: RowComponent): void {
 	}
 
 	for (let index = 0; index < length; index += 1) {
-		const {key} = columns[index];
+		const {key, options} = columns[index];
 
 		managers.render.pool.cells[key.original] ??= [];
 
@@ -132,7 +135,18 @@ export function renderRow(state: State, row: RowComponent): void {
 
 		cell.dataset.key = key.original;
 		cell.id = `${prefix}_row_${getString(row.key)}_column_${key.normalized}`;
-		cell.textContent = getString(getValue(data, key.original, state.options.relaxedKeys));
+
+		const value = getValue(data, key.original, state.options.relaxedKeys);
+
+		if (typeof options.render === 'function') {
+			const rendered = options.render(value, data, rowIndex);
+
+			cell.textContent = '';
+
+			cell.append(...((Array.isArray(rendered) ? rendered : [rendered]) as string[]));
+		} else {
+			cell.textContent = getString(value);
+		}
 
 		if (active && key.original === managers.navigation.active.column) {
 			cell.setAttribute(ATTRIBUTE_DATA_ACTIVE, '');
@@ -142,13 +156,16 @@ export function renderRow(state: State, row: RowComponent): void {
 
 		element.append(cell);
 	}
+
+	// Measure on render, to keep offsets in sync with the actual height
+	state.managers.render.observer.observe(element);
 }
 
 export function updateRow(state: State, key: Key): void {
 	const row = state.managers.row.components.get(key);
 
 	if (row?.element != null) {
-		renderRow(state, row);
+		renderRow(state, row, getRowIndex(state, row.key));
 	}
 }
 

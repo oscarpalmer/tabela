@@ -5,6 +5,7 @@ import {ATTRIBUTE_DATA_ACTIVE} from '../models/dom.model';
 import {GROUP_KEY_PREFIX} from '../models/group.model';
 import type {NavigationManager, NavigationManagerActiveType} from '../models/navigation.model';
 import type {State} from '../models/tabela.model';
+import {getKeyIndex} from './data/data.misc';
 import {getGroup, isGroupKey} from './group.helper';
 import {getRow} from './row.helper';
 
@@ -18,14 +19,23 @@ export function focusNavigation(state: State): void {
 		const key = state.managers.data.keys[index];
 
 		active.index = index;
-		active.row = key == null ? 'header' : key;
-		active.type = key == null ? 'header' : isGroupKey(key) ? 'group' : 'row';
+		active.row = key ?? 'header';
+
+		if (key == null) {
+			active.type = 'header';
+		} else {
+			active.type = isGroupKey(key) ? 'group' : 'row';
+		}
 	}
 
 	setNavigationStyles(state);
 }
 
-function getColumnIndex(state: State, event: KeyboardEvent, column: string): number {
+function getColumnIndex(state: State, event: KeyboardEvent, column?: string): number {
+	if (column == null) {
+		return -1;
+	}
+
 	const current = state.managers.column.keys.indexOf(column);
 
 	if (current === -1) {
@@ -79,7 +89,7 @@ export function handleNavigation(state: State, event: KeyboardEvent): void {
 		setAbsolute(navigation, event.key === KEY_HOME);
 	} else if (horiziontalKeys.has(event.key)) {
 		navigation.active.column =
-			state.managers.column.keys[getColumnIndex(state, event, navigation.active.column!)];
+			state.managers.column.keys[getColumnIndex(state, event, navigation.active.column)];
 	} else {
 		setOffset(state, event);
 	}
@@ -113,7 +123,7 @@ function setOffset(state: State, event: KeyboardEvent): void {
 	} else if (active.type === 'header') {
 		index = -1;
 	} else {
-		index = state.managers.data.getIndex(active.row!);
+		index = getKeyIndex(state, active.row);
 	}
 
 	let result: number | undefined;
@@ -165,21 +175,25 @@ export function setNavigationStyles(state: State, focus?: boolean): void {
 		element.removeAttribute(ATTRIBUTE_DATA_ACTIVE);
 	}
 
-	const selector = getRowSelector(active.type!, state.prefix, active.row!);
+	const rowSelector =
+		active.row == null || active.type == null
+			? undefined
+			: getRowSelector(active.type, state.prefix, active.row);
 
-	state.elements.table.tabIndex = selector == null ? 0 : -1;
+	state.elements.table.tabIndex = rowSelector == null ? 0 : -1;
 
-	if (selector == null) {
+	if (rowSelector == null) {
 		state.elements.table.focus();
 
 		return;
 	}
 
-	state.elements.table.querySelector(selector)?.setAttribute(ATTRIBUTE_DATA_ACTIVE, '');
+	state.elements.table.querySelector(rowSelector)?.setAttribute(ATTRIBUTE_DATA_ACTIVE, '');
 
-	const element = state.elements.table.querySelector(
-		`#${CSS.escape(`${selector}_column${active.type === 'group' ? '' : `_${active.column}`}`)}`,
-	);
+	const columnSuffix = active.type === 'group' ? '' : `_${active.column}`;
+	const columnSelector = `${rowSelector}_column${columnSuffix}`;
+
+	const element = state.elements.table.querySelector(`#${CSS.escape(columnSelector)}`);
 
 	state.elements.table.tabIndex = element == null ? 0 : -1;
 
@@ -206,7 +220,7 @@ export function setNavigationStyles(state: State, focus?: boolean): void {
 
 	if (component?.element == null) {
 		state.components.body.elements.group.parentElement?.scrollTo({
-			top: state.managers.data.getIndex(active.row!) * state.options.rowHeight,
+			top: getKeyIndex(state, active.row) * state.options.rowHeight,
 			behavior: 'smooth',
 		});
 	} else {

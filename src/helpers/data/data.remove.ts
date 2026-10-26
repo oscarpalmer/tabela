@@ -81,8 +81,9 @@ async function removeItems(
 	const {data} = state.managers.data;
 
 	if (clear) {
-		data.keys.active = undefined;
-		data.keys.original = [];
+		data.keys.all = {original: []};
+		data.keys.row = {original: []};
+
 		data.values.array = [];
 
 		data.values.mapped.clear();
@@ -117,7 +118,7 @@ async function removeItems(
 
 		for (let keyIndex = 0; keyIndex < chunkLength; keyIndex += 1) {
 			const key = chunk[keyIndex];
-			const dataIndex = data.keys.original.indexOf(key);
+			const dataIndex = data.keys.all.original.indexOf(key);
 
 			let dataValue: PlainObject | undefined;
 
@@ -126,7 +127,7 @@ async function removeItems(
 			removedData.push(dataValue);
 			removedMap.set(key, dataValue);
 
-			data.keys.original.splice(dataIndex, 1);
+			data.keys.all.original.splice(dataIndex, 1);
 
 			const row = state.managers.row.components.get(key);
 
@@ -148,7 +149,7 @@ async function removeItems(
 				state.options.relaxedKeys,
 			) as unknown;
 
-			const group = getGroup(state, groupValue, true);
+			const group = getGroup(state, groupValue, 'value');
 
 			if (group == null || removedGroups.includes(group)) {
 				continue;
@@ -175,7 +176,7 @@ async function removeItems(
 			groupIndex = data.values.array.indexOf(group.key.full);
 
 			if (groupIndex > -1) {
-				data.keys.original.splice(groupIndex, 1);
+				data.keys.all.original.splice(groupIndex, 1);
 				data.values.array.splice(groupIndex, 1);
 			}
 

@@ -73,7 +73,7 @@ export function createRowElement(height: number): HTMLDivElement {
 			role: ROLE_ROW,
 		},
 		style: {
-			height: `${height}px`,
+			minHeight: `${height}px`,
 		},
 	});
 

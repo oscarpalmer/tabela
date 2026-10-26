@@ -3,10 +3,16 @@ import {average, max, median, min, sum} from '@oscarpalmer/atoms/math';
 import type {PlainObject} from '@oscarpalmer/atoms/models';
 import {getNumber} from '@oscarpalmer/atoms/number';
 import {getString} from '@oscarpalmer/atoms/string';
-import type {ColumnComponent, TabelaColumn, TabelaColumnFooter} from '../models/column.model';
+import type {
+	ColumnComponent,
+	TabelaColumn,
+	TabelaColumnFooterAggregation,
+} from '../models/column.model';
 import type {FooterComponent} from '../models/footer.model';
+import type {RenderCallbackResult} from '../models/render.model';
 import {CSS_CELL_FOOTER} from '../models/style.model';
 import type {State} from '../models/tabela.model';
+import {getData} from './data/data.misc';
 import {createCellElement} from './dom.helpers';
 
 // #region Functions
@@ -21,20 +27,24 @@ function getCell(footer: FooterComponent, column: ColumnComponent): HTMLDivEleme
 	return cell;
 }
 
-function getContent(column: ColumnComponent, data: PlainObject[]): string {
+function getContent(column: ColumnComponent, data: PlainObject[]): RenderCallbackResult {
 	if (data.length === 0 || column.options.footer == null) {
-		return empty;
+		return '';
+	}
+
+	if (typeof column.options.footer === 'function') {
+		return column.options.footer(data);
 	}
 
 	const handler = handlers[column.options.footer];
 
 	if (handler == null) {
-		return empty;
+		return '';
 	}
 
 	const value = handler(column.options, data);
 
-	return Number.isNaN(getNumber(value)) ? empty : getString(value);
+	return Number.isNaN(getNumber(value)) ? '' : getString(value);
 }
 
 export function renderFooter(state: State, columns: ColumnComponent[], set: boolean): void {
@@ -52,7 +62,7 @@ export function renderFooter(state: State, columns: ColumnComponent[], set: bool
 		elements.row.innerHTML = '';
 	}
 
-	const data = state?.managers?.data?.get?.(true) ?? [];
+	const data = getData(state, true);
 
 	for (let index = 0; index < length; index += 1) {
 		const column = columns[index];
@@ -63,7 +73,11 @@ export function renderFooter(state: State, columns: ColumnComponent[], set: bool
 			continue;
 		}
 
-		cell.innerHTML = getContent(column, data);
+		cell.innerHTML = '';
+
+		const content = getContent(column, data);
+
+		cell.append(...((Array.isArray(content) ? content : [content]) as string[]));
 
 		if (set) {
 			elements.cells.push(cell);
@@ -84,10 +98,8 @@ export function updateFooter(state: State): void {
 
 // #region Variables
 
-const empty = '&nbsp;';
-
 const handlers: Record<
-	TabelaColumnFooter,
+	TabelaColumnFooterAggregation,
 	(column: TabelaColumn, values: PlainObject[]) => unknown
 > = {
 	average: (column, values) => average(values, item => item[column.key] as number),

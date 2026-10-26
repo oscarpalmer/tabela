@@ -1,4 +1,5 @@
 import type {Key} from '@oscarpalmer/atoms/models';
+import {getKeyIndex} from '../helpers/data/data.misc';
 import {setNavigationStyles} from '../helpers/navigation.helper';
 import type {NavigationManager} from '../models/navigation.model';
 import type {State} from '../models/tabela.model';
@@ -31,7 +32,7 @@ function activateNavigation(
 	}
 
 	this.active.column = column;
-	this.active.index = this.state.managers.data.getIndex(row);
+	this.active.index = getKeyIndex(this.state, row);
 	this.active.row = row;
 	this.active.type = 'row';
 

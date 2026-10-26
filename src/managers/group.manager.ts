@@ -1,5 +1,6 @@
 import {isNullableOrWhitespace} from '@oscarpalmer/atoms/is';
 import type {Key} from '@oscarpalmer/atoms/models';
+import {getData, setData} from '../helpers/data/data.misc';
 import {removeGroup} from '../helpers/group.helper';
 import type {GroupManager, TabelaGroup} from '../models/group.model';
 import {SYMBOL, type State} from '../models/tabela.model';
@@ -17,12 +18,14 @@ function GroupManager(this: GroupManager, state: State): void {
 	// @ts-expect-error All good, no worries :-)
 	this.handlers = new TabelaGroup(this);
 
-	if (isNullableOrWhitespace(state.options.grouping)) {
+	const {key} = state.options.grouping ?? {};
+
+	if (isNullableOrWhitespace(key)) {
 		return;
 	}
 
 	this.enabled = true;
-	this.key = state.options.grouping;
+	this.key = key;
 }
 
 GroupManager.prototype.destroy = destroyGroupManager;
@@ -57,8 +60,8 @@ function destroyGroupManager(this: GroupManager): void {
 }
 
 function setTabelaGrouping(this: TabelaGroup, key?: string): void {
-	const {managers} = this[SYMBOL];
-	const manager = managers.group;
+	const state = this[SYMBOL];
+	const manager = state.managers.group;
 
 	if (key === manager.key) {
 		return;
@@ -67,7 +70,7 @@ function setTabelaGrouping(this: TabelaGroup, key?: string): void {
 	manager.enabled = !isNullableOrWhitespace(key);
 	manager.key = key ?? '';
 
-	managers.data.set(managers.data.get());
+	void setData(state, getData(state));
 }
 
 // #endregion

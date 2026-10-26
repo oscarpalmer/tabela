@@ -8,9 +8,11 @@ export type Group = {
 };
 
 export type GroupComponent = {
+	cell: HTMLElement | undefined;
 	element: HTMLElement | undefined;
 	expanded: boolean;
-	filtered: number;
+	filtered?: number;
+	height?: number;
 	key: GroupComponentKey;
 	label: string;
 	selected: number;
@@ -53,8 +55,6 @@ export type TabelaGroup = {
 // #endregion
 
 // #region Variables
-
-export const GROUP_KEY_EXPRESSION: RegExp = /^group:(.+)$/;
 
 export const GROUP_KEY_PREFIX = 'group:';
 

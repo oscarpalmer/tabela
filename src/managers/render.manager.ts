@@ -1,23 +1,42 @@
 import {on} from '@oscarpalmer/toretto/event';
-import {onScroll} from '../helpers/render.helper';
+import {onResize, onScroll, onScrollEnd} from '../helpers/render.helper';
 import {type RenderManager} from '../models/render.model';
 import type {State} from '../models/tabela.model';
 
 // #region Instances
 
 function RenderManager(this: RenderManager, state: State): void {
-	this.listener = on(state.elements.table, 'scroll', onScroll.bind(this));
+	const {table} = state.elements;
+
+	const ended = onScrollEnd.bind(this);
+
+	this.listener = on(table, 'scroll', onScroll.bind(this));
+	this.offsets = [];
 	this.state = state;
 	this.top = 0;
+
+	this.estimate = {
+		count: 0,
+		total: 0,
+		value: state.options.rowHeight,
+	};
+
+	this.observer = new ResizeObserver(onResize.bind(this));
 
 	this.pool = {
 		cells: {},
 		rows: [],
 	};
 
+	this.scroll = {
+		active: false,
+		ended,
+		listener: 'onscrollend' in table ? on(table, 'scrollend', ended) : undefined,
+	};
+
 	this.visible = {
 		indiced: new Map(),
-		keys: new Set(),
+		keys: new Map(),
 	};
 }
 
@@ -33,9 +52,15 @@ export function createRenderManager(state: State): RenderManager {
 }
 
 function destroyRenderManager(this: RenderManager): void {
-	const {listener, pool, visible} = this;
+	const {listener, offsets, pool, scroll, visible} = this;
 
 	listener();
+
+	scroll.listener?.();
+
+	clearTimeout(scroll.timeout);
+
+	offsets.length = 0;
 
 	visible.indiced.clear();
 	visible.keys.clear();
@@ -57,9 +82,12 @@ function destroyRenderManager(this: RenderManager): void {
 	pool.cells = {};
 	pool.rows = [];
 
+	this.estimate = undefined as never;
 	this.fragment = undefined as never;
 	this.listener = undefined as never;
+	this.offsets = undefined as never;
 	this.pool = undefined as never;
+	this.scroll = undefined as never;
 	this.state = undefined as never;
 	this.visible = undefined as never;
 }

@@ -36,7 +36,7 @@ export async function updateData(
 			continue;
 		}
 
-		const existingIndex = state.managers.data.data.keys.original.indexOf(key);
+		const existingIndex = state.managers.data.data.keys.all.original.indexOf(key);
 		const existingItem = state.managers.data.data.values.array[existingIndex];
 
 		if (!isPlainObject(existingItem)) {

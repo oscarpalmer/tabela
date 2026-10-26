@@ -17,6 +17,7 @@ import type {TabelaOptions} from '../models/options.model';
 import {CSS_WRAPPER} from '../models/style.model';
 import {type State, SYMBOL, type Tabela} from '../models/tabela.model';
 import {setColumns} from './column.helper';
+import {setData} from './data/data.misc';
 import {createTable} from './dom.helpers';
 import {initializeNavigation} from './navigation.helper';
 import {getOptions} from './options.helper';
@@ -120,7 +121,7 @@ export function initializeTabela(
 	setColumns(state, options.columns);
 	initializeNavigation(state);
 
-	state.managers.data.set(options.data);
+	void setData(state, options.data);
 
 	return state;
 }

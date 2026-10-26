@@ -118,6 +118,7 @@ export const tabelaCSS: string = //css
 	flex-flow: column nowrap;
 	flex: 1;
 	overflow: auto;
+	overflow-anchor: none;
 	position: absolute;
 	inset: 0;
 }
@@ -313,6 +314,6 @@ export const tabelaCSS: string = //css
 	position: fixed;
 	z-index: 1000;
 }
-`.replace(/^\s+|\s+|\s+$/g, ' ');
+`.replace(/\s+/g, ' ');
 
 // #endregion

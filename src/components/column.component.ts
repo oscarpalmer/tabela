@@ -20,6 +20,7 @@ function ColumnComponent(this: ColumnComponent, state: State, column: TabelaColu
 		footer: column.footer,
 		key: column.key,
 		label: column.label ?? column.key,
+		render: column.render,
 		type: column.type ?? 'string',
 	} satisfies Column;
 

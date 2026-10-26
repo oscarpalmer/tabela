@@ -5,8 +5,10 @@ import {toRecord} from '@oscarpalmer/atoms/array/to-record';
 import type {Key, Simplify} from '@oscarpalmer/atoms/models';
 import {getString} from '@oscarpalmer/atoms/string';
 import {compare} from '@oscarpalmer/atoms/value/compare';
+import {getValue} from '@oscarpalmer/atoms/value/handle';
 import {setAttributes} from '@oscarpalmer/toretto/attribute';
 import {createElement} from '@oscarpalmer/toretto/create';
+import {findAncestor} from '@oscarpalmer/toretto/find';
 import {
 	ARIA_ROWINDEX,
 	ATTRIBUTE_DATA_EVENT,
@@ -23,7 +25,7 @@ import {
 	EVENT_GROUP_TOGGLE,
 	EVENT_GROUP_UPDATE,
 } from '../models/event.model';
-import {GROUP_KEY_EXPRESSION, type Group, type GroupComponent} from '../models/group.model';
+import {GROUP_KEY_PREFIX, type Group, type GroupComponent} from '../models/group.model';
 import {RENDER_ORIGIN_DATA} from '../models/render.model';
 import {
 	CSS_BUTTON,
@@ -38,6 +40,7 @@ import {
 	SELECTOR_GROUP_TOTAL,
 } from '../models/style.model';
 import type {State} from '../models/tabela.model';
+import {getKeyIndex} from './data/data.misc';
 import {focusNavigation} from './navigation.helper';
 import {render} from './render.helper';
 
@@ -65,18 +68,35 @@ export function clearGroups(state: State): void {
 	state.managers.event.herald.emit(EVENT_GROUP_CLEAR);
 }
 
-export function getGroup(state: State, value: unknown, forValue: true): GroupComponent | undefined;
+export function getGroup(state: State, value: Key, type: 'row'): GroupComponent | undefined;
+
+export function getGroup(state: State, value: unknown, type: 'value'): GroupComponent | undefined;
 
 export function getGroup(state: State, key: unknown): GroupComponent | undefined;
 
 export function getGroup(
 	state: State,
-	keyOrValue: unknown,
-	forValue?: unknown,
+	value: unknown,
+	type?: 'row' | 'value',
 ): GroupComponent | undefined {
-	return forValue === true
-		? getGroupForValue(state, keyOrValue)
-		: getGroupForKey(state, keyOrValue);
+	if (type == null) {
+		return getGroupForKey(state, value);
+	}
+
+	if (type === 'value') {
+		return getGroupForValue(state, value);
+	}
+
+	const item = state.managers.data.data.values.mapped.get(value as Key);
+
+	if (item == null) {
+		return undefined;
+	}
+
+	return getGroupForValue(
+		state,
+		getValue(item, state.managers.group.key, state.options.relaxedKeys),
+	);
 }
 
 function getGroupForKey(state: State, key: unknown): GroupComponent | undefined {
@@ -96,11 +116,17 @@ export function getTabelaGroup(group: GroupComponent): Group {
 }
 
 export function isGroupKey(key: unknown): boolean {
-	return typeof key === 'string' && GROUP_KEY_EXPRESSION.test(key);
+	return typeof key === 'string' && key.startsWith(GROUP_KEY_PREFIX);
 }
 
 export function onGroup(state: State, button: HTMLElement): void {
-	const key = button.dataset.key?.replace(`${state.prefix}_`, '');
+	const cell = findAncestor(button, `.${CSS_CELL_GROUP}`) as HTMLElement;
+
+	if (cell == null) {
+		return;
+	}
+
+	const key = cell.dataset.key?.replace(`${state.prefix}_`, '');
 	const group = getGroupForKey(state, key ?? '');
 
 	if (group != null) {
@@ -137,30 +163,87 @@ export function removeGroups(state: State, groups: GroupComponent[]): void {
 	state.managers.event.herald.emit(EVENT_GROUP_REMOVE, groups.map(getTabelaGroup));
 }
 
-export function renderGroup(state: State, component: GroupComponent): void {
-	component.element ??= createElement(ELEMENT_DIV, {
+export function renderGroup(state: State, component: GroupComponent, index: number): void {
+	if (component.cell != null || component.element != null) {
+		return;
+	}
+
+	const element = createElement(ELEMENT_DIV, {
 		attribute: {
-			[ARIA_ROWINDEX]: getString(state.managers.data.getIndex(component.key.full) + 1),
+			[ARIA_ROWINDEX]: getString(index + 1),
 			[ATTRIBUTE_DATA_KEY]: component.key.full,
 		},
 		property: {
 			className: `${CSS_ROW} ${CSS_ROW_GROUP}`,
 			id: `${state.prefix}_group_${component.key.short}`,
-			innerHTML: `<div class="${CSS_CELL} ${CSS_CELL_GROUP}" id="${state.prefix}_group_${component.key.short}_column" role="${ROLE_CELL}" tabindex="-1">
-	<button class="${CSS_BUTTON} ${CSS_BUTTON_GROUP}" ${ATTRIBUTE_DATA_EVENT}="${EVENT_GROUP}" ${ATTRIBUTE_DATA_KEY}="${state.prefix}_${component.key.full}" tabindex="-1" type="button">
-		<span aria-hidden="true"></span>
-		<span>Open/close</span>
-	</button>
-	<p>${component.label}</p>
-	<span class="${CSS_GROUP_TOTAL}">${component.total}</span>
-	<span class="${CSS_GROUP_SELECTED}">${component.selected === 0 ? '' : component.selected}</span>
-</div>`,
 			role: ROLE_ROW,
 		},
 		style: {
-			height: `${state.options.rowHeight}px`,
+			minHeight: `${state.options.grouping?.height ?? state.options.rowHeight}px`,
 		},
 	});
+
+	const cell = createElement(ELEMENT_DIV, {
+		data: {
+			key: `${state.prefix}_${component.key.full}`,
+		},
+		property: {
+			className: `${CSS_CELL} ${CSS_CELL_GROUP}`,
+			id: `${state.prefix}_group_${component.key.short}_column`,
+			role: ROLE_CELL,
+			tabIndex: -1,
+		},
+	});
+
+	if (typeof state.options.grouping?.label === 'function') {
+		const rendered = state.options.grouping.label({
+			expanded: component.expanded,
+			filtered: 0,
+			selected: component.selected,
+			total: component.total,
+			value: component.value.original,
+		});
+
+		cell.append(...((Array.isArray(rendered) ? rendered : [rendered]) as string[]));
+	} else {
+		const button = createElement('button', {
+			attribute: {
+				[ATTRIBUTE_DATA_EVENT]: EVENT_GROUP,
+			},
+			property: {
+				className: `${CSS_BUTTON} ${CSS_BUTTON_GROUP}`,
+				tabIndex: -1,
+				type: 'button',
+			},
+		});
+
+		const label = createElement('p', {
+			property: {
+				textContent: component.label,
+			},
+		});
+
+		const total = createElement('span', {
+			property: {
+				className: CSS_GROUP_TOTAL,
+				textContent: component.total.toString(),
+			},
+		});
+
+		const selected = createElement('span', {
+			property: {
+				className: CSS_GROUP_SELECTED,
+				textContent: component.selected === 0 ? '' : component.selected.toString(),
+			},
+		});
+
+		cell.append(button, label, total, selected);
+	}
+
+	element.append(cell);
+
+	component.cell = cell;
+	component.element = element;
 }
 
 export function setGroups(state: State, groups: GroupComponent[]): void {
@@ -182,15 +265,15 @@ export function toggleGroup(state: State, group: GroupComponent): void {
 
 	const index = items.indexOf(group);
 
-	let first = state.managers.data.data.keys.original.indexOf(group.key.full) + 1;
+	let first = state.managers.data.data.keys.all.original.indexOf(group.key.full) + 1;
 
 	const last =
 		items[index + 1] == null
-			? state.managers.data.data.keys.original.length - 1
-			: state.managers.data.data.keys.original.indexOf(items[index + 1].key.full) - 1;
+			? state.managers.data.data.keys.all.original.length - 1
+			: state.managers.data.data.keys.all.original.indexOf(items[index + 1].key.full) - 1;
 
 	for (; first <= last; first += 1) {
-		const key = state.managers.data.data.keys.original[first] as Key;
+		const key = state.managers.data.data.keys.all.original[first] as Key;
 
 		if (group.expanded) {
 			collapsed.delete(key);
@@ -204,13 +287,31 @@ export function toggleGroup(state: State, group: GroupComponent): void {
 		expanded: group.expanded ? [getTabelaGroup(group)] : [],
 	});
 
+	updateGroup(state, group, false);
+
 	render(state, RENDER_ORIGIN_DATA);
 
 	focusNavigation(state);
 }
 
 export function updateGroup(state: State, component: GroupComponent, emit: boolean): void {
-	if (component.element == null) {
+	if (component.cell == null || component.element == null) {
+		return;
+	}
+
+	if (typeof state.options.grouping?.label === 'function') {
+		component.cell.innerHTML = '';
+
+		const rendered = state.options.grouping.label({
+			expanded: component.expanded,
+			filtered: component.filtered,
+			selected: component.selected,
+			total: component.total,
+			value: component.value.original,
+		});
+
+		component.cell.append(...((Array.isArray(rendered) ? rendered : [rendered]) as string[]));
+
 		return;
 	}
 
@@ -226,7 +327,7 @@ export function updateGroup(state: State, component: GroupComponent, emit: boole
 	}
 
 	setAttributes(component.element, {
-		[ARIA_ROWINDEX]: getString(state.managers.data.getIndex(component.key.full) + 1),
+		[ARIA_ROWINDEX]: getString(getKeyIndex(state, component.key.full) + 1),
 	});
 
 	if (emit) {

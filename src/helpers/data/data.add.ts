@@ -64,7 +64,7 @@ export async function addData(state: State, data: PlainObject[], render: boolean
 		const groupValue = getValue(item, state.managers.group.key, state.options.relaxedKeys);
 
 		let group =
-			getGroup(state, groupValue, true) ??
+			getGroup(state, groupValue, 'value') ??
 			addedGroups.find(added => added.value.original === groupValue);
 
 		if (group == null) {

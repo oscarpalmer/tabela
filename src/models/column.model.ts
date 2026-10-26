@@ -1,14 +1,17 @@
+import type {PlainObject} from '@oscarpalmer/atoms/models';
 import type {OuiResizable} from '@oscarpalmer/oui/resizable';
 import type {State} from './tabela.model';
+import type {RenderCallbackResult} from './render.model';
 
 // #region Types
 
 export type Column = {
-	footer?: TabelaColumnFooter;
+	footer?: TabelaColumnFooterAggregation | TabelaColumnFooterCallback;
 	key: string;
-	label: string;
+	label: string | TabelaColumnLabelCallback;
 	type: TabelaColumnType;
 	width: number;
+	render?: TabelaColumnRenderCallback;
 };
 
 export type ColumnComponent = {
@@ -58,14 +61,32 @@ export type ColumnManager = {
 };
 
 export type TabelaColumn = {
-	footer?: TabelaColumnFooter;
+	footer?: TabelaColumnFooterAggregation | TabelaColumnFooterCallback;
 	key: string;
-	label?: string;
+	label?: string | TabelaColumnLabelCallback;
+	render?: TabelaColumnRenderCallback;
 	type?: TabelaColumnType;
 	width?: number;
 };
 
-export type TabelaColumnFooter = 'average' | 'count' | 'max' | 'median' | 'min' | 'sum' | 'unique';
+export type TabelaColumnLabelCallback = () => RenderCallbackResult;
+
+export type TabelaColumnFooterCallback = (data: PlainObject[]) => RenderCallbackResult;
+
+export type TabelaColumnFooterAggregation =
+	| 'average'
+	| 'count'
+	| 'max'
+	| 'median'
+	| 'min'
+	| 'sum'
+	| 'unique';
+
+export type TabelaColumnRenderCallback = (
+	value: unknown,
+	row: PlainObject,
+	index: number,
+) => RenderCallbackResult;
 
 export type TabelaColumnType = 'boolean' | 'date' | 'number' | 'string';
 
@@ -73,7 +94,7 @@ export type TabelaColumnType = 'boolean' | 'date' | 'number' | 'string';
 
 // #region Variables
 
-export const columnFooters: Set<TabelaColumnFooter> = new Set([
+export const columnFooterAggregation: Set<TabelaColumnFooterAggregation> = new Set([
 	'average',
 	'count',
 	'max',

@@ -6,6 +6,7 @@ import type {State} from './tabela.model';
 export type RowComponent = {
 	cells: Record<string, HTMLDivElement>;
 	element: HTMLDivElement | undefined;
+	height?: number;
 	key: Key;
 };
 

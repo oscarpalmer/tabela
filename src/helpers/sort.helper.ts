@@ -1,3 +1,5 @@
+import {filter} from '@oscarpalmer/atoms/array/filter';
+import {select} from '@oscarpalmer/atoms/array/select';
 import {
 	sort,
 	SORT_DIRECTION_ASCENDING,
@@ -36,11 +38,11 @@ import {
 	type TabelaSorter,
 } from '../models/sort.model';
 import type {State} from '../models/tabela.model';
+import {getData} from './data/data.misc';
 import {getGroup, isGroupKey} from './group.helper';
 import {updateNavigation} from './navigation.helper';
 import {render} from './render.helper';
 import {updateColumnWidthStyling} from './style.helper';
-import {select} from '@oscarpalmer/atoms/array/select';
 
 // #region Functions
 
@@ -124,7 +126,11 @@ function compareGroups(this: State, first: unknown, second: unknown): number {
 	}
 
 	if (firstIsGroup || secondIsGroup) {
-		return firstIsGroup && secondIsGroup ? 0 : firstIsGroup ? -1 : 1;
+		if (firstIsGroup && secondIsGroup) {
+			return 0;
+		}
+
+		return firstIsGroup ? -1 : 1;
 	}
 
 	return 0;
@@ -160,7 +166,7 @@ function getDirection(direction: unknown): SortDirection {
 }
 
 function getSortedItems(state: State, sorters: ExtendedArrayValueSorter[]): Key[] {
-	const data = (state.managers.data.data.keys.active?.map(key =>
+	const data = (state.managers.data.data.keys.all.active?.map(key =>
 		isGroupKey(key) ? key : state.managers.data.data.values.mapped.get(key)!,
 	) ?? state.managers.data.data.values.array) as DataValue[];
 
@@ -179,7 +185,7 @@ function getSortedItems(state: State, sorters: ExtendedArrayValueSorter[]): Key[
 
 export function getSorter(original: ExtendedArrayValueSorter): TabelaSorter {
 	return {
-		direction: original.direction!,
+		direction: original.direction ?? SORT_DIRECTION_ASCENDING,
 		key: original.field,
 	};
 }
@@ -302,9 +308,16 @@ export function sortData(state: State): void {
 		const sorterIndex = items.findIndex(item => item.field === column.key.original);
 		const sorterItem = items[sorterIndex];
 
+		let ariaSort: string | undefined;
+
+		if (sorterItem == null) {
+			ariaSort = SORT_NONE;
+		} else {
+			ariaSort = items.length > 1 ? SORT_OTHER : sorterItem.direction;
+		}
+
 		setAttributes(column.elements.wrapper, {
-			[ARIA_SORT]:
-				sorterItem == null ? SORT_NONE : items.length > 1 ? SORT_OTHER : sorterItem.direction,
+			[ARIA_SORT]: ariaSort,
 			[ATTRIBUTE_DATA_SORT_DIRECTION]: sorterItem == null ? undefined : sorterItem.direction,
 		});
 
@@ -315,10 +328,16 @@ export function sortData(state: State): void {
 		);
 	}
 
-	state.managers.data.data.keys.active =
-		size === 0 ? undefined : getSortedItems(state, items.length === 0 ? sort.default! : items);
+	const sorters = items.length === 0 ? sort.default : items;
 
-	event.herald.emit(EVENT_DATA_SORTED, state.managers.data.get(true));
+	const active = size === 0 ? undefined : getSortedItems(state, sorters);
+
+	state.managers.data.data.keys.all.active = active;
+
+	state.managers.data.data.keys.row.active =
+		active == null ? undefined : filter.remove(active, isGroupKey);
+
+	event.herald.emit(EVENT_DATA_SORTED, getData(state, true));
 
 	render(state, RENDER_ORIGIN_SORT);
 }

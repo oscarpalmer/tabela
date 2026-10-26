@@ -1,17 +1,10 @@
-import {filter} from '@oscarpalmer/atoms/array/filter';
-import {select} from '@oscarpalmer/atoms/array/select';
-import {toRecord} from '@oscarpalmer/atoms/array/to-record';
 import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
-import {createGroup} from '../components/group.component';
-import {getColumn} from '../helpers/column.helper';
 import {addData} from '../helpers/data/data.add';
+import {getData, setData} from '../helpers/data/data.misc';
 import {clearData, removeData} from '../helpers/data/data.remove';
-import {renderData} from '../helpers/data/data.render';
 import {synchronizeData} from '../helpers/data/data.synchronize';
 import {updateData} from '../helpers/data/data.update';
-import {isGroupKey, setGroups} from '../helpers/group.helper';
-import type {DataManager, DataValue, TabelaData} from '../models/data.model';
-import type {GroupComponent} from '../models/group.model';
+import type {DataManager, TabelaData} from '../models/data.model';
 import {SYMBOL, type State} from '../models/tabela.model';
 
 // #region Instances
@@ -21,7 +14,12 @@ function DataManager(this: DataManager, state: State): void {
 
 	this.data = {
 		keys: {
-			original: [],
+			all: {
+				original: [],
+			},
+			row: {
+				original: [],
+			},
 		},
 		values: {
 			array: [],
@@ -33,16 +31,16 @@ function DataManager(this: DataManager, state: State): void {
 	this.handlers = new TabelaData(state);
 }
 
-DataManager.prototype.clear = clear;
 DataManager.prototype.destroy = destroyDataManager;
-DataManager.prototype.get = getData;
-DataManager.prototype.getIndex = getIndex;
-DataManager.prototype.set = setData;
 
 Object.defineProperties(DataManager.prototype, {
 	keys: {
 		enumerable: true,
 		get: getKeys,
+	},
+	rows: {
+		enumerable: true,
+		get: getRows,
 	},
 	size: {
 		enumerable: true,
@@ -58,6 +56,7 @@ TabelaData.prototype.add = addTabelaData;
 TabelaData.prototype.clear = clearTabelaData;
 TabelaData.prototype.get = getTabelaData;
 TabelaData.prototype.remove = removeTabelaData;
+TabelaData.prototype.set = setTabelaData;
 TabelaData.prototype.synchronize = synchronizeTabelaData;
 TabelaData.prototype.update = updateTabelaData;
 
@@ -76,7 +75,7 @@ async function clear(this: DataManager): Promise<void> {
 }
 
 async function clearTabelaData(this: TabelaData): Promise<void> {
-	return this[SYMBOL].managers.data.clear();
+	return clear.call(this[SYMBOL].managers.data);
 }
 
 export function createDataManager(state: State): DataManager {
@@ -87,35 +86,23 @@ export function createDataManager(state: State): DataManager {
 function destroyDataManager(this: DataManager): void {
 	const {data} = this;
 
-	data.values.mapped.clear();
+	data.keys.all = {original: []};
+	data.keys.row = {original: []};
 
-	data.keys.active = undefined;
-	data.keys.original.length = 0;
 	data.values.array.length = 0;
+	data.values.mapped.clear();
 
 	this.data = undefined as never;
 	this.handlers = undefined as never;
 	this.state = undefined as never;
 }
 
-function getData(this: DataManager, active?: boolean): PlainObject[] {
-	const {data} = this;
-
-	return (active ?? false) && data.keys.active != null
-		? select(
-				data.keys.active,
-				key => !isGroupKey(key),
-				key => data.values.mapped.get(key as Key)!,
-			)
-		: (filter.remove(data.values.array, isGroupKey) as PlainObject[]);
-}
-
-function getIndex(this: DataManager, item: Key): number {
-	return this.keys.indexOf(item);
-}
-
 function getKeys(this: DataManager): Key[] {
-	return this.data.keys.active ?? this.data.keys.original;
+	return this.data.keys.all.active ?? this.data.keys.all.original;
+}
+
+function getRows(this: DataManager): Key[] {
+	return this.data.keys.row.active ?? this.data.keys.row.original;
 }
 
 function getSize(this: DataManager): number {
@@ -123,7 +110,7 @@ function getSize(this: DataManager): number {
 }
 
 function getTabelaData(this: TabelaData, active?: boolean): PlainObject[] {
-	return this[SYMBOL].managers.data.get(active);
+	return getData(this[SYMBOL], active);
 }
 
 function removeTabelaData(this: TabelaData, keys: Key[]): Promise<void>;
@@ -134,45 +121,8 @@ function removeTabelaData(this: TabelaData, value: Key[] | PlainObject[]): Promi
 	return removeData(this[SYMBOL], value, true);
 }
 
-function setData(this: DataManager, data: PlainObject[]): void {
-	const {state} = this;
-
-	const array: DataValue[] = data.slice();
-
-	if (state.managers.group.enabled) {
-		const column = getColumn(state, state.managers.group.key);
-
-		const grouped = toRecord.arrays(data, state.managers.group.key) as Record<
-			string,
-			PlainObject[]
-		>;
-
-		const entries = Object.entries(grouped);
-		const {length} = entries;
-
-		const groups: GroupComponent[] = [];
-
-		for (let index = 0; index < length; index += 1) {
-			const [value, items] = entries[index];
-
-			const group = createGroup(
-				`${column?.options.label ?? state.managers.group.key}: ${value}`,
-				value,
-			);
-
-			group.total = items.length;
-
-			groups.push(group);
-
-			array.push(group.key.full);
-		}
-
-		setGroups(state, groups);
-	}
-
-	this.data.values.array = array;
-
-	renderData(state);
+function setTabelaData(this: TabelaData, data: PlainObject[]): Promise<void> {
+	return setData(this[SYMBOL], data);
 }
 
 function synchronizeTabelaData(

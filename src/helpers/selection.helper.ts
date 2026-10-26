@@ -23,7 +23,8 @@ import {
 	SELECTOR_TABLE,
 } from '../models/style.model';
 import type {State} from '../models/tabela.model';
-import {isGroupKey} from './group.helper';
+import {getKeyIndex} from './data/data.misc';
+import {getGroup, isGroupKey, updateGroups} from './group.helper';
 import {getKey} from './misc.helpers';
 import {getRow} from './row.helper';
 import {preventSelection} from './style.helper';
@@ -280,8 +281,8 @@ function setRangeSelection(
 
 	const {keys} = state.managers.data;
 
-	const fromIndex = state.managers.data.getIndex(fromKey);
-	const toIndex = state.managers.data.getIndex(toKey);
+	const fromIndex = getKeyIndex(state, fromKey);
+	const toIndex = getKeyIndex(state, toKey);
 
 	if (fromIndex === -1 || toIndex === -1) {
 		return;
@@ -372,6 +373,20 @@ function updateSelection(state: State, added: Key[], removed: Key[]): void {
 			element.classList.add(CSS_ROW_SELECTED);
 		}
 	}
+
+	for (const group of state.managers.group.items) {
+		group.selected = 0;
+	}
+
+	for (const key of state.managers.selection.keys) {
+		const group = getGroup(state, key, 'row');
+
+		if (group != null) {
+			group.selected += 1;
+		}
+	}
+
+	updateGroups(state, state.managers.group.items);
 
 	if (removed.length > 0) {
 		state.managers.event.herald.emit(EVENT_SELECTION_REMOVE, removed);

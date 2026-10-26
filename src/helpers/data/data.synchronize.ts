@@ -62,7 +62,7 @@ export async function synchronizeData(
 
 	if (remove) {
 		const toRemove = filter(
-			state.managers.data.data.keys.original,
+			state.managers.data.data.keys.all.original,
 			key => !isGroupKey(key) && !keys.has(key),
 		) as Key[];
 

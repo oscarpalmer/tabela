@@ -2,10 +2,22 @@ import {filter} from '@oscarpalmer/atoms/array/filter';
 import {isPlainObject} from '@oscarpalmer/atoms/is';
 import type {PlainObject} from '@oscarpalmer/atoms/models';
 import type {TabelaColumn} from '../models/column.model';
-import type {Options} from '../models/options.model';
+import type {Options, TabelaGrouping} from '../models/options.model';
 import {getValidColumn} from './column.helper';
 
 // #region Functions
+
+function getCallback(input: unknown): Function | undefined {
+	if (input == null) {
+		return undefined;
+	}
+
+	if (typeof input !== 'function') {
+		throw new TypeError('Callback must be a function');
+	}
+
+	return input;
+}
 
 function getColumns(input: unknown): TabelaColumn[] {
 	if (!Array.isArray(input)) {
@@ -23,7 +35,35 @@ function getData(input: unknown): PlainObject[] {
 	return input;
 }
 
-function getRowHeight(input: unknown): number {
+function getGrouping(input: unknown): TabelaGrouping | undefined {
+	if (typeof input === 'string') {
+		return {key: input};
+	}
+
+	if (input == null) {
+		return undefined;
+	}
+
+	if (!isPlainObject(input)) {
+		throw new TypeError('Grouping must be a plain object');
+	}
+
+	return {
+		key: getValidString('Grouping key', input.key, false),
+		height: getHeight(input.height, true),
+		label: getCallback(input.label) as TabelaGrouping['label'],
+	};
+}
+
+function getHeight(input: unknown, nullable: true): number | undefined;
+
+function getHeight(input: unknown): number;
+
+function getHeight(input: unknown, nullable?: boolean): number | undefined {
+	if (input == null && (nullable ?? false)) {
+		return undefined;
+	}
+
 	if (typeof input !== 'number' || Number.isNaN(input) || input <= 0) {
 		throw new TypeError('Row height must be a positive number');
 	}
@@ -40,20 +80,19 @@ export function getOptions(input: unknown): Options {
 	const data = getData(input.data);
 	const key = getValidString('Key', input.key, false);
 	const label = getValidString('Label', input.label, false);
-	const rowHeight = getRowHeight(input.rowHeight);
+	const rowHeight = getHeight(input.rowHeight);
 
-	const grouping = getValidString('Grouping', input.grouping, true);
 	const sorting = getValidString('Sorting', input.sorting, true);
 
 	return {
 		columns,
 		data,
-		grouping,
 		key,
 		label,
 		rowHeight,
 		sorting,
 		footer: input.footer !== false,
+		grouping: getGrouping(input.grouping),
 		relaxedKeys: input.relaxedKeys === true,
 	};
 }

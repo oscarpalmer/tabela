@@ -58,6 +58,7 @@ import {
 	CSS_HEADING_FILTER,
 } from '../models/style.model';
 import type {State} from '../models/tabela.model';
+import {getGroup, isGroupKey, updateGroups} from './group.helper';
 import {render} from './render.helper';
 
 // #region Functions
@@ -279,9 +280,17 @@ export function filterData(state: State): void {
 		.filter(filter => !isNullableOrWhitespace(filter.value));
 
 	const filtersLength = filters.length;
+	const noFilters = filtersLength === 0;
 
-	if (filtersLength === 0) {
-		state.managers.data.data.keys.active = undefined;
+	for (const group of state.managers.group.items) {
+		group.filtered = noFilters ? undefined : 0;
+	}
+
+	if (noFilters) {
+		state.managers.data.data.keys.all.active = undefined;
+		state.managers.data.data.keys.row.active = undefined;
+
+		updateGroups(state, state.managers.group.items);
 
 		render(state, RENDER_ORIGIN_FILTER);
 
@@ -315,12 +324,29 @@ export function filterData(state: State): void {
 		set = set.union(value);
 	}
 
-	state.managers.data.data.keys.active = filter(
-		state.managers.data.data.keys.original,
+	const active = filter(
+		state.managers.data.data.keys.all.original,
 		key => state.managers.group.mapped.has(key as never) || set.has(key),
 	);
 
+	state.managers.data.data.keys.all.active = active;
+	state.managers.data.data.keys.row.active = filter.remove(active, isGroupKey);
+
 	render(state, RENDER_ORIGIN_FILTER);
+
+	if (!state.managers.group.enabled) {
+		return;
+	}
+
+	for (const key of set) {
+		const group = getGroup(state, key, 'row');
+
+		if (group?.filtered != null) {
+			group.filtered += 1;
+		}
+	}
+
+	updateGroups(state, state.managers.group.items);
 }
 
 function getCacheId(): string {
@@ -376,7 +402,11 @@ export function onFilter(state: State, input: Element): void {
 
 	const value = isSelect ? [...input.selectedOptions].map(option => option.value) : input.value;
 
-	const key = header.dataset.key!;
+	const {key} = header.dataset;
+
+	if (key == null) {
+		return;
+	}
 
 	const filters = filter.items.get(key) ?? [];
 	const existing = filters.find(filter => filter.id === EVENT_FILTER_UPDATE);
@@ -466,11 +496,14 @@ async function updateColumns(
 ): Promise<void> {
 	const {filter} = state.managers;
 
-	const data = map ?? state.managers.data.data.values.mapped;
+	const dataEntries = [...(map ?? state.managers.data.data.values.mapped).entries()];
+	const dataLength = dataEntries.length;
 
 	let columnsLength = columns.length;
 
-	for (const [dataKey, dataItem] of data) {
+	for (let dataIndex = 0; dataIndex < dataLength; dataIndex += 1) {
+		const [dataKey, dataItem] = dataEntries[dataIndex];
+
 		if (typeof dataItem === 'string') {
 			continue;
 		}

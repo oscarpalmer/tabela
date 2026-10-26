@@ -13,7 +13,7 @@ import {SYMBOL, type State} from '../models/tabela.model';
 // #region Instances
 
 function SortManager(this: SortManager, state: State): void {
-	this.default = [getValidSorter(state.options.sorting ?? state.key)!];
+	this.default = [getValidSorter(state, state.options.sorting ?? state.key)!];
 	this.items = [];
 
 	// @ts-expect-error All good, no worries :-)
@@ -67,7 +67,11 @@ function flipTabelaSorter(this: TabelaSort, key: string): void {
 }
 
 function getSize(this: SortManager): number {
-	return this.items.length === 0 ? (this.default == null ? 0 : 1) : this.items.length;
+	if (this.items.length === 0) {
+		return this.default == null ? 0 : 1;
+	}
+
+	return this.items.length;
 }
 
 function removeTabelaSorter(this: TabelaSort, key: string): void {

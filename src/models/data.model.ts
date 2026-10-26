@@ -3,27 +3,29 @@ import type {State, SYMBOL} from './tabela.model';
 
 // #region Types
 
-type DataKeys = {
-	active?: Key[];
-	original: Key[];
-};
-
 export type DataManager = {
 	data: DataManagerData;
 	handlers: TabelaData;
 	state: State;
 	get keys(): Key[];
+	get rows(): Key[];
 	get size(): number;
-	clear(): Promise<void>;
 	destroy(): void;
-	get(active?: boolean): PlainObject[];
-	getIndex(item: Key): number;
-	set(data: PlainObject[]): void;
 };
 
 type DataManagerData = {
-	keys: DataKeys;
+	keys: DataManagerDataKeys;
 	values: DataValues;
+};
+
+type DataManagerDataKeys = {
+	all: DataManagerDataKeysValue;
+	row: DataManagerDataKeysValue;
+};
+
+type DataManagerDataKeysValue = {
+	active?: Key[];
+	original: Key[];
 };
 
 export type DataUpdate = 'add' | 'set' | 'remove' | 'update';
@@ -42,6 +44,7 @@ export type TabelaData = {
 	get(active?: boolean): PlainObject[];
 	remove(keys: Key[]): Promise<void>;
 	remove(data: PlainObject[]): Promise<void>;
+	set(data: PlainObject[]): Promise<void>;
 	synchronize(data: PlainObject[], remove?: boolean): Promise<void>;
 	update(data: PlainObject[]): Promise<void>;
 };
