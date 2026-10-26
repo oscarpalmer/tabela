@@ -12,7 +12,7 @@ import {SYMBOL, type State} from '../models/tabela.model';
 function DataManager(this: DataManager, state: State): void {
 	this.state = state;
 
-	this.data = {
+	this.store = {
 		keys: {
 			all: {
 				original: [],
@@ -69,8 +69,8 @@ async function addTabelaData(this: TabelaData, data: PlainObject[]): Promise<voi
 }
 
 async function clear(this: DataManager): Promise<void> {
-	if (this.data.values.array.length > 0) {
-		return clearData(this.state, false);
+	if (this.store.values.array.length > 0) {
+		return clearData(this.state);
 	}
 }
 
@@ -84,7 +84,7 @@ export function createDataManager(state: State): DataManager {
 }
 
 function destroyDataManager(this: DataManager): void {
-	const {data} = this;
+	const {store: data} = this;
 
 	data.keys.all = {original: []};
 	data.keys.row = {original: []};
@@ -92,17 +92,17 @@ function destroyDataManager(this: DataManager): void {
 	data.values.array.length = 0;
 	data.values.mapped.clear();
 
-	this.data = undefined as never;
+	this.store = undefined as never;
 	this.handlers = undefined as never;
 	this.state = undefined as never;
 }
 
 function getKeys(this: DataManager): Key[] {
-	return this.data.keys.all.active ?? this.data.keys.all.original;
+	return this.store.keys.all.active ?? this.store.keys.all.original;
 }
 
 function getRows(this: DataManager): Key[] {
-	return this.data.keys.row.active ?? this.data.keys.row.original;
+	return this.store.keys.row.active ?? this.store.keys.row.original;
 }
 
 function getSize(this: DataManager): number {

@@ -1,5 +1,5 @@
 import {createOuiResizable} from '@oscarpalmer/oui/resizable';
-import {createColumnElements} from '../helpers/column.helper';
+import {createColumnElements} from '../helpers/column/column.misc';
 import type {
 	Column,
 	ColumnComponent,

@@ -31,6 +31,7 @@ export type FilterManager = {
 	cache: Map<string, Map<string, FilterCache>>;
 	handlers: TabelaFilter;
 	items: Map<string, FilterItem[]>;
+	keys: Set<Key>;
 	state: State;
 	destroy(): void;
 };

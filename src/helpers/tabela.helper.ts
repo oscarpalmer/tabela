@@ -16,10 +16,10 @@ import {ARIA_LABEL} from '../models/dom.model';
 import type {TabelaOptions} from '../models/options.model';
 import {CSS_WRAPPER} from '../models/style.model';
 import {type State, SYMBOL, type Tabela} from '../models/tabela.model';
-import {setColumns} from './column.helper';
+import {setColumns} from './column/column.item';
 import {setData} from './data/data.misc';
 import {createTable} from './dom.helpers';
-import {initializeNavigation} from './navigation.helper';
+import {initializeNavigation} from './navigation/navigation.misc';
 import {getOptions} from './options.helper';
 
 // #region Functions

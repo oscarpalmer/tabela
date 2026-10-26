@@ -1,7 +1,6 @@
-import {chunk} from '@oscarpalmer/atoms/array';
+import {select} from '@oscarpalmer/atoms/array/select';
 import {isKey, isPlainObject} from '@oscarpalmer/atoms/is';
 import type {Key, PlainObject} from '@oscarpalmer/atoms/models';
-import {delay} from '@oscarpalmer/atoms/promise/delay';
 import {getValue} from '@oscarpalmer/atoms/value/handle';
 import {DATA_UPDATE_REMOVE, DATA_UPDATE_SET} from '../../models/data.model';
 import {
@@ -11,16 +10,44 @@ import {
 } from '../../models/event.model';
 import type {GroupComponent} from '../../models/group.model';
 import type {State} from '../../models/tabela.model';
-import {updateFilterCache} from '../filter.helper';
-import {clearGroups, getGroup, isGroupKey, removeGroups, updateGroups} from '../group.helper';
+import {updateFilterCache} from '../filter/filter.cache';
+import {updateGroups} from '../group/group.dom';
+import {clearGroups, getGroup, removeGroups} from '../group/group.item';
+import {isGroupKey} from '../group/group.misc';
 import {clearRows, removeRow} from '../row.helper';
 import {renderData} from './data.render';
-import {select} from '@oscarpalmer/atoms/array/select';
 
 // #region Functions
 
-export async function clearData(state: State, synchronize: boolean): Promise<void> {
-	return removeItems(state, [], true, synchronize, true).then(() => undefined);
+async function clearItems(state: State, render: boolean): Promise<unknown> {
+	const {managers} = state;
+	const {data, event, group} = managers;
+	const {store} = data;
+
+	store.keys.all = {original: []};
+	store.keys.row = {original: []};
+
+	store.values.array = [];
+
+	store.values.mapped.clear();
+
+	clearRows(state);
+
+	if (group.enabled) {
+		clearGroups(state);
+	}
+
+	event.herald.emit(EVENT_DATA_CLEAR);
+
+	void updateFilterCache(DATA_UPDATE_SET, state);
+
+	renderData(state);
+
+	return render ? undefined : [];
+}
+
+export async function clearData(state: State): Promise<void> {
+	return clearItems(state, true).then(() => undefined);
 }
 
 export async function removeData(
@@ -40,15 +67,15 @@ export async function removeData(
 	items: Array<Key | PlainObject>,
 	render: boolean,
 ): Promise<unknown> {
+	const {key, options} = state;
+
 	const keys = select.reverse(
 		items,
-		item => (isPlainObject(item) ? getValue(item, state.key, state.options.relaxedKeys) : item),
+		item => (isPlainObject(item) ? getValue(item, key, options.relaxedKeys) : item),
 		item => isKey(item) && !isGroupKey(item),
 	) as Key[];
 
-	const {length} = keys;
-
-	if (length === 0) {
+	if (keys.length === 0) {
 		return render ? undefined : [];
 	}
 
@@ -78,30 +105,15 @@ async function removeItems(
 	synchronize: boolean,
 	render: boolean,
 ): Promise<unknown> {
-	const {data} = state.managers.data;
+	const {managers, options} = state;
+	const {data, event, group, row} = managers;
+	const {store} = data;
 
 	if (clear) {
-		data.keys.all = {original: []};
-		data.keys.row = {original: []};
-
-		data.values.array = [];
-
-		data.values.mapped.clear();
-
-		clearRows(state);
-
-		if (state.managers.group.enabled) {
-			clearGroups(state);
-		}
-
-		state.managers.event.herald.emit(EVENT_DATA_CLEAR);
-
-		void updateFilterCache(DATA_UPDATE_SET, state);
-
-		renderData(state);
-
-		return render ? undefined : [];
+		return clearItems(state, render);
 	}
+
+	const {length} = keys;
 
 	const removedGroups: GroupComponent[] = [];
 	const updatedGroups: GroupComponent[] = [];
@@ -109,83 +121,67 @@ async function removeItems(
 	const removedData: PlainObject[] = [];
 	const removedMap = new Map<Key, PlainObject>();
 
-	const chunked = chunk(keys);
-	const chunkedLength = chunked.length;
+	for (let index = 0; index < length; index += 1) {
+		const key = keys[index];
+		const dataIndex = store.keys.all.original.indexOf(key);
 
-	for (let chunkedIndex = 0; chunkedIndex < chunkedLength; chunkedIndex += 1) {
-		const chunk = chunked[chunkedIndex];
-		const chunkLength = chunk.length;
+		let dataItem: PlainObject | undefined;
 
-		for (let keyIndex = 0; keyIndex < chunkLength; keyIndex += 1) {
-			const key = chunk[keyIndex];
-			const dataIndex = data.keys.all.original.indexOf(key);
+		[dataItem] = store.values.array.splice(dataIndex, 1) as PlainObject[];
 
-			let dataValue: PlainObject | undefined;
+		removedData.push(dataItem);
+		removedMap.set(key, dataItem);
 
-			[dataValue] = data.values.array.splice(dataIndex, 1) as PlainObject[];
+		store.keys.all.original.splice(dataIndex, 1);
 
-			removedData.push(dataValue);
-			removedMap.set(key, dataValue);
+		const rowComponent = row.components.get(key);
 
-			data.keys.all.original.splice(dataIndex, 1);
-
-			const row = state.managers.row.components.get(key);
-
-			if (row != null) {
-				removeRow(state, row, true);
-			}
-
-			data.values.mapped.delete(key);
-
-			if (!state.managers.group.enabled || isGroupKey(key)) {
-				continue;
-			}
-
-			state.managers.group.collapsed.delete(key);
-
-			const groupValue = getValue(
-				dataValue,
-				state.managers.group.key,
-				state.options.relaxedKeys,
-			) as unknown;
-
-			const group = getGroup(state, groupValue, 'value');
-
-			if (group == null || removedGroups.includes(group)) {
-				continue;
-			}
-
-			group.total -= 1;
-
-			if (group.total > 0) {
-				const groupIndex = updatedGroups.indexOf(group);
-
-				if (groupIndex === -1) {
-					updatedGroups.push(group);
-				}
-
-				continue;
-			}
-
-			let groupIndex = updatedGroups.indexOf(group);
-
-			if (groupIndex > -1) {
-				updatedGroups.splice(groupIndex, 1);
-			}
-
-			groupIndex = data.values.array.indexOf(group.key.full);
-
-			if (groupIndex > -1) {
-				data.keys.all.original.splice(groupIndex, 1);
-				data.values.array.splice(groupIndex, 1);
-			}
-
-			removedGroups.push(group);
-
-			if (keys.length >= 10_000) {
-				await delay(25);
-			}
+		if (rowComponent != null) {
+			removeRow(state, rowComponent, true);
 		}
+
+		store.values.mapped.delete(key);
+
+		if (!group.enabled || isGroupKey(key)) {
+			continue;
+		}
+
+		managers.group.collapsed.delete(key);
+
+		const groupValue = getValue(dataItem, managers.group.key, options.relaxedKeys) as unknown;
+
+		const groupComponent = getGroup(state, groupValue, 'value');
+
+		if (groupComponent == null || removedGroups.includes(groupComponent)) {
+			continue;
+		}
+
+		groupComponent.total -= 1;
+
+		if (groupComponent.total > 0) {
+			const groupIndex = updatedGroups.indexOf(groupComponent);
+
+			if (groupIndex === -1) {
+				updatedGroups.push(groupComponent);
+			}
+
+			continue;
+		}
+
+		let groupIndex = updatedGroups.indexOf(groupComponent);
+
+		if (groupIndex > -1) {
+			updatedGroups.splice(groupIndex, 1);
+		}
+
+		groupIndex = store.values.array.indexOf(groupComponent.key.full);
+
+		if (groupIndex > -1) {
+			store.keys.all.original.splice(groupIndex, 1);
+			store.values.array.splice(groupIndex, 1);
+		}
+
+		removedGroups.push(groupComponent);
 	}
 
 	removeGroups(state, removedGroups);
@@ -193,10 +189,10 @@ async function removeItems(
 
 	void updateFilterCache(DATA_UPDATE_REMOVE, state, removedMap);
 
-	state.managers.event.herald.emit(EVENT_DATA_REMOVE, removedData);
+	event.herald.emit(EVENT_DATA_REMOVE, removedData);
 
 	if (synchronize) {
-		state.managers.event.herald.emit(EVENT_DATA_SYNCHRONIZE, {
+		event.herald.emit(EVENT_DATA_SYNCHRONIZE, {
 			added: [],
 			removed: removedData,
 			updated: [],

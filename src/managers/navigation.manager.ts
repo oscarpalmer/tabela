@@ -1,6 +1,6 @@
 import type {Key} from '@oscarpalmer/atoms/models';
 import {getKeyIndex} from '../helpers/data/data.misc';
-import {setNavigationStyles} from '../helpers/navigation.helper';
+import {setNavigationStyles} from '../helpers/navigation/navigation.misc';
 import type {NavigationManager} from '../models/navigation.model';
 import type {State} from '../models/tabela.model';
 

@@ -3,7 +3,7 @@ import {isPlainObject} from '@oscarpalmer/atoms/is';
 import type {PlainObject} from '@oscarpalmer/atoms/models';
 import type {TabelaColumn} from '../models/column.model';
 import type {Options, TabelaGrouping} from '../models/options.model';
-import {getValidColumn} from './column.helper';
+import {getValidColumn} from './column/column.item';
 
 // #region Functions
 

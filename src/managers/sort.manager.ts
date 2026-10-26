@@ -1,12 +1,12 @@
 import {type SortDirection} from '@oscarpalmer/atoms/array/sort';
+import {flipSorter} from '../helpers/sort/sort.event';
 import {
 	addSorter,
 	clearSorters,
-	flipSorter,
 	getValidSorter,
 	removeSorter,
 	setSorters,
-} from '../helpers/sort.helper';
+} from '../helpers/sort/sort.item';
 import {type SortManager, type TabelaSort, type TabelaSorter} from '../models/sort.model';
 import {SYMBOL, type State} from '../models/tabela.model';
 

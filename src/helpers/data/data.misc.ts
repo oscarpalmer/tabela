@@ -6,22 +6,23 @@ import {createGroup} from '../../components/group.component';
 import type {DataValue} from '../../models/data.model';
 import type {GroupComponent} from '../../models/group.model';
 import type {State} from '../../models/tabela.model';
-import {getColumn} from '../column.helper';
-import {isGroupKey, setGroups} from '../group.helper';
+import {getColumn} from '../column/column.item';
+import {setGroups} from '../group/group.item';
+import {isGroupKey} from '../group/group.misc';
 import {renderData} from './data.render';
 
 // #region Functions
 
 export function getData(state: State, active?: boolean): PlainObject[] {
-	const {data} = state.managers.data;
+	const {store} = state.managers.data;
 
-	return (active ?? false) && data.keys.all.active != null
+	return (active ?? false) && store.keys.all.active != null
 		? select(
-				data.keys.all.active,
+				store.keys.all.active,
 				key => !isGroupKey(key),
-				key => data.values.mapped.get(key as Key)!,
+				key => store.values.mapped.get(key as Key)!,
 			)
-		: (filter.remove(data.values.array, isGroupKey) as PlainObject[]);
+		: (filter.remove(store.values.array, isGroupKey) as PlainObject[]);
 }
 
 export function getKeyIndex(state: State, item?: Key): number {
@@ -32,41 +33,44 @@ export function getRowIndex(state: State, item?: Key): number {
 	return item == null ? -1 : state.managers.data.rows.indexOf(item);
 }
 
-export async function setData(state: State, data: PlainObject[]): Promise<void> {
-	const array: DataValue[] = data.slice();
+export async function setData(state: State, items: PlainObject[]): Promise<void> {
+	const {managers} = state;
+	const {data, group} = managers;
 
-	if (state.managers.group.enabled) {
-		const column = getColumn(state, state.managers.group.key);
+	const values: DataValue[] = items.slice();
 
-		const grouped = toRecord.arrays(data, state.managers.group.key) as Record<
-			string,
-			PlainObject[]
-		>;
+	if (!group.enabled) {
+		data.store.values.array = values;
 
-		const entries = Object.entries(grouped);
-		const {length} = entries;
-
-		const groups: GroupComponent[] = [];
-
-		for (let index = 0; index < length; index += 1) {
-			const [value, items] = entries[index];
-
-			const group = createGroup(
-				`${column?.options.label ?? state.managers.group.key}: ${value}`,
-				value,
-			);
-
-			group.total = items.length;
-
-			groups.push(group);
-
-			array.push(group.key.full);
-		}
-
-		setGroups(state, groups);
+		return renderData(state);
 	}
 
-	state.managers.data.data.values.array = array;
+	const column = getColumn(state, group.key);
+
+	const grouped = toRecord.arrays(items, group.key) as Record<string, PlainObject[]>;
+
+	const entries = Object.entries(grouped);
+	const {length} = entries;
+
+	const groups: GroupComponent[] = [];
+
+	for (let index = 0; index < length; index += 1) {
+		const [value, items] = entries[index];
+
+		const prefix = typeof column?.options.label === 'string' ? column.options.label : group.key;
+
+		const groupComponent = createGroup(`${prefix}: ${value}`, value);
+
+		groupComponent.total = items.length;
+
+		groups.push(groupComponent);
+
+		values.push(groupComponent.key.full);
+	}
+
+	setGroups(state, groups);
+
+	data.store.values.array = values;
 
 	renderData(state);
 }

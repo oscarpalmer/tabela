@@ -1,17 +1,19 @@
 import type {Key} from '@oscarpalmer/atoms/models';
 import {on} from '@oscarpalmer/toretto/event';
 import {
-	addSelection,
-	clearSelection,
 	onSelectionMouseDown,
 	onSelectionMouseMove,
 	onSelectionMouseUp,
 	onSelectionShiftDown,
 	onSelectionShiftUp,
+} from '../helpers/selection/selection.event';
+import {
+	addSelection,
+	clearSelection,
 	removeSelection,
 	setSelection,
 	toggleSelection,
-} from '../helpers/selection.helper';
+} from '../helpers/selection/selection.misc';
 import {
 	mappedSelectionManagers,
 	type SelectionManager,

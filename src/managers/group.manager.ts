@@ -1,7 +1,7 @@
 import {isNullableOrWhitespace} from '@oscarpalmer/atoms/is';
 import type {Key} from '@oscarpalmer/atoms/models';
 import {getData, setData} from '../helpers/data/data.misc';
-import {removeGroup} from '../helpers/group.helper';
+import {removeGroup} from '../helpers/group/group.item';
 import type {GroupManager, TabelaGroup} from '../models/group.model';
 import {SYMBOL, type State} from '../models/tabela.model';
 

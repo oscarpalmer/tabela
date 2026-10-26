@@ -1,4 +1,4 @@
-import {addFilters, clearFilters, removeFilter, setFilters} from '../helpers/filter.helper';
+import {addFilters, clearFilters, removeFilter, setFilters} from '../helpers/filter/filter.item';
 import type {FilterManager, TabelaFilter, TabelaFilterItem} from '../models/filter.model';
 import {SYMBOL, type State} from '../models/tabela.model';
 
@@ -8,6 +8,7 @@ function FilterManager(this: FilterManager, state: State): void {
 	this.active = new Set();
 	this.cache = new Map();
 	this.items = new Map();
+	this.keys = new Set();
 	this.state = state;
 
 	// @ts-expect-error All good, no worries :-)

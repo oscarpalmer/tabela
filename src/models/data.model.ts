@@ -4,16 +4,16 @@ import type {State, SYMBOL} from './tabela.model';
 // #region Types
 
 export type DataManager = {
-	data: DataManagerData;
 	handlers: TabelaData;
 	state: State;
+	store: DataManagerStore;
 	get keys(): Key[];
 	get rows(): Key[];
 	get size(): number;
 	destroy(): void;
 };
 
-type DataManagerData = {
+type DataManagerStore = {
 	keys: DataManagerDataKeys;
 	values: DataValues;
 };

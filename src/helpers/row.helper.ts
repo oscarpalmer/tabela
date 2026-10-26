@@ -54,12 +54,15 @@ export function hasRow(state: State, key: unknown): boolean {
 }
 
 export function removeRow(state: State, row: RowComponent, unmap?: boolean): void {
+	const {managers} = state;
+	const {render} = managers;
+
 	if (row.element != null) {
-		state.managers.render.observer.unobserve(row.element);
+		render.observer.unobserve(row.element);
 
 		row.element.innerHTML = '';
 
-		state.managers.render.pool.rows.push(row.element);
+		render.pool.rows.push(row.element);
 
 		row.element.remove();
 
@@ -69,7 +72,7 @@ export function removeRow(state: State, row: RowComponent, unmap?: boolean): voi
 	row.cells = {};
 
 	if (unmap ?? false) {
-		state.managers.row.components.delete(row.key);
+		managers.row.components.delete(row.key);
 	}
 }
 
@@ -83,16 +86,16 @@ export function removeRowByKey(state: State, key: unknown): void {
 
 export function renderRow(state: State, row: RowComponent, rowIndex: number): void {
 	const {managers, options, prefix} = state;
+	const {navigation, render, selection} = managers;
 
-	const element =
-		row.element ?? managers.render.pool.rows.shift() ?? createRowElement(options.rowHeight);
+	const element = row.element ?? render.pool.rows.shift() ?? createRowElement(options.rowHeight);
 
 	row.element = element;
 
 	element.innerHTML = '';
 
-	const active = row.key === managers.navigation.active.row;
-	const selected = managers.selection.keys.has(row.key);
+	const active = row.key === navigation.active.row;
+	const selected = selection.keys.has(row.key);
 
 	const key = getString(row.key);
 
@@ -119,7 +122,7 @@ export function renderRow(state: State, row: RowComponent, rowIndex: number): vo
 	const columns = managers.column.items;
 	const {length} = columns;
 
-	const data = managers.data.data.values.mapped.get(row.key);
+	const data = managers.data.store.values.mapped.get(row.key);
 
 	if (data == null) {
 		return;
@@ -128,10 +131,9 @@ export function renderRow(state: State, row: RowComponent, rowIndex: number): vo
 	for (let index = 0; index < length; index += 1) {
 		const {key, options} = columns[index];
 
-		managers.render.pool.cells[key.original] ??= [];
+		render.pool.cells[key.original] ??= [];
 
-		const cell =
-			managers.render.pool.cells[key.original].shift() ?? createCellElement(key.normalized);
+		const cell = render.pool.cells[key.original].shift() ?? createCellElement(key.normalized);
 
 		cell.dataset.key = key.original;
 		cell.id = `${prefix}_row_${getString(row.key)}_column_${key.normalized}`;
@@ -158,7 +160,7 @@ export function renderRow(state: State, row: RowComponent, rowIndex: number): vo
 	}
 
 	// Measure on render, to keep offsets in sync with the actual height
-	state.managers.render.observer.observe(element);
+	render.observer.observe(element);
 }
 
 export function updateRow(state: State, key: Key): void {

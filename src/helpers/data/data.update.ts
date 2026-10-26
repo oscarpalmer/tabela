@@ -4,57 +4,65 @@ import {getValue} from '@oscarpalmer/atoms/value/handle';
 import {DATA_UPDATE_UPDATE} from '../../models/data.model';
 import {EVENT_DATA_UPDATE} from '../../models/event.model';
 import type {State} from '../../models/tabela.model';
-import {updateFilterCache} from '../filter.helper';
+import {updateFilterCache} from '../filter/filter.cache';
 import {updateRow} from '../row.helper';
 
 // #region Functions
 
 export async function updateData(
 	state: State,
-	data: PlainObject[],
+	items: PlainObject[],
 	render: boolean,
 ): Promise<void> {
-	if (!Array.isArray(data) || data.length === 0) {
+	if (!Array.isArray(items)) {
 		return;
 	}
 
-	const {length} = data;
+	const {length} = items;
+
+	if (length === 0) {
+		return;
+	}
+
+	const {key, managers, options} = state;
+	const {data, event} = managers;
+	const {store} = data;
 
 	const map = new Map<Key, PlainObject>();
 	const updated: PlainObject[] = [];
 
-	for (let dataIndex = 0; dataIndex < length; dataIndex += 1) {
-		const dataItem = data[dataIndex];
+	for (let index = 0; index < length; index += 1) {
+		const item = items[index];
 
-		if (!isPlainObject(dataItem)) {
+		if (!isPlainObject(item)) {
 			continue;
 		}
 
-		const key = getValue(dataItem, state.key, state.options.relaxedKeys);
+		const itemKey = getValue(item, key, options.relaxedKeys);
 
-		if (!isKey(key)) {
+		if (!isKey(itemKey)) {
 			continue;
 		}
 
-		const existingIndex = state.managers.data.data.keys.all.original.indexOf(key);
-		const existingItem = state.managers.data.data.values.array[existingIndex];
+		const existingIndex = store.keys.all.original.indexOf(itemKey);
+		const existingItem = store.values.array[existingIndex];
 
 		if (!isPlainObject(existingItem)) {
 			continue;
 		}
 
-		Object.assign(existingItem, dataItem);
+		Object.assign(existingItem, item);
 
-		map.set(key, existingItem);
+		map.set(itemKey, existingItem);
 		updated.push(existingItem);
 
-		if (render && state.managers.render.visible.keys.has(key)) {
-			updateRow(state, key);
+		if (render && managers.render.visible.keys.has(itemKey)) {
+			updateRow(state, itemKey);
 		}
 	}
 
 	if (updated.length > 0) {
-		state.managers.event.herald.emit(EVENT_DATA_UPDATE, updated);
+		event.herald.emit(EVENT_DATA_UPDATE, updated);
 	}
 
 	return updateFilterCache(DATA_UPDATE_UPDATE, state, map);

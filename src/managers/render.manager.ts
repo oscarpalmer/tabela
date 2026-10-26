@@ -1,5 +1,5 @@
 import {on} from '@oscarpalmer/toretto/event';
-import {onResize, onScroll, onScrollEnd} from '../helpers/render.helper';
+import {onResize, onScroll, onScrollEnd} from '../helpers/render/render.event';
 import {type RenderManager} from '../models/render.model';
 import type {State} from '../models/tabela.model';
 

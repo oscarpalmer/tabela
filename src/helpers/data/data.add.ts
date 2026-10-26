@@ -8,21 +8,32 @@ import {DATA_UPDATE_ADD} from '../../models/data.model';
 import {EVENT_DATA_ADD} from '../../models/event.model';
 import type {GroupComponent} from '../../models/group.model';
 import type {State} from '../../models/tabela.model';
-import {getColumn} from '../column.helper';
-import {updateFilterCache} from '../filter.helper';
-import {addGroups, getGroup, updateGroups} from '../group.helper';
+import {getColumn} from '../column/column.item';
+import {updateFilterCache} from '../filter/filter.cache';
+import {updateGroups} from '../group/group.dom';
+import {addGroups, getGroup} from '../group/group.item';
 import {renderData} from './data.render';
 import {updateData} from './data.update';
 
 // #region Functions
 
-export async function addData(state: State, data: PlainObject[], render: boolean): Promise<void> {
-	if (!Array.isArray(data) || data.length === 0) {
+export async function addData(state: State, items: PlainObject[], render: boolean): Promise<void> {
+	if (!Array.isArray(items)) {
 		return;
 	}
 
-	const addedData: PlainObject[] = [];
-	const updatedData: PlainObject[] = [];
+	const {length} = items;
+
+	if (length === 0) {
+		return;
+	}
+
+	const {key, managers, options} = state;
+	const {data, event, group} = managers;
+	const {store} = data;
+
+	const addedItems: PlainObject[] = [];
+	const updatedItems: PlainObject[] = [];
 
 	const addedGroups: GroupComponent[] = [];
 	const updatedGroups: GroupComponent[] = [];
@@ -30,81 +41,80 @@ export async function addData(state: State, data: PlainObject[], render: boolean
 	const addedMap = new Map<Key, PlainObject>();
 
 	let groupColumn: ColumnComponent | undefined;
-	let {length} = data;
 
 	for (let index = 0; index < length; index += 1) {
-		const item = data[index];
+		const item = items[index];
 
 		if (!isPlainObject(item)) {
 			continue;
 		}
 
-		const key = getValue(item, state.key, state.options.relaxedKeys);
+		const itemKey = getValue(item, key, options.relaxedKeys);
 
-		if (!isKey(key)) {
+		if (!isKey(itemKey)) {
 			continue;
 		}
 
-		if (state.managers.data.data.values.mapped.has(key)) {
-			updatedData.push(item);
+		if (store.values.mapped.has(itemKey)) {
+			updatedItems.push(item);
 
 			continue;
 		}
 
-		addedData.push(item);
-		addedMap.set(key, item);
+		addedItems.push(item);
+		addedMap.set(itemKey, item);
 
-		state.managers.data.data.values.array.push(item);
-		state.managers.data.data.values.mapped.set(key, item);
+		store.values.array.push(item);
+		store.values.mapped.set(itemKey, item);
 
-		if (!state.managers.group.enabled) {
+		if (!group.enabled) {
 			continue;
 		}
 
-		const groupValue = getValue(item, state.managers.group.key, state.options.relaxedKeys);
+		const groupValue = getValue(item, group.key, options.relaxedKeys);
 
-		let group =
+		let groupComponent =
 			getGroup(state, groupValue, 'value') ??
 			addedGroups.find(added => added.value.original === groupValue);
 
-		if (group == null) {
-			groupColumn ??= getColumn(state, state.managers.group.key);
+		if (groupComponent == null) {
+			groupColumn ??= getColumn(state, group.key);
 
-			group = createGroup(
-				`${groupColumn?.options.label ?? state.managers.group.key}: ${getString(groupValue)}`,
+			groupComponent = createGroup(
+				`${groupColumn?.options.label ?? group.key}: ${getString(groupValue)}`,
 				groupValue,
 			);
 
-			state.managers.data.data.values.array.push(group.key.full);
+			store.values.array.push(groupComponent.key.full);
 
-			addedGroups.push(group);
-		} else if (!addedGroups.includes(group) && !updatedGroups.includes(group)) {
-			updatedGroups.push(group);
+			addedGroups.push(groupComponent);
+		} else if (!addedGroups.includes(groupComponent) && !updatedGroups.includes(groupComponent)) {
+			updatedGroups.push(groupComponent);
 		}
 
-		if (!group.expanded) {
-			state.managers.group.collapsed.add(key);
+		if (!groupComponent.expanded) {
+			group.collapsed.add(itemKey);
 		}
 
-		group.total += 1;
+		groupComponent.total += 1;
 	}
 
 	addGroups(state, addedGroups);
 	updateGroups(state, updatedGroups);
 
-	const noAddedData = addedData.length === 0;
+	const noAddedData = addedItems.length === 0;
 
 	if (!noAddedData) {
 		await updateFilterCache(DATA_UPDATE_ADD, state, addedMap);
 	}
 
-	await updateData(state, updatedData, noAddedData);
+	await updateData(state, updatedItems, noAddedData);
 
 	if (noAddedData) {
 		return;
 	}
 
-	state.managers.event.herald.emit(EVENT_DATA_ADD, addedData);
+	event.herald.emit(EVENT_DATA_ADD, addedItems);
 
 	if (render) {
 		renderData(state);

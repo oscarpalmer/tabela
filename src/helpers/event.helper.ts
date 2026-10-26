@@ -10,11 +10,11 @@ import {
 	type EventManager,
 } from '../models/event.model';
 import {SELECTOR_TABLE} from '../models/style.model';
-import {onFilter} from './filter.helper';
-import {onGroup} from './group.helper';
-import {handleNavigation} from './navigation.helper';
-import {onSelection} from './selection.helper';
-import {onSort} from './sort.helper';
+import {onFilter} from './filter/filter.event';
+import {onGroup} from './group/group.event';
+import {handleNavigation} from './navigation/navigation.event';
+import {onSelection} from './selection/selection.event';
+import {onSort} from './sort/sort.event';
 
 // #region Functions
 

@@ -60,6 +60,6 @@ export const RENDER_ORIGIN_FILTER: RenderOrigin = 'filter';
 
 export const RENDER_ORIGIN_SORT: RenderOrigin = 'sort';
 
-export const RENDER_SCROLL_END_DELAY = 150;
+export const RENDER_SCROLL_END_DELAY = 125;
 
 // #endregion

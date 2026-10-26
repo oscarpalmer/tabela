@@ -27,9 +27,13 @@ export function updateColumnWidthStyling(state: State): void {
 		state.elements.wrapper.append(style.widths);
 	}
 
+	const {length} = state.managers.column.items;
+
 	let styling = '';
 
-	for (const column of state.managers.column.items) {
+	for (let index = 0; index < length; index += 1) {
+		const column = state.managers.column.items[index];
+
 		styling += `--tabela-width-${column.key.normalized}: ${column.elements.wrapper.style.width};`;
 	}
 
