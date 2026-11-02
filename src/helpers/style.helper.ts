@@ -19,7 +19,7 @@ export function appendBaseStyles(): void {
 }
 
 export function updateColumnWidthStyling(state: State): void {
-	const {style} = state.managers;
+	const {column, style} = state.managers;
 
 	if (style.widths == null) {
 		style.widths = document.createElement('style');
@@ -27,14 +27,14 @@ export function updateColumnWidthStyling(state: State): void {
 		state.elements.wrapper.append(style.widths);
 	}
 
-	const {length} = state.managers.column.items;
-
 	let styling = '';
 
-	for (let index = 0; index < length; index += 1) {
-		const column = state.managers.column.items[index];
+	const {length} = column.items;
 
-		styling += `--tabela-width-${column.key.normalized}: ${column.elements.wrapper.style.width};`;
+	for (let index = 0; index < length; index += 1) {
+		const item = column.items[index];
+
+		styling += `--tabela-width-${item.key.normalized}: ${item.elements.wrapper.style.width};`;
 	}
 
 	style.widths.textContent = `#${state.elements.wrapper.id} { ${styling} }`;

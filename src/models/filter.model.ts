@@ -29,6 +29,7 @@ export type FilterItem = {
 export type FilterManager = {
 	active: Set<string>;
 	cache: Map<string, Map<string, FilterCache>>;
+	enabled: boolean;
 	handlers: TabelaFilter;
 	items: Map<string, FilterItem[]>;
 	keys: Set<Key>;

@@ -15,6 +15,8 @@ export type ExtendedArrayValueSorter = {
 
 export type SortManager = {
 	default: ExtendedArrayValueSorter[];
+	enabled: boolean;
+	field?: string;
 	handlers: TabelaSort;
 	items: ExtendedArrayValueSorter[];
 	get size(): number;

@@ -16,65 +16,67 @@ export type StyleManager = {
 
 export const CSS_BUTTON = 'tabela__button';
 
-export const CSS_BUTTON_GROUP = 'tabela__button--group';
+export const CSS_BUTTON_GROUP: string = `${CSS_BUTTON}--group`;
 
 export const CSS_CELL = 'tabela__cell';
 
-export const CSS_CELL_BODY = 'tabela__cell--body';
+export const CSS_CELL_BODY: string = `${CSS_CELL}--body`;
 
-export const CSS_CELL_FOOTER = 'tabela__cell--footer';
+export const CSS_CELL_FOOTER: string = `${CSS_CELL}--footer`;
 
-export const CSS_CELL_GROUP = 'tabela__cell--group';
+export const CSS_CELL_GROUP: string = `${CSS_CELL}--group`;
 
 export const CSS_FAKER = 'tabela__faker';
 
 export const CSS_FILTER = 'tabela__filter';
 
-export const CSS_FILTER_INPUT = 'tabela__filter__input';
+export const CSS_FILTER_INPUT: string = `${CSS_FILTER}__input`;
 
-export const CSS_FILTER_ITEM = 'tabela__filter__item';
+export const CSS_FILTER_ITEM: string = `${CSS_FILTER}__item`;
 
-export const CSS_FILTER_LABEL = 'tabela__filter__label';
+export const CSS_FILTER_LABEL: string = `${CSS_FILTER}__label`;
 
-export const CSS_FILTER_LIST = 'tabela__filter__list';
+export const CSS_FILTER_LIST: string = `${CSS_FILTER}__list`;
 
-export const CSS_FILTER_TYPE = 'tabela__filter__type';
+export const CSS_FILTER_TYPE: string = `${CSS_FILTER}__type`;
 
 export const CSS_GROUP = 'tabela__group';
 
-export const CSS_GROUP_SELECTED = 'tabela__group__selected';
+export const CSS_GROUP_SELECTED: string = `${CSS_GROUP}__selected`;
 
-export const CSS_GROUP_TOTAL = 'tabela__group__total';
+export const CSS_GROUP_TOTAL: string = `${CSS_GROUP}__total`;
 
 export const CSS_HEADING = 'tabela__heading';
 
-export const CSS_HEADING_CONTENT = 'tabela__heading__content';
+export const CSS_HEADING_CONTENT: string = `${CSS_HEADING}__content`;
 
-export const CSS_HEADING_FILTER = 'tabela__heading__filter';
+export const CSS_HEADING_FILTER: string = `${CSS_HEADING}__filter`;
 
-export const CSS_HEADING_RESIZER = 'tabela__heading__resizer';
+export const CSS_HEADING_RESIZER: string = `${CSS_HEADING}__resizer`;
 
-export const CSS_HEADING_SORTER = 'tabela__heading__sorter';
+export const CSS_HEADING_SORTABLE: string = `${CSS_HEADING}--sortable`;
+
+export const CSS_HEADING_SORTER: string = `${CSS_HEADING}__sorter`;
 
 export const CSS_ROW = 'tabela__row';
 
-export const CSS_ROW_BODY = 'tabela__row--body';
+export const CSS_ROW_BODY: string = `${CSS_ROW}--body`;
 
-export const CSS_ROW_FOOTER = 'tabela__row--footer';
+export const CSS_ROW_FOOTER: string = `${CSS_ROW}--footer`;
 
-export const CSS_ROW_GROUP = 'tabela__row--group tabela__group';
+export const CSS_ROW_GROUP: string = `${CSS_ROW}--group ${CSS_GROUP}`;
 
-export const CSS_ROW_HEADER = 'tabela__row--header';
+export const CSS_ROW_HEADER: string = `${CSS_ROW}--header`;
 
-export const CSS_ROW_SELECTED = 'tabela__row--selected';
+export const CSS_ROW_SELECTED: string = `${CSS_ROW}--selected`;
 
-export const CSS_ROWGROUP = 'tabela__rowgroup';
+export const CSS_ROWGROUP: string = `${CSS_ROW}group`;
 
-export const CSS_ROWGROUP_BODY = 'tabela__rowgroup--body';
+export const CSS_ROWGROUP_BODY: string = `${CSS_ROWGROUP}--body`;
 
-export const CSS_ROWGROUP_FOOTER = 'tabela__rowgroup--footer';
+export const CSS_ROWGROUP_FOOTER: string = `${CSS_ROWGROUP}--footer`;
 
-export const CSS_ROWGROUP_HEADER = 'tabela__rowgroup--header';
+export const CSS_ROWGROUP_HEADER: string = `${CSS_ROWGROUP}--header`;
 
 export const CSS_SELECTION = 'tabela__selection';
 
@@ -207,7 +209,6 @@ export const tabelaCSS: string = //css
 	flex-flow: row nowrap;
 	align-items: center;
 	gap: 0.5em;
-	cursor: pointer;
 }
 
 :where(.${CSS_HEADING_CONTENT}) {
@@ -227,6 +228,10 @@ export const tabelaCSS: string = //css
 	margin: 0 -.5em 0 -.25em;
 	background: red;
 	cursor: col-resize;
+}
+
+:where(.${CSS_HEADING_SORTABLE}) {
+	cursor: pointer;
 }
 
 :where(.${CSS_HEADING_SORTER}) {

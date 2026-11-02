@@ -9,6 +9,8 @@ function FilterManager(this: FilterManager, state: State): void {
 	this.cache = new Map();
 	this.items = new Map();
 	this.keys = new Set();
+
+	this.enabled = state.options.filterable;
 	this.state = state;
 
 	// @ts-expect-error All good, no worries :-)

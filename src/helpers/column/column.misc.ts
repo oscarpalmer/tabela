@@ -61,11 +61,17 @@ export function createColumnElements(
 
 	const filter = createFilterElement(state, column, id);
 
-	const sorter = createElement(ELEMENT_DIV, {
-		property: {
-			className: CSS_HEADING_SORTER,
-		},
-	});
+	let sorter: HTMLDivElement | undefined;
+
+	if (state.managers.sort.enabled && column.options.sortable) {
+		sorter = createElement(ELEMENT_DIV, {
+			property: {
+				className: CSS_HEADING_SORTER,
+			},
+		});
+
+		wrapper.classList.add(`${CSS_HEADING}--sortable`);
+	}
 
 	const resizable = createElement('span', {
 		aria: {
@@ -80,7 +86,17 @@ export function createColumnElements(
 		},
 	});
 
-	wrapper.append(content, filter.button, filter.popover, sorter, resizable);
+	wrapper.append(content);
+
+	if (filter != null) {
+		wrapper.append(filter.button, filter.popover);
+	}
+
+	if (sorter != null) {
+		wrapper.append(sorter);
+	}
+
+	wrapper.append(resizable);
 
 	return {
 		content,

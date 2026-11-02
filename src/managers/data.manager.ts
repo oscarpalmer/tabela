@@ -35,15 +35,12 @@ DataManager.prototype.destroy = destroyDataManager;
 
 Object.defineProperties(DataManager.prototype, {
 	keys: {
-		enumerable: true,
 		get: getKeys,
 	},
 	rows: {
-		enumerable: true,
 		get: getRows,
 	},
 	size: {
-		enumerable: true,
 		get: getSize,
 	},
 });

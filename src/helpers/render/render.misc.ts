@@ -1,8 +1,9 @@
 import {max, min} from '@oscarpalmer/atoms/math';
 import type {Key} from '@oscarpalmer/atoms/models';
 import {parse} from '@oscarpalmer/atoms/string';
-import {GROUP_KEY_PREFIX} from '../../models/group.model';
+import {GROUP_KEY_PREFIX, type GroupComponent} from '../../models/group.model';
 import type {RenderRange} from '../../models/render.model';
+import type {RowComponent} from '../../models/row.model';
 import type {State} from '../../models/tabela.model';
 import {getGroup} from '../group/group.item';
 import {isGroupKey} from '../group/group.misc';
@@ -172,7 +173,13 @@ export function updatePositions(state: State, from: number): void {
 			continue;
 		}
 
-		const component = isGroupKey(key) ? getGroup(state, key) : getRow(state, key, false);
+		let component: GroupComponent | RowComponent | undefined;
+
+		if (isGroupKey(key)) {
+			component = getGroup(state, key);
+		} else {
+			component = getRow(state, key, false);
+		}
 
 		if (component?.element != null) {
 			component.element.style.transform = `translateY(${offsets[index]}px)`;

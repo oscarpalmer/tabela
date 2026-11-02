@@ -7,8 +7,8 @@ import {getValidColumn} from './column/column.item';
 
 // #region Functions
 
-function getCallback(input: unknown): Function | undefined {
-	if (input == null) {
+function getCallback(input: unknown, nullable?: boolean): Function | undefined {
+	if (input == null && (nullable ?? false)) {
 		return undefined;
 	}
 
@@ -30,6 +30,18 @@ function getColumns(input: unknown): TabelaColumn[] {
 function getData(input: unknown): PlainObject[] {
 	if (!Array.isArray(input)) {
 		throw new TypeError('Data must be an array');
+	}
+
+	return input;
+}
+
+function getFilterable(input: unknown): boolean {
+	if (input == null) {
+		return true;
+	}
+
+	if (typeof input !== 'boolean') {
+		throw new TypeError('Filterable must be a boolean');
 	}
 
 	return input;
@@ -78,23 +90,37 @@ export function getOptions(input: unknown): Options {
 
 	const columns = getColumns(input.columns);
 	const data = getData(input.data);
+	const grouping = getGrouping(input.grouping);
+	const filterable = getFilterable(input.filterable);
 	const key = getValidString('Key', input.key, false);
 	const label = getValidString('Label', input.label, false);
 	const rowHeight = getHeight(input.rowHeight);
-
-	const sorting = getValidString('Sorting', input.sorting, true);
+	const sorting = getSorting(input.sorting);
 
 	return {
 		columns,
 		data,
+		filterable,
+		grouping,
 		key,
 		label,
 		rowHeight,
 		sorting,
 		footer: input.footer !== false,
-		grouping: getGrouping(input.grouping),
 		relaxedKeys: input.relaxedKeys === true,
 	};
+}
+
+function getSorting(input: unknown): string | boolean {
+	if (input == null || typeof input === 'boolean') {
+		return input ?? true;
+	}
+
+	if (typeof input === 'string') {
+		return input;
+	}
+
+	throw new TypeError('Sorting must be a string or a boolean');
 }
 
 function getValidString(name: string, input: unknown, nullable: true): string | undefined;

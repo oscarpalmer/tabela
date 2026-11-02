@@ -13,8 +13,15 @@ import {SYMBOL, type State} from '../models/tabela.model';
 // #region Instances
 
 function SortManager(this: SortManager, state: State): void {
-	this.default = [getValidSorter(state, state.options.sorting ?? state.key)!];
+	this.enabled = typeof state.options.sorting === 'string' || state.options.sorting === true;
 	this.items = [];
+
+	this.default = [
+		getValidSorter(
+			state,
+			typeof state.options.sorting === 'string' ? state.options.sorting : state.key,
+		)!,
+	];
 
 	// @ts-expect-error All good, no worries :-)
 	this.handlers = new TabelaSort(state);
@@ -24,7 +31,6 @@ SortManager.prototype.destroy = destroySortManager;
 
 Object.defineProperties(SortManager.prototype, {
 	size: {
-		enumerable: true,
 		get: getSize,
 	},
 });

@@ -91,6 +91,11 @@ export async function updateFilterableColumns(
 
 	for (let columnIndex = 0; columnIndex < columnsLength; columnIndex += 1) {
 		const column = state.managers.column.items[columnIndex];
+
+		if (column.elements.filter == null) {
+			continue;
+		}
+
 		const cached = filter.cache.get(column.key.original);
 
 		const list =

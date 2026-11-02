@@ -17,10 +17,12 @@ function ColumnComponent(this: ColumnComponent, state: State, column: TabelaColu
 
 	this.options = {
 		width,
+		filterable: column.filterable ?? true,
 		footer: column.footer,
 		key: column.key,
 		label: column.label ?? column.key,
 		render: column.render,
+		sortable: column.sortable ?? true,
 		type: column.type ?? 'string',
 	} satisfies Column;
 
@@ -53,8 +55,10 @@ function createKey(original: string): ColumnComponentKey {
 
 function destroyColumn(this: ColumnComponent): void {
 	this.elements.content.remove();
+	this.elements.filter?.button.remove();
+	this.elements.filter?.popover.remove();
 	this.elements.wrapper.remove();
-	this.elements.sorter.remove();
+	this.elements.sorter?.remove();
 
 	this.elements = undefined as never;
 	this.options = undefined as never;

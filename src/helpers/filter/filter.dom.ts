@@ -25,7 +25,11 @@ export function createFilterElement(
 	state: State,
 	column: ColumnComponent,
 	prefix: string,
-): ColumnComponentElementsFilter {
+): ColumnComponentElementsFilter | undefined {
+	if (!state.managers.filter.enabled || !column.options.filterable) {
+		return undefined;
+	}
+
 	const id = `${prefix}_filter`;
 
 	const button = createElement('button', {

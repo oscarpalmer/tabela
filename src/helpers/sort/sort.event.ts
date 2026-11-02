@@ -91,7 +91,7 @@ export function flipSorter(state: State, key: string, origin?: KeyboardEvent | M
 }
 
 export function onSort(event: KeyboardEvent | MouseEvent, state: State, target: HTMLElement): void {
-	if (findAncestor(event, SELECTOR_FILTER) != null) {
+	if (!state.managers.sort.enabled || findAncestor(event, SELECTOR_FILTER) != null) {
 		return;
 	}
 
@@ -122,6 +122,10 @@ export function sortData(state: State): void {
 
 	for (let index = 0; index < length; index += 1) {
 		const column = state.managers.column.items[index];
+
+		if (!column.options.sortable || column.elements.sorter == null) {
+			continue;
+		}
 
 		const sorterIndex = items.findIndex(item => item.field === column.key.original);
 		const sorterItem = items[sorterIndex];

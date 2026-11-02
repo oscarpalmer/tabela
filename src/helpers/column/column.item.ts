@@ -34,10 +34,12 @@ export function getValidColumn(value: unknown): TabelaColumn {
 	}
 
 	return {
+		filterable: typeof column.filterable === 'boolean' ? column.filterable : true,
 		footer: getColumnFooter(column.footer),
 		label: getColumnLabel(column.label) ?? column.key,
 		key: column.key,
 		render: column.render,
+		sortable: typeof column.sortable === 'boolean' ? column.sortable : true,
 		width:
 			typeof column.width === 'number' && !Number.isNaN(column.width) ? column.width : undefined,
 	};

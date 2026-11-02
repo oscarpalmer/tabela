@@ -7,13 +7,14 @@ import type {RenderCallbackResult} from './render.model';
 export type Options = {
 	columns: TabelaColumn[];
 	data: PlainObject[];
+	filterable: boolean;
 	footer?: boolean;
 	grouping?: TabelaGrouping;
 	key: string;
 	label: string;
 	relaxedKeys: boolean;
 	rowHeight: number;
-	sorting?: string;
+	sorting: string | boolean;
 };
 
 export type TabelaGrouping = {
@@ -33,13 +34,14 @@ type TabelaGroupingLabelParameters = {
 export type TabelaOptions = {
 	columns: TabelaColumn[];
 	data: PlainObject[];
+	filterable: boolean;
 	footer?: boolean;
 	grouping?: string | TabelaGrouping;
 	key: string;
 	label: string;
 	relaxedKeys?: boolean;
 	rowHeight: number;
-	sorting?: string;
+	sorting?: string | boolean;
 };
 
 // #endregion

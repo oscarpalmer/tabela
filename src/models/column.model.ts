@@ -6,9 +6,11 @@ import type {RenderCallbackResult} from './render.model';
 // #region Types
 
 export type Column = {
+	filterable: boolean;
 	footer?: TabelaColumnFooterAggregation | TabelaColumnFooterCallback;
 	key: string;
 	label: string | TabelaColumnLabelCallback;
+	sortable: boolean;
 	type: TabelaColumnType;
 	width: number;
 	render?: TabelaColumnRenderCallback;
@@ -24,8 +26,8 @@ export type ColumnComponent = {
 
 export type ColumnComponentElements = {
 	content: HTMLDivElement;
-	filter: ColumnComponentElementsFilter;
-	sorter: HTMLDivElement;
+	filter?: ColumnComponentElementsFilter;
+	sorter?: HTMLDivElement;
 	wrapper: HTMLDivElement;
 };
 
@@ -61,10 +63,12 @@ export type ColumnManager = {
 };
 
 export type TabelaColumn = {
+	filterable?: boolean;
 	footer?: TabelaColumnFooterAggregation | TabelaColumnFooterCallback;
 	key: string;
 	label?: string | TabelaColumnLabelCallback;
 	render?: TabelaColumnRenderCallback;
+	sortable?: boolean;
 	type?: TabelaColumnType;
 	width?: number;
 };
